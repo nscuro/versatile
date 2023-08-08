@@ -1,12 +1,36 @@
 package io.github.nscuro.versatile;
 
+import io.github.nscuro.versatile.version.Version;
+
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
-public record Constraint(Comparator comparator, String version) {
+public class Constraint implements Comparable<Constraint> {
 
-    public static Constraint parse(final String constraintStr) {
+    private final VersioningScheme scheme;
+    private final Comparator comparator;
+    private final Version version;
+
+    Constraint(final VersioningScheme scheme, final Comparator comparator, final Version version) {
+        if (scheme == null) {
+            throw new VersException("scheme must not be null");
+        }
+        if (comparator == null) {
+            throw new VersException("comparator must not be null");
+        }
+        if (comparator == Comparator.WILDCARD && version != null) {
+            throw new VersException("comparator %s is not allowed with version".formatted(comparator));
+        } else if (comparator != Comparator.WILDCARD && version == null) {
+            throw new VersException("comparator %s is not allowed without version".formatted(comparator));
+        }
+        this.scheme = scheme;
+        this.comparator = comparator;
+        this.version = version;
+    }
+
+    static Constraint parse(final VersioningScheme scheme, final String constraintStr) {
         final Comparator comparator;
         if (constraintStr.startsWith("<=")) {
             comparator = Comparator.LESS_THAN_OR_EQUAL;
@@ -22,12 +46,35 @@ public record Constraint(Comparator comparator, String version) {
             comparator = Comparator.EQUAL;
         }
 
-        final String version = constraintStr.replaceFirst("^" + Pattern.quote(comparator.operator()), "");
-        if (version.isBlank()) {
-            throw new VersException();
+        final String versionStr = constraintStr.replaceFirst("^" + Pattern.quote(comparator.operator()), "").trim();
+        if (versionStr.isBlank()) {
+            throw new VersException("comparator %s is not allowed without version".formatted(comparator));
         }
 
-        return new Constraint(comparator, maybeUrlDecode(version));
+        final Version version = Version.forScheme(scheme, maybeUrlDecode(versionStr));
+
+        return new Constraint(scheme, comparator, version);
+    }
+
+    boolean matches(final Version version) {
+        if (version == null) {
+            throw new VersException("version must not be null");
+        }
+        if (this.scheme != version.scheme()) {
+            throw new VersException("cannot evaluate constraint of scheme %s against version of scheme %s"
+                    .formatted(this.scheme, version.scheme()));
+        }
+
+        final int comparisonResult = this.version.compareTo(version);
+        return switch (comparator) {
+            case LESS_THAN -> comparisonResult < 0;
+            case LESS_THAN_OR_EQUAL -> comparisonResult <= 0;
+            case GREATER_THAN_OR_EQUAL -> comparisonResult >= 0;
+            case GREATER_THAN -> comparisonResult > 0;
+            case EQUAL -> comparisonResult == 0;
+            case NOT_EQUAL -> comparisonResult != 0;
+            case WILDCARD -> true;
+        };
     }
 
     private static String maybeUrlDecode(final String version) {
@@ -36,6 +83,38 @@ public record Constraint(Comparator comparator, String version) {
         }
 
         return version;
+    }
+
+    @Override
+    public int compareTo(final Constraint other) {
+        return this.version.compareTo(other.version);
+    }
+
+    public VersioningScheme scheme() {
+        return scheme;
+    }
+
+    public Comparator comparator() {
+        return comparator;
+    }
+
+    public Version version() {
+        return version;
+    }
+
+    @Override
+    public String toString() {
+        if (comparator == Comparator.WILDCARD) {
+            // Wildcard cannot have a version.
+            return Comparator.WILDCARD.operator();
+        }
+
+        if (comparator == Comparator.EQUAL) {
+            // Operator is omitted for equality.
+            return URLEncoder.encode(version().toString(), StandardCharsets.UTF_8);
+        }
+
+        return comparator.operator() + URLEncoder.encode(version.toString(), StandardCharsets.UTF_8);
     }
 
 }

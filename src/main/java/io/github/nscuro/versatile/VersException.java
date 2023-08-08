@@ -2,12 +2,12 @@ package io.github.nscuro.versatile;
 
 public class VersException extends RuntimeException {
 
-    public VersException() {
-        super();
+    VersException(final String message) {
+        this(message, null);
     }
 
-    public VersException(final Throwable cause) {
-        super(cause);
+    VersException(final String message, final Throwable cause) {
+        super(message, cause);
     }
 
 }
