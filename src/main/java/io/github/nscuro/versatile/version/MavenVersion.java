@@ -1,15 +1,15 @@
 package io.github.nscuro.versatile.version;
 
-import io.github.nscuro.versatile.VersioningScheme;
-import org.apache.maven.artifact.versioning.ComparableVersion;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
-class MavenVersion extends Version {
+public class MavenVersion extends Version {
 
-    private final ComparableVersion delegate;
+    private final ArtifactVersion delegate;
 
-    MavenVersion(final String versionStr) {
+    public MavenVersion(final String versionStr) {
         super(VersioningScheme.MAVEN, versionStr);
-        this.delegate = new ComparableVersion(versionStr);
+        this.delegate = new DefaultArtifactVersion(versionStr);
     }
 
     @Override

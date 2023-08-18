@@ -1,8 +1,6 @@
 package io.github.nscuro.versatile.version;
 
-import io.github.nscuro.versatile.VersioningScheme;
-
-class GenericVersion extends Version {
+public class GenericVersion extends Version {
 
     private final ComponentVersion delegate;
 

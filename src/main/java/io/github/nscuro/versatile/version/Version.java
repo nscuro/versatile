@@ -1,7 +1,5 @@
 package io.github.nscuro.versatile.version;
 
-import io.github.nscuro.versatile.VersioningScheme;
-
 import java.util.Objects;
 
 public abstract class Version implements Comparable<Version> {

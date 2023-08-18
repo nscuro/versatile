@@ -1,4 +1,4 @@
-package io.github.nscuro.versatile;
+package io.github.nscuro.versatile.version;
 
 import com.github.packageurl.PackageURL;
 

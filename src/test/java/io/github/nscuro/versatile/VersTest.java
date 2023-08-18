@@ -1,6 +1,7 @@
 package io.github.nscuro.versatile;
 
 import io.github.nscuro.versatile.version.NpmVersion;
+import io.github.nscuro.versatile.version.VersioningScheme;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

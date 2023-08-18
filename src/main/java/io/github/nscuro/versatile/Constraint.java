@@ -1,6 +1,7 @@
 package io.github.nscuro.versatile;
 
 import io.github.nscuro.versatile.version.Version;
+import io.github.nscuro.versatile.version.VersioningScheme;
 
 import java.net.URLDecoder;
 import java.net.URLEncoder;

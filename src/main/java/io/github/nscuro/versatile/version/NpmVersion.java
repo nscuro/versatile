@@ -1,7 +1,6 @@
 package io.github.nscuro.versatile.version;
 
 import com.vdurmont.semver4j.Semver;
-import io.github.nscuro.versatile.VersioningScheme;
 
 public class NpmVersion extends Version {
 
