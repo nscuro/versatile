@@ -16,6 +16,8 @@
 
         <!-- Dependency Versions -->
         <lib.assertj.version>3.24.2</lib.assertj.version>
+        <lib.jackson-databind.version>2.15.2</lib.jackson-databind.version>
+        <lib.json-path.version>2.8.0</lib.json-path.version>
         <lib.junit-jupiter.version>5.10.0</lib.junit-jupiter.version>
         <lib.maven-artifact.version>3.9.4</lib.maven-artifact.version>
         <lib.packageurl-java.version>1.4.1</lib.packageurl-java.version>
@@ -52,6 +54,20 @@
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <version>${lib.assertj.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${lib.jackson-databind.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jayway.jsonpath</groupId>
+            <artifactId>json-path</artifactId>
+            <version>${lib.json-path.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

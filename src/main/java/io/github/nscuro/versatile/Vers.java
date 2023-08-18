@@ -1,12 +1,12 @@
 package io.github.nscuro.versatile;
 
+import io.github.nscuro.versatile.PairwiseIterator.Pair;
 import io.github.nscuro.versatile.version.Version;
 import io.github.nscuro.versatile.version.VersioningScheme;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -150,9 +150,9 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
         // (aka. pairwise) in the second list.
         final PairwiseIterator<Constraint> constraintIter = new PairwiseIterator<>(remainingConstraints);
         while (constraintIter.hasNext()) {
-            final Map.Entry<Constraint, Constraint> constraintPair = constraintIter.next();
-            final Constraint currConstraint = constraintPair.getKey();
-            final Constraint nextConstraint = constraintPair.getValue();
+            final Pair<Constraint> constraintPair = constraintIter.next();
+            final Constraint currConstraint = constraintPair.left();
+            final Constraint nextConstraint = constraintPair.right();
 
             // If this is the first iteration and current comparator is "<" or <=" and
             // the "tested version" is less than the current version then the "tested version"
@@ -211,27 +211,29 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
                 .map(Constraint::comparator)
                 .anyMatch(Comparator.WILDCARD::equals);
         if (containsWildcard && constraints.size() > 1) {
-            throw new VersException("comparator %s is only allowed with a single constraint");
+            throw new VersException("Invalid range %s: wildcard is only allowed with a single constraint".formatted(this));
         }
 
         // Ignoring all constraints with "!=" comparators...
         List<Constraint> tmpConstraints = constraints.stream()
                 .filter(constraint -> constraint.comparator() != Comparator.NOT_EQUAL)
                 .toList();
-        if (tmpConstraints.isEmpty()) {
+        if (tmpConstraints.size() < 2) {
+            // No, or only one constraint remaining; Nothing to validate anymore.
             return this;
         }
 
         // A "=" constraint must be followed only by a constraint with one of "=", ">", ">=" as comparator (or no constraint).
         var constraintIter = new PairwiseIterator<>(tmpConstraints);
         while (constraintIter.hasNext()) {
-            final Map.Entry<Constraint, Constraint> constraintPair = constraintIter.next();
-            final Constraint currConstraint = constraintPair.getKey();
-            final Constraint nextConstraint = constraintPair.getValue();
+            final Pair<Constraint> constraintPair = constraintIter.next();
+            final Constraint currConstraint = constraintPair.left();
+            final Constraint nextConstraint = constraintPair.right();
 
             if (currConstraint.comparator() == Comparator.EQUAL
                     && !Set.of(Comparator.EQUAL, Comparator.GREATER_THAN, Comparator.GREATER_THAN_OR_EQUAL).contains(nextConstraint.comparator())) {
-                throw new VersException("A = comparator must only be followed by a > or >= operator, but got: %s".formatted(nextConstraint.comparator().operator()));
+                throw new VersException("Invalid range %s: A = comparator must only be followed by a > or >= operator, but got: %s"
+                        .formatted(this, nextConstraint.comparator().operator()));
             }
         }
 
@@ -239,7 +241,8 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
         tmpConstraints = tmpConstraints.stream()
                 .filter(constraint -> constraint.comparator() != Comparator.EQUAL)
                 .toList();
-        if (tmpConstraints.isEmpty()) {
+        if (tmpConstraints.size() < 2) {
+            // No, or only one constraint remaining; Nothing to validate anymore.
             return this;
         }
 
@@ -248,19 +251,19 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
         //   * ">" and ">=" must be followed by one of "<", "<=" (or no constraint).
         constraintIter = new PairwiseIterator<>(tmpConstraints);
         while (constraintIter.hasNext()) {
-            final Map.Entry<Constraint, Constraint> constraintPair = constraintIter.next();
-            final Constraint currConstraint = constraintPair.getKey();
-            final Constraint nextConstraint = constraintPair.getValue();
+            final Pair<Constraint> constraintPair = constraintIter.next();
+            final Constraint currConstraint = constraintPair.left();
+            final Constraint nextConstraint = constraintPair.right();
 
             if (Set.of(Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL).contains(currConstraint.comparator())
                     && !Set.of(Comparator.GREATER_THAN, Comparator.GREATER_THAN_OR_EQUAL).contains(nextConstraint.comparator())) {
-                throw new VersException("A < or <= comparator must only be followed by a > or >= comparator, but got: %s"
-                        .formatted(nextConstraint.comparator().operator()));
+                throw new VersException("Invalid range %s: A < or <= comparator must only be followed by a > or >= comparator, but got: %s"
+                        .formatted(this, nextConstraint.comparator().operator()));
             }
             if (Set.of(Comparator.GREATER_THAN, Comparator.GREATER_THAN_OR_EQUAL).contains(currConstraint.comparator())
                     && !Set.of(Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL).contains(nextConstraint.comparator())) {
-                throw new VersException("A > or >= comparator must only be followed by a < or <= comparator, but got: %s"
-                        .formatted(nextConstraint.comparator().operator()));
+                throw new VersException("Invalid range %s: A > or >= comparator must only be followed by a < or <= comparator, but got: %s"
+                        .formatted(this, nextConstraint.comparator().operator()));
             }
         }
 

@@ -1,10 +1,12 @@
 package io.github.nscuro.versatile;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.NoSuchElementException;
 
-class PairwiseIterator<T> implements Iterator<Map.Entry<T, T>> {
+class PairwiseIterator<T> implements Iterator<PairwiseIterator.Pair<T>> {
+
+    record Pair<T>(T left, T right) {
+    }
 
     private final Iterator<T> delegate;
     private T current;
@@ -20,7 +22,7 @@ class PairwiseIterator<T> implements Iterator<Map.Entry<T, T>> {
     }
 
     @Override
-    public Map.Entry<T, T> next() {
+    public Pair<T> next() {
         if (!delegate.hasNext()) {
             throw new NoSuchElementException();
         }
@@ -32,7 +34,7 @@ class PairwiseIterator<T> implements Iterator<Map.Entry<T, T>> {
             next = delegate.next();
         }
 
-        final var item = Map.entry(current, next);
+        final var item = new Pair<>(current, next);
         current = next;
         return item;
     }
