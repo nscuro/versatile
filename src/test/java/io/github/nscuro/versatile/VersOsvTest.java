@@ -105,7 +105,7 @@ class VersOsvTest {
 
                     affectedPackages
                             .computeIfAbsent(purl.canonicalize(), ignored -> new ArrayList<>())
-                            .add(versBuilder.build().toString());
+                            .add(versBuilder.build().validate().toString());
                 }
 
                 parsedVulns.add(new ParsedVulnerability(vulnId, affectedPackages));

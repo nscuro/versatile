@@ -3,8 +3,11 @@ package io.github.nscuro.versatile;
 import io.github.nscuro.versatile.version.NpmVersion;
 import io.github.nscuro.versatile.version.VersioningScheme;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
 class VersTest {
 
@@ -51,6 +54,18 @@ class VersTest {
         assertThat(vers.contains("3.2.2")).isTrue();
         assertThat(vers.contains("6.6.5")).isTrue();
         assertThat(vers.contains("6.6.6")).isFalse();
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "vers:pypi/>0.0.0|>=0.0.1|0.0.2|<0.0.3|0.0.4|<0.0.5|>=0.0.6,vers:pypi/>0.0.0|<0.0.5|>=0.0.6",
+            "vers:pypi/>0.0.0|>=0.0.1|0.0.2|0.0.3|0.0.4|<0.0.5|>=0.0.6|!=0.8,vers:pypi/>0.0.0|<0.0.5|>=0.0.6|!=0.8",
+            "vers:pypi/>0.0.0|>=0.0.1|>=0.0.1|0.0.2|0.0.3|0.0.4|<0.0.5|<=0.0.6|!=0.7|8.0|>12|<15.3,vers:pypi/>0.0.0|<=0.0.6|!=0.7|8.0|>12|<15.3"
+    })
+    void testSimplify(final String before, final String after) {
+        final Vers vers = Vers.parse(before).simplify();
+        assertThat(vers).hasToString(after);
+        assertThatNoException().isThrownBy(vers::validate);
     }
 
 }

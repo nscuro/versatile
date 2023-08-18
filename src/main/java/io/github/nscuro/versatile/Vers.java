@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.function.Predicate.not;
 
@@ -72,7 +73,7 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
                 .map(part -> Constraint.parse(scheme, part))
                 .toList();
 
-        return new Vers(scheme, constraints).validate();
+        return new Vers(scheme, constraints);
     }
 
     public static Builder builder(final VersioningScheme versioningScheme) {
@@ -91,11 +92,6 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
         return constraints.size() == 1 && constraints.get(0).comparator() == Comparator.WILDCARD;
     }
 
-    /**
-     * @param versionStr
-     * @return
-     * @see <a href="https://github.com/package-url/purl-spec/blob/version-range-spec/VERSION-RANGE-SPEC.rst#checking-if-a-version-is-contained-within-a-range">Algorithm description</a>
-     */
     public boolean contains(final String versionStr) {
         // Select the version equality and comparison procedures suitable for this
         // versioning scheme and use these for all version comparisons performed below.
@@ -186,6 +182,7 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
             // out the range. Continue to the next iteration.
             else if (Set.of(Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL).contains(currConstraint.comparator())
                     && Set.of(Comparator.GREATER_THAN, Comparator.GREATER_THAN_OR_EQUAL).contains(nextConstraint.comparator())) {
+                //noinspection UnnecessaryContinue
                 continue;
             }
 
@@ -199,6 +196,92 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
         // Reaching here without having finished the check before means that
         // the "tested version" is NOT in the range.
         return false;
+    }
+
+    public Vers simplify() {
+        // Start from a list of constraints of comparator and version, sorted by
+        // version and where each version occurs only once in any constraint.
+
+        // If the constraints list contains a single constraint (star, equal or anything)
+        // return this list and simplification is finished.
+        if (constraints.size() < 2) {
+            return this;
+        }
+
+        // Split the constraints list in two sub lists:
+        //   * a list of "unequal constraints" where the comparator is "!="
+        //   * a remainder list of "constraints" where the comparator is not "!="
+        final List<Constraint> unequalConstraints = constraints.stream()
+                .filter(constraint -> constraint.comparator() == Comparator.NOT_EQUAL)
+                .toList();
+        final List<Constraint> remainderConstraints = constraints.stream()
+                .filter(constraint -> constraint.comparator() != Comparator.NOT_EQUAL)
+                .collect(Collectors.toList()); // This list must be mutable
+
+        // If the remainder list of "constraints" is empty, return the "unequal constraints"
+        // list and simplification is finished.
+        if (remainderConstraints.isEmpty()) {
+            return new Vers(scheme, unequalConstraints);
+        }
+
+        // Iterate over the constraints list, considering the current and next contiguous constraints,
+        // and the previous constraint (e.g., before current) if it exists:
+        int currIndex = 0, nextIndex = 0;
+        while (currIndex < remainderConstraints.size() - 1) {
+            nextIndex = currIndex + 1;
+
+            final Constraint currConstraint = remainderConstraints.get(currIndex);
+            final Constraint nextConstraint = remainderConstraints.get(nextIndex);
+            final Comparator currComparator = currConstraint.comparator();
+            final Comparator nextComparator = nextConstraint.comparator();
+
+            // If current comparator is ">" or ">=" and next comparator is "=", ">" or ">=", discard next constraint.
+            if (Set.of(Comparator.GREATER_THAN, Comparator.GREATER_THAN_OR_EQUAL).contains(currComparator)
+                    && Set.of(Comparator.EQUAL, Comparator.GREATER_THAN, Comparator.GREATER_THAN_OR_EQUAL).contains(nextComparator)) {
+                remainderConstraints.remove(nextIndex);
+            }
+
+            // If current comparator is "=", "<" or "<=" and next comparator is <" or <=", discard current constraint.
+            if (Set.of(Comparator.EQUAL, Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL).contains(currComparator)
+                    && Set.of(Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL).contains(nextComparator)) {
+                remainderConstraints.remove(currIndex);
+
+                // Previous constraint becomes current if it exists.
+                if (currIndex > 0) {
+                    currIndex -= 1;
+                }
+            }
+
+            // If there is a previous constraint:
+            if (currIndex > 0) {
+                final Constraint prevConstraint = remainderConstraints.get(currIndex - 1);
+                final Comparator prevComparator = prevConstraint.comparator();
+
+                // If previous comparator is ">" or ">=" and current comparator is "=", ">" or ">=",
+                // discard current constraint.
+                if (Set.of(Comparator.GREATER_THAN, Comparator.GREATER_THAN_OR_EQUAL).contains(prevComparator)
+                        && Set.of(Comparator.EQUAL, Comparator.GREATER_THAN, Comparator.GREATER_THAN_OR_EQUAL).contains(currComparator)) {
+                    remainderConstraints.remove(currIndex);
+                }
+
+                // If previous comparator is "=", "<" or "<=" and current comparator is <" or <=",
+                // discard previous constraint.
+                if (Set.of(Comparator.EQUAL, Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL).contains(prevComparator)
+                        && Set.of(Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL).contains(currComparator)) {
+                    remainderConstraints.remove(prevConstraint);
+                }
+            }
+
+            currIndex++;
+        }
+
+        // Concatenate the "unequal constraints" list and the filtered "constraints" list.
+        final List<Constraint> simplifiedConstraints = Stream.concat(remainderConstraints.stream(), unequalConstraints.stream())
+                .distinct()
+                .sorted()
+                .toList();
+
+        return new Vers(scheme, simplifiedConstraints);
     }
 
     public Vers validate() {
