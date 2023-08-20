@@ -14,6 +14,7 @@ public abstract class Version implements Comparable<Version> {
 
     public static Version forScheme(final VersioningScheme scheme, final String versionStr) {
         return switch (scheme) {
+            case DEB -> new DebianVersion(versionStr);
             case MAVEN -> new MavenVersion(versionStr);
             case NPM -> new NpmVersion(versionStr);
             default -> new GenericVersion(versionStr);

@@ -9,6 +9,7 @@ import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
+import io.github.nscuro.versatile.version.InvalidVersionException;
 import io.github.nscuro.versatile.version.VersioningScheme;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -38,6 +39,7 @@ class VersOsvTest {
     @Disabled
     @ParameterizedTest
     @ValueSource(strings = {
+            "Debian",
             "Go",
             "Maven",
             "npm"
@@ -89,12 +91,17 @@ class VersOsvTest {
 
                         for (final JsonNode event : range.get("events")) {
                             JsonNode versionNode;
-                            if ((versionNode = event.get("introduced")) != null) {
-                                versBuilder.withConstraint(Comparator.GREATER_THAN_OR_EQUAL, versionNode.asText());
-                            } else if ((versionNode = event.get("fixed")) != null) {
-                                versBuilder.withConstraint(Comparator.LESS_THAN, versionNode.asText());
-                            } else if ((versionNode = event.get("last_affected")) != null) {
-                                versBuilder.withConstraint(Comparator.LESS_THAN_OR_EQUAL, versionNode.asText());
+                            try {
+                                if ((versionNode = event.get("introduced")) != null) {
+                                    versBuilder.withConstraint(Comparator.GREATER_THAN_OR_EQUAL, versionNode.asText());
+                                } else if ((versionNode = event.get("fixed")) != null) {
+                                    versBuilder.withConstraint(Comparator.LESS_THAN, versionNode.asText());
+                                } else if ((versionNode = event.get("last_affected")) != null) {
+                                    versBuilder.withConstraint(Comparator.LESS_THAN_OR_EQUAL, versionNode.asText());
+                                }
+                            } catch (InvalidVersionException e) {
+                                // Some Debian ranges use non-standard versions like "<end-of-life>" or "<unfixed>"
+                                System.out.println(e.getMessage());
                             }
                         }
                     }
