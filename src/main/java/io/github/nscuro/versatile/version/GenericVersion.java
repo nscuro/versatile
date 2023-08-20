@@ -4,11 +4,23 @@ public class GenericVersion extends Version {
 
     private final ComponentVersion delegate;
 
-    GenericVersion(final String versionStr) {
+    public GenericVersion(final String versionStr) {
         super(VersioningScheme.GENERIC, versionStr);
         this.delegate = new ComponentVersion(versionStr);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isStable() {
+        // TODO: Looks for some common pre-release qualifiers.
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int compareTo(final Version other) {
         if (other instanceof final GenericVersion otherVersion) {

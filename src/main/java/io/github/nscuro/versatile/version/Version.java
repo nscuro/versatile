@@ -5,7 +5,7 @@ import java.util.Objects;
 public abstract class Version implements Comparable<Version> {
 
     private final VersioningScheme scheme;
-    private final String versionStr;
+    final String versionStr;
 
     Version(final VersioningScheme scheme, final String versionStr) {
         this.scheme = scheme;
@@ -13,6 +13,8 @@ public abstract class Version implements Comparable<Version> {
     }
 
     public static Version forScheme(final VersioningScheme scheme, final String versionStr) {
+        // TODO: Would be nice to offer some sort of registry that library users can hook their
+        //   own Version implementations into, and even override default implementations.
         return switch (scheme) {
             case DEB -> new DebianVersion(versionStr);
             case GOLANG -> new GoVersion(versionStr);
@@ -21,6 +23,13 @@ public abstract class Version implements Comparable<Version> {
             default -> new GenericVersion(versionStr);
         };
     }
+
+    /**
+     * Determines whether the {@link Version} is considered stable.
+     *
+     * @return {@code true} when stable, otherwise {@code false}
+     */
+    public abstract boolean isStable();
 
     @Override
     public boolean equals(final Object obj) {

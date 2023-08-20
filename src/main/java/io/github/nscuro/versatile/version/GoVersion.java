@@ -1,11 +1,17 @@
 package io.github.nscuro.versatile.version;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * @see <a href="https://github.com/golang/mod/blob/v0.12.0/semver/semver.go">Go Modules semantic version implementation</a>
+ * @see <a href="https://github.com/golang/mod/blob/v0.12.0/module/pseudo.go">Go Modules pseudo version implementation</a>
  */
 public class GoVersion extends Version {
+
+    private static final Pattern PSEUDO_VERSION_PATTERN = Pattern.compile("""
+            ^v[0-9]+\\.(0\\.0-|\\d+\\.\\d+-([^+]*\\.)?0\\.)\\d{14}-[A-Za-z0-9]+(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$
+            """);
 
     private final String major;
     private final String minor;
@@ -14,7 +20,7 @@ public class GoVersion extends Version {
     private final String prerelease;
     private final String build;
 
-    GoVersion(final String versionStr) {
+    public GoVersion(final String versionStr) {
         super(VersioningScheme.GOLANG, versionStr);
 
         if (!versionStr.startsWith("v")) {
@@ -87,6 +93,12 @@ public class GoVersion extends Version {
         }
 
         this.shortV = null;
+    }
+
+    @Override
+    public boolean isStable() {
+        // TODO: Check for pseudo version.
+        return prerelease == null;
     }
 
     @Override

@@ -22,7 +22,7 @@ public class DebianVersion extends Version {
     private final String upstreamVersion;
     private final String debianRevision;
 
-    DebianVersion(final String versionStr) {
+    public DebianVersion(final String versionStr) {
         super(VersioningScheme.DEB, versionStr);
 
         final Matcher versionMatcher = VERSION_PATTERN.matcher(versionStr);
@@ -45,6 +45,19 @@ public class DebianVersion extends Version {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isStable() {
+        // Stability in Debian is mostly dictated by the distro version and its repository.
+        // TODO: Is there a convention for Debian package versions that we can rely on?
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int compareTo(final Version other) {
         if (other instanceof final DebianVersion otherVersion) {

@@ -3,7 +3,13 @@ package io.github.nscuro.versatile.version;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
+import java.util.regex.Pattern;
+
 public class MavenVersion extends Version {
+
+    private static final Pattern UNSTABLE_QUALIFIER_PATTERN = Pattern.compile("""
+            ^(snapshot|rc\\d*|alpha\\.?\\d*|beta\\.?\\d*|m\\.?\\d*|milestone\\.\\d*)$
+            """, Pattern.CASE_INSENSITIVE);
 
     private final ArtifactVersion delegate;
 
@@ -12,6 +18,21 @@ public class MavenVersion extends Version {
         this.delegate = new DefaultArtifactVersion(versionStr);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isStable() {
+        if (delegate.getQualifier() == null || delegate.getQualifier().equals(this.versionStr)) {
+            return true;
+        }
+
+        return UNSTABLE_QUALIFIER_PATTERN.matcher(delegate.getQualifier()).matches();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int compareTo(final Version other) {
         if (other instanceof final MavenVersion otherVersion) {

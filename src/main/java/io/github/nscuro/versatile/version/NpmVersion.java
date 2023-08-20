@@ -6,11 +6,19 @@ public class NpmVersion extends Version {
 
     private final Semver delegate;
 
-    NpmVersion(final String versionStr) {
+    public NpmVersion(final String versionStr) {
         super(VersioningScheme.NPM, versionStr);
         this.delegate = new Semver(versionStr, Semver.SemverType.NPM);
     }
 
+    @Override
+    public boolean isStable() {
+        return delegate.isStable();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int compareTo(final Version other) {
         if (other instanceof final NpmVersion otherVersion) {
