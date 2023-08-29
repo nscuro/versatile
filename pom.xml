@@ -16,10 +16,12 @@
 
         <!-- Dependency Versions -->
         <lib.assertj.version>3.24.2</lib.assertj.version>
+        <lib.checkstyle.version>10.12.3</lib.checkstyle.version>
         <lib.jackson-databind.version>2.15.2</lib.jackson-databind.version>
         <lib.json-path.version>2.8.0</lib.json-path.version>
         <lib.junit-jupiter.version>5.10.0</lib.junit-jupiter.version>
         <lib.maven-artifact.version>3.9.4</lib.maven-artifact.version>
+        <lib.open-vulnerability-clients.version>4.1.2</lib.open-vulnerability-clients.version>
         <lib.packageurl-java.version>1.4.1</lib.packageurl-java.version>
         <lib.semver4j.version>3.1.0</lib.semver4j.version>
     </properties>
@@ -70,6 +72,43 @@
             <version>${lib.json-path.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>io.github.jeremylong</groupId>
+            <artifactId>open-vulnerability-clients</artifactId>
+            <version>${lib.open-vulnerability-clients.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <configLocation>${project.basedir}/.checkstyle.xml</configLocation>
+                    <includeResources>false</includeResources>
+                    <includeTestResources>false</includeTestResources>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>${lib.checkstyle.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
