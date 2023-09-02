@@ -27,6 +27,7 @@ jobs:
         gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
         gpg-passphrase: GPG_PASSPHRASE
     - name: Perform Release
+      id: perform-release
       env:
         OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
         OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
@@ -35,17 +36,17 @@ jobs:
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         
-        mvn -B -Pgithub-actions release:clean release:prepare release:perform
-    - name: Determine Release Tag
-      id: determine-release-tag
-      run: |-
+        mvn -B -Pgithub-actions release:clean release:prepare
+        
         TAG_NAME="$(sed -nr 's/^scm.tag=(v[0-9.]+)$/\1/p' release.properties)"
         echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_OUTPUT
+        
+        mvn -B release:perform
     - name: Create GitHub Release
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |-
-        gh release create "${{ steps.determine-release-tag.outputs.TAG_NAME }}" \
+        gh release create "${{ steps.perform-release.outputs.TAG_NAME }}" \
           --target ${{ github.ref_name }} \
           --verify-tag \
           --generate-notes
