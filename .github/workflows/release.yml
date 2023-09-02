@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  workflow_dispatch: { }
+
+permissions: { }
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # Required to create releases
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # tag=v3.6.0
+    - name: Set up JDK
+      uses: actions/setup-java@cd89f46ac9d01407894225f350157564c9c7cee2 # tag=v3.12.0
+      with:
+        java-version: "17"
+        distribution: temurin
+        cache: maven
+        server-id: ossrh
+        server-username: OSSRH_USERNAME
+        server-password: OSSRH_PASSWORD
+        gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+        gpg-passphrase: GPG_PASSPHRASE
+    - name: Perform Release
+      env:
+        OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+        OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      run: |-
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        
+        mvn -B -Pgithub-actions release:clean release:prepare release:perform
+    - name: Determine Release Tag
+      id: determine-release-tag
+      run: |-
+        TAG_NAME="$(sed -nr 's/^scm.tag=(v[0-9.]+)$/\1/p' release.properties)"
+        echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_OUTPUT
+    - name: Create GitHub Release
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      run: |-
+        gh release create "${{ steps.determine-release-tag.outputs.TAG_NAME }}" \
+          --target ${{ github.ref_name }} \
+          --verify-tag \
+          --generate-notes
