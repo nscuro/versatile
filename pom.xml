@@ -71,7 +71,7 @@
 
         <!-- Default SCM Properties -->
         <scm.connection>scm:git:ssh://git@github.com/nscuro/versatile.git</scm.connection>
-        <scm.url>>https://github.com/nscuro/versatile.git</scm.url>
+        <scm.url>https://github.com/nscuro/versatile.git</scm.url>
     </properties>
 
     <dependencies>
