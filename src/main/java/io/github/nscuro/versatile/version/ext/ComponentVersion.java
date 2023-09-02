@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright (c) Steve Springett. All Rights Reserved.
  */
-package io.github.nscuro.versatile.version;
+package io.github.nscuro.versatile.version.ext;
 
 import java.util.ArrayList;
 import java.util.Iterator;
