@@ -98,6 +98,8 @@ to [simplify](https://github.com/package-url/purl-spec/blob/version-range-spec/V
 constraints in a range. This mechanism is exposed through the `Vers#simplify` method.
 
 ```java
+import io.github.nscuro.versatile.Vers;
+
 class SimplifyVers {
 
     void shouldSimplify() {
@@ -122,7 +124,6 @@ to the range's `VersioningScheme`.
 
 ```java
 import io.github.nscuro.versatile.Vers;
-import io.github.nscuro.versatile.version.VersioningScheme;
 
 class VersContains {
 
