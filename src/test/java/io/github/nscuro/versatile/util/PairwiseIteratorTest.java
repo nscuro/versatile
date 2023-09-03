@@ -18,7 +18,6 @@
  */
 package io.github.nscuro.versatile.util;
 
-import io.github.nscuro.versatile.util.PairwiseIterator;
 import io.github.nscuro.versatile.util.PairwiseIterator.Pair;
 import org.junit.jupiter.api.Test;
 
