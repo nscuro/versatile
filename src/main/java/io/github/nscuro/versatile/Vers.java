@@ -18,7 +18,8 @@
  */
 package io.github.nscuro.versatile;
 
-import io.github.nscuro.versatile.PairwiseIterator.Pair;
+import io.github.nscuro.versatile.util.PairwiseIterator;
+import io.github.nscuro.versatile.util.PairwiseIterator.Pair;
 import io.github.nscuro.versatile.version.Version;
 import io.github.nscuro.versatile.version.VersioningScheme;
 

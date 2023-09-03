@@ -19,7 +19,7 @@ Java implementation of [vers](https://github.com/package-url/purl-spec/blob/vers
 | Ruby Gem |     ❌     |
 | Generic  |     ✅     |
 | Gentoo   |     ❌     |
-| Go       |     ❌     |
+| Go       |     ✅     |
 | Maven    |     ✅     |
 | NPM      |     ✅     |
 | Nuget    |     ❌     |

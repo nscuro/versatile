@@ -45,7 +45,7 @@ public class DebianVersion extends Version {
 
         final Matcher versionMatcher = VERSION_PATTERN.matcher(versionStr);
         if (!versionMatcher.find()) {
-            throw new InvalidVersionException("""
+            throw new InvalidVersionException(versionStr, """
                     Provided version "%s" does not match the Debian version format \
                     [epoch:]upstream-version[-debian-revision]\
                     """.formatted(versionStr));
@@ -56,7 +56,7 @@ public class DebianVersion extends Version {
         this.debianRevision = versionMatcher.group("debianRevision");
 
         if (this.upstreamVersion == null) {
-            throw new InvalidVersionException("""
+            throw new InvalidVersionException(versionStr, """
                     Provided version "%s" does not contain the mandatory upstream version, \
                     according to the Debian version format [epoch:]upstream-version[-debian-revision]\
                     """.formatted(versionStr));
@@ -94,6 +94,18 @@ public class DebianVersion extends Version {
 
         throw new IllegalArgumentException("%s can only be compared with its own type, but got %s"
                 .formatted(GenericVersion.class.getSimpleName(), other.getClass().getSimpleName()));
+    }
+
+    public int epoch() {
+        return epoch;
+    }
+
+    public String upstreamVersion() {
+        return upstreamVersion;
+    }
+
+    public String debianRevision() {
+        return debianRevision;
     }
 
     private static int compareVersionPart(final String versionPartA, final String versionPartB) {

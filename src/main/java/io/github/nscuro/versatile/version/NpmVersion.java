@@ -29,6 +29,9 @@ public class NpmVersion extends Version {
         this.delegate = new Semver(versionStr, Semver.SemverType.NPM);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isStable() {
         return delegate.isStable();

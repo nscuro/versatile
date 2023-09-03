@@ -18,16 +18,28 @@
  */
 package io.github.nscuro.versatile.version;
 
-import io.github.nscuro.versatile.VersException;
+import java.util.function.BiConsumer;
 
-public class InvalidVersionException extends VersException {
+import static org.assertj.core.api.Assertions.assertThat;
 
-    InvalidVersionException(final String version, final String message) {
-        this(version, message, null);
-    }
+abstract class AbstractVersionTest {
 
-    InvalidVersionException(final String version, final String message, final Throwable cause) {
-        super("Version %s is invalid: %s".formatted(version, message), cause);
+    enum ComparisonExpectation {
+
+        SMALLER((x, y) -> assertThat(x).isLessThan(y)),
+        EQUAL((x, y) -> assertThat(x).isEqualByComparingTo(y)),
+        HIGHER((x, y) -> assertThat(x).isGreaterThan(y));
+
+        private final BiConsumer<Version, Version> evaluator;
+
+        ComparisonExpectation(final BiConsumer<Version, Version> evaluator) {
+            this.evaluator = evaluator;
+        }
+
+        void evaluate(final Version x, final Version y) {
+            evaluator.accept(x, y);
+        }
+
     }
 
 }

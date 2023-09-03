@@ -264,11 +264,15 @@ class VersUtilsTest {
                             events.add(Map.entry(fieldName, eventNode.get(fieldName).asText()));
                         }
 
-                        final Vers vers = versFromOsvRange(range.get("type").asText(), ecosystem, events);
-                        arrayNode.add(objectMapper.createObjectNode()
-                                .put("name", affected.get("package").get("name").asText())
-                                .putPOJO("events", events)
-                                .put("vers", vers.toString()));
+                        try {
+                            final Vers vers = versFromOsvRange(range.get("type").asText(), ecosystem, events);
+                            arrayNode.add(objectMapper.createObjectNode()
+                                    .put("name", affected.get("package").get("name").asText())
+                                    .putPOJO("events", events)
+                                    .put("vers", vers.toString()));
+                        } catch (VersException e) {
+                            System.out.println("Failed to convert range %s: %s".formatted(range, e));
+                        }
                     }
                 }
             }

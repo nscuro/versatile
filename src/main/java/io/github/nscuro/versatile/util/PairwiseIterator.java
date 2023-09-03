@@ -16,21 +16,21 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright (c) Niklas Düster. All Rights Reserved.
  */
-package io.github.nscuro.versatile;
+package io.github.nscuro.versatile.util;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-class PairwiseIterator<T> implements Iterator<PairwiseIterator.Pair<T>> {
+public class PairwiseIterator<T> implements Iterator<PairwiseIterator.Pair<T>> {
 
-    record Pair<T>(T left, T right) {
+    public record Pair<T>(T left, T right) {
     }
 
     private final Iterator<T> delegate;
     private T current;
     private T next;
 
-    PairwiseIterator(final Iterable<T> iterable) {
+    public PairwiseIterator(final Iterable<T> iterable) {
         this.delegate = iterable.iterator();
     }
 
