@@ -24,7 +24,7 @@ Java implementation of [vers](https://github.com/package-url/purl-spec/blob/vers
 | NPM      |     ✅     |
 | Nuget    |     ❌     |
 | PyPI     |     ❌     |
-| RPM      |     ❌     |
+| RPM      |     ✅     |
 
 > **Note**  
 > Versions for which the appropriate scheme is not currently supported will fall back to `generic`

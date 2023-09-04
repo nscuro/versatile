@@ -26,7 +26,7 @@ abstract class AbstractVersionTest {
 
     enum ComparisonExpectation {
 
-        SMALLER((x, y) -> assertThat(x).isLessThan(y)),
+        LOWER((x, y) -> assertThat(x).isLessThan(y)),
         EQUAL((x, y) -> assertThat(x).isEqualByComparingTo(y)),
         HIGHER((x, y) -> assertThat(x).isGreaterThan(y));
 

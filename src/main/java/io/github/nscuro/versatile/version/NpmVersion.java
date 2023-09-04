@@ -47,7 +47,7 @@ public class NpmVersion extends Version {
         }
 
         throw new IllegalArgumentException("%s can only be compared with its own type, but got %s"
-                .formatted(GenericVersion.class.getSimpleName(), other.getClass().getSimpleName()));
+                .formatted(this.getClass().getName(), other.getClass().getName()));
     }
 
 }

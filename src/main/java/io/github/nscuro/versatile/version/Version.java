@@ -38,6 +38,7 @@ public abstract class Version implements Comparable<Version> {
             case GOLANG -> new GoVersion(versionStr);
             case MAVEN -> new MavenVersion(versionStr);
             case NPM -> new NpmVersion(versionStr);
+            case RPM -> new RpmVersion(versionStr);
             default -> new GenericVersion(versionStr);
         };
     }
