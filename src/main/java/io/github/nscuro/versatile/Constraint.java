@@ -86,10 +86,10 @@ public class Constraint implements Comparable<Constraint> {
 
         final int comparisonResult = this.version.compareTo(version);
         return switch (comparator) {
-            case LESS_THAN -> comparisonResult < 0;
-            case LESS_THAN_OR_EQUAL -> comparisonResult <= 0;
-            case GREATER_THAN_OR_EQUAL -> comparisonResult >= 0;
-            case GREATER_THAN -> comparisonResult > 0;
+            case LESS_THAN -> comparisonResult > 0;
+            case LESS_THAN_OR_EQUAL -> comparisonResult >= 0;
+            case GREATER_THAN_OR_EQUAL -> comparisonResult <= 0;
+            case GREATER_THAN -> comparisonResult < 0;
             case EQUAL -> comparisonResult == 0;
             case NOT_EQUAL -> comparisonResult != 0;
             case WILDCARD -> true;

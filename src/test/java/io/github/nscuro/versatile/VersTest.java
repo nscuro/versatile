@@ -86,4 +86,45 @@ class VersTest {
         assertThatNoException().isThrownBy(vers::validate);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "vers:generic/>1.0.0, CONTAINS, 1.0.1",
+            "vers:generic/>1.0.0, NOT_CONTAINS, 1.0.0",
+            "vers:generic/>=1.0.0, CONTAINS, 1.0.0",
+            "vers:generic/>=1.0.0, CONTAINS, 1.0.1",
+            "vers:generic/>=1.0.0, NOT_CONTAINS, 0.9.9",
+            "vers:generic/1.0.0, CONTAINS, 1.0.0",
+            "vers:generic/1.0.0, NOT_CONTAINS, 1.0.1",
+            "vers:generic/1.0.0, NOT_CONTAINS, 0.9.9",
+            "vers:generic/<=1.0.0, CONTAINS, 1.0.0",
+            "vers:generic/<=1.0.0, CONTAINS, 0.9.9",
+            "vers:generic/<=1.0.0, NOT_CONTAINS, 1.0.1",
+            "vers:generic/<1.0.0, CONTAINS, 0.9.9",
+            "vers:generic/<1.0.0, NOT_CONTAINS, 1.0.0",
+            "vers:generic/<1.0.0, NOT_CONTAINS, 1.0.1",
+            "vers:generic/>1.0.0|<2.0.0, CONTAINS, 1.0.1",
+            "vers:generic/>1.0.0|<2.0.0, CONTAINS, 1.9.9",
+            "vers:generic/>1.0.0|<2.0.0, NOT_CONTAINS, 1.0.0",
+            "vers:generic/>1.0.0|<2.0.0, NOT_CONTAINS, 2.0.0",
+            "vers:generic/>1.0.0|<2.0.0|>3.0.0|<4.0.0, CONTAINS, 3.1.0",
+            "vers:generic/>1.0.0|<2.0.0|>3.0.0|<4.0.0, NOT_CONTAINS, 2.1.0",
+            "vers:generic/>0|!=6.6.6, CONTAINS, 1.0.0",
+            "vers:generic/>0|!=6.6.6, NOT_CONTAINS, 6.6.6"
+    })
+    void testContains(final String range, final ContainsExpectation expectation, final String version) {
+        if (expectation == ContainsExpectation.CONTAINS) {
+            assertThat(Vers.parse(range).contains(version)).isTrue();
+        } else {
+            assertThat(Vers.parse(range).contains(version)).isFalse();
+        }
+    }
+
+    enum ContainsExpectation {
+
+        CONTAINS,
+
+        NOT_CONTAINS
+
+    }
+
 }

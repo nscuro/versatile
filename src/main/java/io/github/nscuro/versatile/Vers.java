@@ -122,8 +122,8 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
         // If the constraint list contains only one item and the "tested version"
         // satisfies the comparator then the "tested version" is IN the range.
         // Check is finished.
-        if (constraints.size() == 1 && constraints.get(0).matches(testedVersion)) {
-            return true;
+        if (constraints.size() == 1) {
+            return constraints.get(0).matches(testedVersion);
         }
 
         // If the "tested version" is equal to any of the constraint version where the
@@ -163,6 +163,7 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
 
         // Iterate over the current and next contiguous constraints pairs
         // (aka. pairwise) in the second list.
+        var firstIteration = true;
         final PairwiseIterator<Constraint> constraintIter = new PairwiseIterator<>(remainingConstraints);
         while (constraintIter.hasNext()) {
             final Pair<Constraint> constraintPair = constraintIter.next();
@@ -172,25 +173,27 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
             // If this is the first iteration and current comparator is "<" or <=" and
             // the "tested version" is less than the current version then the "tested version"
             // is IN the range. Check is finished.
-            if (nextConstraint == null
-                    && Set.of(Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL).contains(currConstraint.comparator())
-                    && testedVersion.compareTo(currConstraint.version()) < 0) {
-                return true;
+            if (firstIteration) {
+                if (isUpperBoundConstraint(currConstraint)
+                        && testedVersion.compareTo(currConstraint.version()) < 0) {
+                    return true;
+                }
+
+                firstIteration = false;
             }
 
             // If this is the last iteration and next comparator is ">" or >=" and the "tested version"
             // is greater than the next version then the "tested version" is IN the range. Check is finished.
             if (nextConstraint == null
-                    && Set.of(Comparator.GREATER_THAN, Comparator.GREATER_THAN_OR_EQUAL).contains(nextConstraint.comparator())
-                    && testedVersion.compareTo(nextConstraint.version()) > 0) {
+                    && isLowerBoundConstraint(currConstraint)
+                    && testedVersion.compareTo(currConstraint.version()) > 0) {
                 return true;
             }
 
             // If current comparator is ">" or >=" and next comparator is "<" or <=" and the "tested version"
             // is greater than the current version and the "tested version" is less than the next version then
             // the "tested version" is IN the range. Check is finished.
-            if (Set.of(Comparator.GREATER_THAN, Comparator.GREATER_THAN_OR_EQUAL).contains(currConstraint.comparator())
-                    && Set.of(Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL).contains(nextConstraint.comparator())) {
+            if (isLowerBoundConstraint(currConstraint) && isUpperBoundConstraint(nextConstraint)) {
                 if (testedVersion.compareTo(currConstraint.version()) > 0
                         && testedVersion.compareTo(nextConstraint.version()) < 0) {
                     return true;
@@ -199,8 +202,7 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
 
             // If current comparator is "<" or <=" and next comparator is ">" or >=" then these versions are
             // out the range. Continue to the next iteration.
-            else if (Set.of(Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL).contains(currConstraint.comparator())
-                    && Set.of(Comparator.GREATER_THAN, Comparator.GREATER_THAN_OR_EQUAL).contains(nextConstraint.comparator())) {
+            else if (isUpperBoundConstraint(currConstraint) && isLowerBoundConstraint(nextConstraint)) {
                 //noinspection UnnecessaryContinue
                 continue;
             }
@@ -379,6 +381,16 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
                 .map(Constraint::toString)
                 .collect(Collectors.joining("|"));
         return "vers:%s/%s".formatted(schemeStr, constraintsStr);
+    }
+
+    private static boolean isLowerBoundConstraint(final Constraint constraint) {
+        return constraint != null && (constraint.comparator() == Comparator.GREATER_THAN
+                || constraint.comparator() == Comparator.GREATER_THAN_OR_EQUAL);
+    }
+
+    private static boolean isUpperBoundConstraint(final Constraint constraint) {
+        return constraint != null && (constraint.comparator() == Comparator.LESS_THAN
+                || constraint.comparator() == Comparator.LESS_THAN_OR_EQUAL);
     }
 
     public static class Builder {
