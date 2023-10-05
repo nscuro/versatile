@@ -25,11 +25,11 @@ class DebianVersionTest extends AbstractVersionTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "0, 1, LOWER",
-            "114.0.5735.106-1~deb11u1, 114.0.5735.133-1~deb12u1, LOWER",
-            "114.0.5735.133-1, 114.0.5735.133-1~deb12u1, HIGHER"
+            "0, IS_LOWER_THAN, 1",
+            "114.0.5735.106-1~deb11u1, IS_LOWER_THAN, 114.0.5735.133-1~deb12u1",
+            "114.0.5735.133-1, IS_HIGHER_THAN, 114.0.5735.133-1~deb12u1"
     })
-    void testCompareTo(final String versionA, final String versionB, final ComparisonExpectation expectation) {
+    void testCompareTo(final String versionA, final ComparisonExpectation expectation, final String versionB) {
         expectation.evaluate(new DebianVersion(versionA), new DebianVersion(versionB));
     }
 

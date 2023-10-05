@@ -26,9 +26,9 @@ abstract class AbstractVersionTest {
 
     enum ComparisonExpectation {
 
-        LOWER((x, y) -> assertThat(x).isLessThan(y)),
-        EQUAL((x, y) -> assertThat(x).isEqualByComparingTo(y)),
-        HIGHER((x, y) -> assertThat(x).isGreaterThan(y));
+        IS_LOWER_THAN((x, y) -> assertThat(x).isLessThan(y)),
+        IS_EQUAL_TO((x, y) -> assertThat(x).isEqualByComparingTo(y)),
+        IS_HIGHER_THAN((x, y) -> assertThat(x).isGreaterThan(y));
 
         private final BiConsumer<Version, Version> evaluator;
 

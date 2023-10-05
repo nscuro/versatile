@@ -89,30 +89,30 @@ class GoVersionTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "v1.0.0-alpha, v1.0.0-alpha.1, LOWER",
-            "v1.0.0-alpha.1, v1.0.0-alpha.beta, LOWER",
-            "v1.0.0-alpha.beta, v1.0.0-beta.2, LOWER",
-            "v1.0.0-beta.2, v1.0.0-beta.11, LOWER",
-            "v1.0.0-beta.11, v1.0.0-rc.1, LOWER",
-            "v1.0.0-rc.1, v1, LOWER",
-            "v1, v1.0, EQUAL",
-            "v1.0, v1.0.0, EQUAL",
-            "v1.0.0, v1.2, LOWER",
-            "v1.2, v1.2.0, EQUAL",
-            "v1.2.0, v1.2.3-456, LOWER",
-            "v1.2.3-456, v1.2.3-456.789, LOWER",
-            "v1.2.3-456.789, v1.2.3-456-789, LOWER",
-            "v1.2.3-456-789, v1.2.3-456a, LOWER",
-            "v1.2.3-456a, v1.2.3-pre, LOWER",
-            "v1.2.3-pre, v1.2.3-pre+meta, EQUAL",
-            "v1.2.3-pre+meta, v1.2.3-pre.1, LOWER",
-            "v1.2.3-pre.1, v1.2.3-zzz, LOWER",
-            "v1.2.3-zzz, v1.2.3, LOWER",
-            "v1.2.3, v1.2.3+meta, EQUAL",
-            "v1.2.3+meta, v1.2.3+meta-pre, EQUAL",
-            "v1.2.3+meta-pre, v1.2.3+meta-pre.sha.256a, EQUAL",
+            "v1.0.0-alpha, IS_LOWER_THAN, v1.0.0-alpha.1",
+            "v1.0.0-alpha.1, IS_LOWER_THAN, v1.0.0-alpha.beta",
+            "v1.0.0-alpha.beta, IS_LOWER_THAN, v1.0.0-beta.2",
+            "v1.0.0-beta.2, IS_LOWER_THAN, v1.0.0-beta.11",
+            "v1.0.0-beta.11, IS_LOWER_THAN, v1.0.0-rc.1",
+            "v1.0.0-rc.1, IS_LOWER_THAN, v1",
+            "v1, IS_EQUAL_TO, v1.0",
+            "v1.0, IS_EQUAL_TO, v1.0.0",
+            "v1.0.0, IS_LOWER_THAN, v1.2",
+            "v1.2, IS_EQUAL_TO, v1.2.0",
+            "v1.2.0, IS_LOWER_THAN, v1.2.3-456",
+            "v1.2.3-456, IS_LOWER_THAN, v1.2.3-456.789",
+            "v1.2.3-456.789, IS_LOWER_THAN, v1.2.3-456-789",
+            "v1.2.3-456-789, IS_LOWER_THAN, v1.2.3-456a",
+            "v1.2.3-456a, IS_LOWER_THAN, v1.2.3-pre",
+            "v1.2.3-pre, IS_EQUAL_TO, v1.2.3-pre+meta",
+            "v1.2.3-pre+meta, IS_LOWER_THAN, v1.2.3-pre.1",
+            "v1.2.3-pre.1, IS_LOWER_THAN, v1.2.3-zzz",
+            "v1.2.3-zzz, IS_LOWER_THAN, v1.2.3",
+            "v1.2.3, IS_EQUAL_TO, v1.2.3+meta",
+            "v1.2.3+meta, IS_EQUAL_TO, v1.2.3+meta-pre",
+            "v1.2.3+meta-pre, IS_EQUAL_TO, v1.2.3+meta-pre.sha.256a",
     })
-    void testCompareTo(final String versionA, final String versionB, final ComparisonExpectation expectation) {
+    void testCompareTo(final String versionA, final ComparisonExpectation expectation, final String versionB) {
         expectation.evaluate(new GoVersion(versionA), new GoVersion(versionB));
     }
 
