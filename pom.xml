@@ -61,7 +61,7 @@
         <lib.checkstyle.version>10.12.4</lib.checkstyle.version>
         <lib.jackson-databind.version>2.15.2</lib.jackson-databind.version>
         <lib.json-path.version>2.8.0</lib.json-path.version>
-        <lib.junit-jupiter.version>5.10.0</lib.junit-jupiter.version>
+        <lib.junit-jupiter.version>5.10.1</lib.junit-jupiter.version>
         <lib.maven-artifact.version>3.9.5</lib.maven-artifact.version>
         <lib.open-vulnerability-clients.version>5.0.0</lib.open-vulnerability-clients.version>
         <lib.packageurl-java.version>1.4.1</lib.packageurl-java.version>
