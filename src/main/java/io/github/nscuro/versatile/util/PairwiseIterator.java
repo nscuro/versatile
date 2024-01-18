@@ -20,6 +20,7 @@ package io.github.nscuro.versatile.util;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Spliterator;
 
 public class PairwiseIterator<T> implements Iterator<PairwiseIterator.Pair<T>> {
 
@@ -27,21 +28,27 @@ public class PairwiseIterator<T> implements Iterator<PairwiseIterator.Pair<T>> {
     }
 
     private final Iterator<T> delegate;
+    private final long delegateSize;
     private T current;
     private T next;
 
     public PairwiseIterator(final Iterable<T> iterable) {
+        if (!iterable.spliterator().hasCharacteristics(Spliterator.SIZED)) {
+            throw new IllegalArgumentException("Unable to determine size of the provided iterable");
+        }
+
         this.delegate = iterable.iterator();
+        this.delegateSize = iterable.spliterator().getExactSizeIfKnown();
     }
 
     @Override
     public boolean hasNext() {
-        return delegate.hasNext();
+        return delegateSize >= 2 && delegate.hasNext();
     }
 
     @Override
     public Pair<T> next() {
-        if (!delegate.hasNext()) {
+        if (delegateSize < 2 || !delegate.hasNext()) {
             throw new NoSuchElementException();
         }
 

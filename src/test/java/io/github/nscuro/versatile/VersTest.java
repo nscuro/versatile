@@ -109,7 +109,14 @@ class VersTest {
             "vers:generic/>1.0.0|<2.0.0|>3.0.0|<4.0.0, CONTAINS, 3.1.0",
             "vers:generic/>1.0.0|<2.0.0|>3.0.0|<4.0.0, NOT_CONTAINS, 2.1.0",
             "vers:generic/>0|!=6.6.6, CONTAINS, 1.0.0",
-            "vers:generic/>0|!=6.6.6, NOT_CONTAINS, 6.6.6"
+            "vers:generic/>0|!=6.6.6, NOT_CONTAINS, 6.6.6",
+            "vers:generic/>1.0.0|<2.0.0|>3.0.0, NOT_CONTAINS, 0.5.0",
+            "vers:generic/>1.0.0|<2.0.0|>3.0.0, CONTAINS, 1.5.0",
+            "vers:generic/>1.0.0|<2.0.0|>3.0.0, NOT_CONTAINS, 2.5.0",
+            "vers:generic/>1.0.0|<2.0.0|>3.0.0, NOT_CONTAINS, 3.0.0",
+            "vers:generic/>1.0.0|<2.0.0|>3.0.0, CONTAINS, 3.5.0",
+            "vers:generic/>1.0.0|<2.0.0|>=3.0.0, CONTAINS, 3.0.0",
+            "vers:generic/>1.0.0|<2.0.0|>=3.0.0, CONTAINS, 3.5.0"
     })
     void testContains(final String range, final ContainsExpectation expectation, final String version) {
         if (expectation == ContainsExpectation.CONTAINS) {

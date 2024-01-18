@@ -157,18 +157,30 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
                 .filter(constraint -> constraint.comparator() != Comparator.EQUAL)
                 .filter(constraint -> constraint.comparator() != Comparator.NOT_EQUAL)
                 .toList();
-        if (constraints.isEmpty()) {
+        if (remainingConstraints.isEmpty()) {
             return false;
+        }
+
+        // If the remaining constraint list contains only one item and the "tested version"
+        // satisfies the comparator then the "tested version" is IN the range.
+        // Check is finished.
+        //
+        // NB: This step is not mentioned in the specification, but necessary because
+        // the pairwise iteration below does not even start when fewer than two constraints
+        // are left.
+        if (remainingConstraints.size() == 1) {
+            return remainingConstraints.get(0).matches(testedVersion);
         }
 
         // Iterate over the current and next contiguous constraints pairs
         // (aka. pairwise) in the second list.
         var firstIteration = true;
         final PairwiseIterator<Constraint> constraintIter = new PairwiseIterator<>(remainingConstraints);
+        Constraint currConstraint, nextConstraint = null;
         while (constraintIter.hasNext()) {
             final Pair<Constraint> constraintPair = constraintIter.next();
-            final Constraint currConstraint = constraintPair.left();
-            final Constraint nextConstraint = constraintPair.right();
+            currConstraint = constraintPair.left();
+            nextConstraint = constraintPair.right();
 
             // If this is the first iteration and current comparator is "<" or <=" and
             // the "tested version" is less than the current version then the "tested version"
@@ -180,14 +192,6 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
                 }
 
                 firstIteration = false;
-            }
-
-            // If this is the last iteration and next comparator is ">" or >=" and the "tested version"
-            // is greater than the next version then the "tested version" is IN the range. Check is finished.
-            if (nextConstraint == null
-                    && isLowerBoundConstraint(currConstraint)
-                    && testedVersion.compareTo(currConstraint.version()) > 0) {
-                return true;
             }
 
             // If current comparator is ">" or >=" and next comparator is "<" or <=" and the "tested version"
@@ -212,6 +216,13 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
             else {
                 throw new VersException("Constraints are in an invalid order");
             }
+        }
+
+        // If this is the last iteration and next comparator is ">" or >=" and the "tested version"
+        // is greater than the next version then the "tested version" is IN the range. Check is finished.
+        if (isLowerBoundConstraint(nextConstraint)
+                && testedVersion.compareTo(nextConstraint.version()) > 0) {
+            return true;
         }
 
         // Reaching here without having finished the check before means that

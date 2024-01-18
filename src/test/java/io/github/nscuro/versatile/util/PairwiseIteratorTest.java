@@ -44,12 +44,14 @@ class PairwiseIteratorTest {
     @Test
     void testWithSingleItem() {
         final Iterator<Pair<String>> iterator = new PairwiseIterator<>(List.of("A"));
-        assertThat(iterator.next()).isEqualTo(new Pair<>("A", null));
+        assertThat(iterator.hasNext()).isFalse();
+        assertThatExceptionOfType(NoSuchElementException.class).isThrownBy(iterator::next);
     }
 
     @Test
     void testWithNoItem() {
         final Iterator<Pair<String>> iterator = new PairwiseIterator<>(Collections.emptyList());
+        assertThat(iterator.hasNext()).isFalse();
         assertThatExceptionOfType(NoSuchElementException.class).isThrownBy(iterator::next);
     }
 
