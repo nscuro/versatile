@@ -34,13 +34,15 @@ Java implementation of [vers](https://github.com/package-url/purl-spec/blob/vers
 ### Installation
 
 ```xml
-
 <dependency>
     <groupId>io.github.nscuro</groupId>
     <artifactId>versatile</artifactId>
     <version>${versatile.version}</version>
 </dependency>
 ```
+
+> [!NOTE]
+> *versatile* requires Java >= 17.
 
 ### Constructing `vers` Ranges
 
