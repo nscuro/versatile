@@ -88,6 +88,7 @@ class VersTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "vers:generic/*, CONTAINS, 1.0.0",
             "vers:generic/>1.0.0, CONTAINS, 1.0.1",
             "vers:generic/>1.0.0, NOT_CONTAINS, 1.0.0",
             "vers:generic/>=1.0.0, CONTAINS, 1.0.0",

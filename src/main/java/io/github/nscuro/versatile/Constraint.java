@@ -84,14 +84,13 @@ public class Constraint implements Comparable<Constraint> {
                     .formatted(this.scheme, version.scheme()));
         }
 
-        final int comparisonResult = this.version.compareTo(version);
         return switch (comparator) {
-            case LESS_THAN -> comparisonResult > 0;
-            case LESS_THAN_OR_EQUAL -> comparisonResult >= 0;
-            case GREATER_THAN_OR_EQUAL -> comparisonResult <= 0;
-            case GREATER_THAN -> comparisonResult < 0;
-            case EQUAL -> comparisonResult == 0;
-            case NOT_EQUAL -> comparisonResult != 0;
+            case LESS_THAN -> this.version.compareTo(version) > 0;
+            case LESS_THAN_OR_EQUAL -> this.version.compareTo(version) >= 0;
+            case GREATER_THAN_OR_EQUAL -> this.version.compareTo(version) <= 0;
+            case GREATER_THAN -> this.version.compareTo(version) < 0;
+            case EQUAL -> this.version.compareTo(version) == 0;
+            case NOT_EQUAL -> this.version.compareTo(version) != 0;
             case WILDCARD -> true;
         };
     }
