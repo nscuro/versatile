@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright (c) Niklas Düster. All Rights Reserved.
  */
-package io.github.nscuro.versatile.util;
+package io.github.nscuro.versatile;
 
-import io.github.nscuro.versatile.util.PairwiseIterator.Pair;
+import io.github.nscuro.versatile.PairwiseIterator.Pair;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;

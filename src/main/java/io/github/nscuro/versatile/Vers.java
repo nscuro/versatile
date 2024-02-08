@@ -18,8 +18,7 @@
  */
 package io.github.nscuro.versatile;
 
-import io.github.nscuro.versatile.util.PairwiseIterator;
-import io.github.nscuro.versatile.util.PairwiseIterator.Pair;
+import io.github.nscuro.versatile.PairwiseIterator.Pair;
 import io.github.nscuro.versatile.version.Version;
 import io.github.nscuro.versatile.version.VersioningScheme;
 
@@ -51,7 +50,7 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
             throw new VersException("constraints must not be null or empty");
         }
     }
-
+    
     public static Vers parse(final String versString) {
         if (versString == null || versString.isBlank()) {
             throw new VersException("vers string must not be null or blank");

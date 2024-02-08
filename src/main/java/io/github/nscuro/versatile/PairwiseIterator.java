@@ -16,15 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright (c) Niklas Düster. All Rights Reserved.
  */
-package io.github.nscuro.versatile.util;
+package io.github.nscuro.versatile;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Spliterator;
 
-public class PairwiseIterator<T> implements Iterator<PairwiseIterator.Pair<T>> {
+class PairwiseIterator<T> implements Iterator<PairwiseIterator.Pair<T>> {
 
-    public record Pair<T>(T left, T right) {
+    record Pair<T>(T left, T right) {
     }
 
     private final Iterator<T> delegate;
@@ -32,7 +32,7 @@ public class PairwiseIterator<T> implements Iterator<PairwiseIterator.Pair<T>> {
     private T current;
     private T next;
 
-    public PairwiseIterator(final Iterable<T> iterable) {
+    PairwiseIterator(final Iterable<T> iterable) {
         if (!iterable.spliterator().hasCharacteristics(Spliterator.SIZED)) {
             throw new IllegalArgumentException("Unable to determine size of the provided iterable");
         }
