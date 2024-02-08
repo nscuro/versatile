@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/nscuro/versatile/actions/workflows/ci.yml/badge.svg)](https://github.com/nscuro/versatile/actions/workflows/ci.yml)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.nscuro/versatile/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.nscuro/versatile)
+[![javadoc](https://javadoc.io/badge2/io.github.nscuro/versatile/javadoc.svg)](https://javadoc.io/doc/io.github.nscuro/versatile)
 [![License](http://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
 Java implementation of [vers](https://github.com/package-url/purl-spec/blob/version-range-spec/VERSION-RANGE-SPEC.rst),
