@@ -30,6 +30,7 @@ import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.github.jeremylong.openvulnerability.client.ghsa.GitHubSecurityAdvisoryClient;
 import io.github.jeremylong.openvulnerability.client.ghsa.SecurityAdvisory;
 import io.github.jeremylong.openvulnerability.client.ghsa.Vulnerabilities;
+import io.github.jeremylong.openvulnerability.client.nvd.CpeMatch;
 import io.github.nscuro.versatile.version.VersioningScheme;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -59,6 +60,7 @@ import static io.github.jeremylong.openvulnerability.client.ghsa.GitHubSecurityA
 import static io.github.nscuro.versatile.VersUtils.schemeFromGhsaEcosystem;
 import static io.github.nscuro.versatile.VersUtils.schemeFromOsvEcosystem;
 import static io.github.nscuro.versatile.VersUtils.versFromGhsaRange;
+import static io.github.nscuro.versatile.VersUtils.versFromNvdRange;
 import static io.github.nscuro.versatile.VersUtils.versFromOsvRange;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -283,4 +285,34 @@ class VersUtilsTest {
         }
     }
 
+    private static Stream<Arguments> testVersFromNvdRangeArguments() {
+        return Stream.of(
+                arguments(
+                        new CpeMatch(true, "cpe:2.3:o:linux:linux_kernel:*:*:*:*:*:*:*:*", null, null, "2.2.0", null, "2.2.13"),
+                        "*",
+                        "vers:generic/>=2.2.0|<=2.2.13"
+                ),
+                arguments(
+                        new CpeMatch(true, "cpe:2.3:a:thinkcmf:thinkcmf:6.0.7:*:*:*:*:*:*:*", null, null, null, null, null),
+                        "6.0.7",
+                        "vers:generic/6.0.7"
+                ),
+                arguments(
+                        new CpeMatch(true, "cpe:2.3:a:thinkcmf:thinkcmf:6.0.7:*:*:*:*:*:*:*", null, null, null, null, null),
+                        "*",
+                        "vers:generic/*"
+                ),
+                arguments(
+                        new CpeMatch(true, "cpe:2.3:o:linux:linux_kernel:6.0.7:*:*:*:*:*:*:*:*", null, null, "2.2.0", null, null),
+                        "6.0.7",
+                        "vers:generic/>=2.2.0"
+                )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("testVersFromNvdRangeArguments")
+    void testVersFromNvdRange(final CpeMatch cpeMatch, final String exactVersion, final String expectedVers) {
+        assertThat(versFromNvdRange(cpeMatch, exactVersion)).hasToString(expectedVers);
+    }
 }

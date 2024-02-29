@@ -123,7 +123,6 @@
             <groupId>io.github.jeremylong</groupId>
             <artifactId>open-vulnerability-clients</artifactId>
             <version>${lib.open-vulnerability-clients.version}</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
