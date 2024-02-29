@@ -18,7 +18,6 @@
  */
 package io.github.nscuro.versatile;
 
-import io.github.jeremylong.openvulnerability.client.nvd.CpeMatch;
 import io.github.nscuro.versatile.version.InvalidVersionException;
 import io.github.nscuro.versatile.version.VersioningScheme;
 
@@ -131,22 +130,24 @@ public final class VersUtils {
      * @throws VersException            When the produced {@link Vers} is invalid
      * @throws InvalidVersionException  When any version in the range is invalid according to the inferred {@link VersioningScheme}
      */
-    public static Vers versFromNvdRange(final CpeMatch cpeMatch, final String exactVersion) {
+    public static Vers versFromNvdRange(final String versionStartExcluding, final String versionStartIncluding,
+                                        final String versionEndExcluding, final String versionEndIncluding,
+                                        final String exactVersion) {
 
         // Using 'generic' as versioning scheme for NVD due to lack of package data.
         final var versBuilder = Vers.builder(VersioningScheme.GENERIC);
 
-        if (trimToNull(cpeMatch.getVersionStartExcluding()) != null) {
-            versBuilder.withConstraint(Comparator.GREATER_THAN, cpeMatch.getVersionStartExcluding());
+        if (trimToNull(versionStartExcluding) != null) {
+            versBuilder.withConstraint(Comparator.GREATER_THAN, versionStartExcluding);
         }
-        if (trimToNull(cpeMatch.getVersionStartIncluding()) != null) {
-            versBuilder.withConstraint(Comparator.GREATER_THAN_OR_EQUAL, cpeMatch.getVersionStartIncluding());
+        if (trimToNull(versionStartIncluding) != null) {
+            versBuilder.withConstraint(Comparator.GREATER_THAN_OR_EQUAL, versionStartIncluding);
         }
-        if (trimToNull(cpeMatch.getVersionEndExcluding()) != null) {
-            versBuilder.withConstraint(Comparator.LESS_THAN, cpeMatch.getVersionEndExcluding());
+        if (trimToNull(versionEndExcluding) != null) {
+            versBuilder.withConstraint(Comparator.LESS_THAN, versionEndExcluding);
         }
-        if (trimToNull(cpeMatch.getVersionEndIncluding()) != null) {
-            versBuilder.withConstraint(Comparator.LESS_THAN_OR_EQUAL, cpeMatch.getVersionEndIncluding());
+        if (trimToNull(versionEndIncluding) != null) {
+            versBuilder.withConstraint(Comparator.LESS_THAN_OR_EQUAL, versionEndIncluding);
         }
         // If CpeMatch does not define a version range, but the CPE itself can
         // still give us the information we need. The version field can either be:

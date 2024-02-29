@@ -30,7 +30,6 @@ import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.github.jeremylong.openvulnerability.client.ghsa.GitHubSecurityAdvisoryClient;
 import io.github.jeremylong.openvulnerability.client.ghsa.SecurityAdvisory;
 import io.github.jeremylong.openvulnerability.client.ghsa.Vulnerabilities;
-import io.github.jeremylong.openvulnerability.client.nvd.CpeMatch;
 import io.github.nscuro.versatile.version.VersioningScheme;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -288,23 +287,19 @@ class VersUtilsTest {
     private static Stream<Arguments> testVersFromNvdRangeArguments() {
         return Stream.of(
                 arguments(
-                        new CpeMatch(true, "cpe:2.3:o:linux:linux_kernel:*:*:*:*:*:*:*:*", null, null, "2.2.0", null, "2.2.13"),
-                        "*",
+                        null, "2.2.0", null, "2.2.13", "*",
                         "vers:generic/>=2.2.0|<=2.2.13"
                 ),
                 arguments(
-                        new CpeMatch(true, "cpe:2.3:a:thinkcmf:thinkcmf:6.0.7:*:*:*:*:*:*:*", null, null, null, null, null),
-                        "6.0.7",
+                        null, null, null, null, "6.0.7",
                         "vers:generic/6.0.7"
                 ),
                 arguments(
-                        new CpeMatch(true, "cpe:2.3:a:thinkcmf:thinkcmf:6.0.7:*:*:*:*:*:*:*", null, null, null, null, null),
-                        "*",
+                        null, null, null, null, "*",
                         "vers:generic/*"
                 ),
                 arguments(
-                        new CpeMatch(true, "cpe:2.3:o:linux:linux_kernel:6.0.7:*:*:*:*:*:*:*:*", null, null, "2.2.0", null, null),
-                        "6.0.7",
+                        null, "2.2.0", null, null, "6.0.7",
                         "vers:generic/>=2.2.0"
                 )
         );
@@ -312,7 +307,10 @@ class VersUtilsTest {
 
     @ParameterizedTest
     @MethodSource("testVersFromNvdRangeArguments")
-    void testVersFromNvdRange(final CpeMatch cpeMatch, final String exactVersion, final String expectedVers) {
-        assertThat(versFromNvdRange(cpeMatch, exactVersion)).hasToString(expectedVers);
+    void testVersFromNvdRange(final String versionStartExcluding, final String versionStartIncluding,
+                              final String versionEndExcluding, final String versionEndIncluding,
+                              final String exactVersion, final String expectedVers) {
+        assertThat(versFromNvdRange(versionStartExcluding, versionStartIncluding, versionEndExcluding, versionEndIncluding, exactVersion))
+                .hasToString(expectedVers);
     }
 }
