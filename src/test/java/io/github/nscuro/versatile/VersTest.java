@@ -22,10 +22,16 @@ import io.github.nscuro.versatile.version.NpmVersion;
 import io.github.nscuro.versatile.version.VersioningScheme;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.List;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 class VersTest {
 
@@ -84,6 +90,34 @@ class VersTest {
         final Vers vers = Vers.parse(before).simplify();
         assertThat(vers).hasToString(after);
         assertThatNoException().isThrownBy(vers::validate);
+    }
+
+    private static Stream<Arguments> testSplitVersArguments() {
+        return Stream.of(
+                arguments(
+                        "vers:generic/1.2.3|>=2.0.0|<5.0.0",
+                        List.of("vers:generic/1.2.3", "vers:generic/>=2.0.0|<5.0.0")
+                ),
+                arguments(
+                        "vers:pypi/>0.0.0|>=0.0.1|0.0.2|<0.0.3|0.0.4|<0.0.5|>=0.0.6",
+                        List.of("vers:pypi/>0.0.0|<0.0.5", "vers:pypi/>=0.0.6")
+                ),
+                arguments(
+                        "vers:pypi/>0.0.0|>=0.0.1|0.0.2|0.0.3|0.0.4|<0.0.5|>=0.0.6|!=0.8",
+                        List.of("vers:pypi/>0.0.0|<0.0.5", "vers:pypi/!=0.8", "vers:pypi/>=0.0.6")
+                ),
+                arguments(
+                        "vers:npm/>=1.0.0-beta1|<=1.7.5|>=7.0.0-M1|<=7.0.7|>=7.1.0|<=7.1.2|>=8.0.0-M1|<=8.0.1",
+                        List.of("vers:npm/>=1.0.0-beta1|<=1.7.5", "vers:npm/>=7.0.0-M1|<=7.0.7", "vers:npm/>=7.1.0|<=7.1.2", "vers:npm/>=8.0.0-M1|<=8.0.1")
+                )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("testSplitVersArguments")
+    void testSplitVers(final String inputVers, final List<String> versList) {
+        final var parsedVers = Vers.parse(inputVers);
+        assertThat(Vers.splitVers(parsedVers).stream().map(vers -> vers.toString())).containsAll(versList);
     }
 
     @ParameterizedTest
