@@ -95,8 +95,20 @@ class VersTest {
     private static Stream<Arguments> testSplitVersArguments() {
         return Stream.of(
                 arguments(
+                        "vers:generic/*",
+                        List.of("vers:generic/*")
+                ),
+                arguments(
+                        "vers:generic/!=9.9",
+                        List.of("vers:generic/!=9.9")
+                ),
+                arguments(
                         "vers:generic/1.2.3|>=2.0.0|<5.0.0",
                         List.of("vers:generic/1.2.3", "vers:generic/>=2.0.0|<5.0.0")
+                ),
+                arguments(
+                        "vers:maven/<0.5.1|>=1.2.3|!=3.2.1|<6.6.6|*",
+                        List.of("vers:maven/*", "vers:maven/<0.5.1|>=1.2.3", "vers:maven/!=3.2.1", "vers:maven/<6.6.6")
                 ),
                 arguments(
                         "vers:pypi/>0.0.0|>=0.0.1|0.0.2|<0.0.3|0.0.4|<0.0.5|>=0.0.6",
@@ -117,7 +129,7 @@ class VersTest {
     @MethodSource("testSplitVersArguments")
     void testSplitVers(final String inputVers, final List<String> versList) {
         final var parsedVers = Vers.parse(inputVers);
-        assertThat(Vers.splitVers(parsedVers).stream().map(vers -> vers.toString())).containsAll(versList);
+        assertThat(parsedVers.splitVers().stream().map(vers -> vers.toString())).containsAll(versList);
     }
 
     @ParameterizedTest

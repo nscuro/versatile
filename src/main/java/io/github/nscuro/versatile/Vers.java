@@ -94,12 +94,11 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
         return new Vers(scheme, constraints);
     }
 
-    public static List<Vers> splitVers(final Vers versToSplit) {
-        var constraints = versToSplit.simplify().constraints();
-        var scheme = versToSplit.scheme;
+    public List<Vers> splitVers() {
+        var versSimplified = this.simplify();
         List<Vers> versList = new ArrayList<>();
         ArrayList<Constraint> constraintPair = new ArrayList<>();
-        for (var constraint : constraints) {
+        for (var constraint : versSimplified.constraints) {
             if (constraint.comparator().equals(Comparator.EQUAL)
                     || constraint.comparator().equals(Comparator.NOT_EQUAL)) {
                 versList.add(Vers.builder(scheme).withConstraint(constraint).build());
