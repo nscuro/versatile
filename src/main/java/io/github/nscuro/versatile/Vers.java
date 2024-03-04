@@ -94,7 +94,7 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
         return new Vers(scheme, constraints);
     }
 
-    public List<Vers> splitVers() {
+    public List<Vers> split() {
         var versSimplified = this.simplify();
         List<Vers> versList = new ArrayList<>();
         ArrayList<Constraint> constraintPair = new ArrayList<>();

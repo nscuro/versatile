@@ -92,7 +92,7 @@ class VersTest {
         assertThatNoException().isThrownBy(vers::validate);
     }
 
-    private static Stream<Arguments> testSplitVersArguments() {
+    private static Stream<Arguments> testSplitArguments() {
         return Stream.of(
                 arguments(
                         "vers:generic/*",
@@ -126,10 +126,10 @@ class VersTest {
     }
 
     @ParameterizedTest
-    @MethodSource("testSplitVersArguments")
-    void testSplitVers(final String inputVers, final List<String> versList) {
+    @MethodSource("testSplitArguments")
+    void testSplit(final String inputVers, final List<String> versList) {
         final var parsedVers = Vers.parse(inputVers);
-        assertThat(parsedVers.splitVers().stream().map(vers -> vers.toString())).containsAll(versList);
+        assertThat(parsedVers.split().stream().map(vers -> vers.toString())).containsAll(versList);
     }
 
     @ParameterizedTest
