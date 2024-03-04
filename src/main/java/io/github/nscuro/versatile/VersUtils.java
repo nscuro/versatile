@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.apache.commons.lang3.StringUtils.trimToNull;
+
 public final class VersUtils {
 
     private VersUtils() {
@@ -114,6 +116,58 @@ public final class VersUtils {
             versBuilder.withConstraint(comparator, event.getValue());
         }
 
+        return versBuilder.build();
+    }
+
+    /**
+     * Convert ranges or exact version as used by NVD to a {@link Vers} range.
+     *
+     * @param versionStartExcluding   The versionStartExcluding in the range
+     * @param versionStartIncluding   The versionStartIncluding in the range
+     * @param versionEndExcluding   The versionEndExcluding in the range
+     * @param versionEndIncluding   The versionEndIncluding in the range
+     * @param exactVersion  The exact version in CpeMatch
+     * @return The resulting {@link Vers}
+     * @throws IllegalArgumentException When the provided cpe match is invalid,
+     *                                  or the provided {@code events} contains an invalid event
+     * @throws VersException            When the produced {@link Vers} is invalid
+     * @throws InvalidVersionException  When any version in the range is invalid according to the inferred {@link VersioningScheme}
+     */
+    public static Vers versFromNvdRange(final String versionStartExcluding, final String versionStartIncluding,
+                                        final String versionEndExcluding, final String versionEndIncluding,
+                                        final String exactVersion) {
+
+        // Using 'generic' as versioning scheme for NVD due to lack of package data.
+        final var versBuilder = Vers.builder(VersioningScheme.GENERIC);
+
+        if (trimToNull(versionStartExcluding) != null) {
+            versBuilder.withConstraint(Comparator.GREATER_THAN, versionStartExcluding);
+        }
+        if (trimToNull(versionStartIncluding) != null) {
+            versBuilder.withConstraint(Comparator.GREATER_THAN_OR_EQUAL, versionStartIncluding);
+        }
+        if (trimToNull(versionEndExcluding) != null) {
+            versBuilder.withConstraint(Comparator.LESS_THAN, versionEndExcluding);
+        }
+        if (trimToNull(versionEndIncluding) != null) {
+            versBuilder.withConstraint(Comparator.LESS_THAN_OR_EQUAL, versionEndIncluding);
+        }
+        // If CpeMatch does not define a version range, but the CPE itself can
+        // still give us the information we need. The version field can either be:
+        //   * an exact version (e.g. "1.0.0")
+        //   * a wildcard matching all versions ("*")
+        //   * a "not applicable", matching no version at all ("-")
+        if (!versBuilder.hasConstraints() && exactVersion != null) {
+            if (!"*".equals(exactVersion) && !"-".equals(exactVersion)) {
+                // If we have neither upper, nor lower bound, and the CPE version
+                // is not a wildcard, only a specific version is vulnerable.
+                versBuilder.withConstraint(Comparator.EQUAL, exactVersion);
+            } else if ("*".equals(exactVersion)) {
+                // If we have neither upper, nor lower bound, and the CPE version
+                // is a wildcard, all versions are vulnerable, and we can safely use a vers wildcard.
+                versBuilder.withConstraint(Comparator.WILDCARD, null);
+            }
+        }
         return versBuilder.build();
     }
 

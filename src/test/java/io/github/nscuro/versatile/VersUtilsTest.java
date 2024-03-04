@@ -59,6 +59,7 @@ import static io.github.jeremylong.openvulnerability.client.ghsa.GitHubSecurityA
 import static io.github.nscuro.versatile.VersUtils.schemeFromGhsaEcosystem;
 import static io.github.nscuro.versatile.VersUtils.schemeFromOsvEcosystem;
 import static io.github.nscuro.versatile.VersUtils.versFromGhsaRange;
+import static io.github.nscuro.versatile.VersUtils.versFromNvdRange;
 import static io.github.nscuro.versatile.VersUtils.versFromOsvRange;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -283,4 +284,33 @@ class VersUtilsTest {
         }
     }
 
+    private static Stream<Arguments> testVersFromNvdRangeArguments() {
+        return Stream.of(
+                arguments(
+                        null, "2.2.0", null, "2.2.13", "*",
+                        "vers:generic/>=2.2.0|<=2.2.13"
+                ),
+                arguments(
+                        null, null, null, null, "6.0.7",
+                        "vers:generic/6.0.7"
+                ),
+                arguments(
+                        null, null, null, null, "*",
+                        "vers:generic/*"
+                ),
+                arguments(
+                        null, "2.2.0", null, null, "6.0.7",
+                        "vers:generic/>=2.2.0"
+                )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("testVersFromNvdRangeArguments")
+    void testVersFromNvdRange(final String versionStartExcluding, final String versionStartIncluding,
+                              final String versionEndExcluding, final String versionEndIncluding,
+                              final String exactVersion, final String expectedVers) {
+        assertThat(versFromNvdRange(versionStartExcluding, versionStartIncluding, versionEndExcluding, versionEndIncluding, exactVersion))
+                .hasToString(expectedVers);
+    }
 }
