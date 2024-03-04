@@ -94,6 +94,28 @@ public record Vers(VersioningScheme scheme, List<Constraint> constraints) {
         return new Vers(scheme, constraints);
     }
 
+    public List<Vers> split() {
+        var versSimplified = this.simplify();
+        List<Vers> versList = new ArrayList<>();
+        ArrayList<Constraint> constraintPair = new ArrayList<>();
+        for (var constraint : versSimplified.constraints) {
+            if (constraint.comparator().equals(Comparator.EQUAL)
+                    || constraint.comparator().equals(Comparator.NOT_EQUAL)) {
+                versList.add(Vers.builder(scheme).withConstraint(constraint).build());
+            } else {
+                constraintPair.add(constraint);
+            }
+            if (constraintPair.size() == 2) {
+                versList.add(new Vers(scheme, List.copyOf(constraintPair)));
+                constraintPair.clear();
+            }
+        }
+        if (constraintPair.size() > 0) {
+            versList.add(new Vers(scheme, constraintPair));
+        }
+        return versList;
+    }
+
     public static Builder builder(final VersioningScheme versioningScheme) {
         return new Builder(versioningScheme);
     }
