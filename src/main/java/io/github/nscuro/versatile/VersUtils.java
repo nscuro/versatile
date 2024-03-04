@@ -120,9 +120,12 @@ public final class VersUtils {
     }
 
     /**
-     * Convert a cpeMatch or exact version as used by NVD to a {@link Vers} range.
+     * Convert ranges or exact version as used by NVD to a {@link Vers} range.
      *
-     * @param cpeMatch      CpeMatch object for the CVE
+     * @param versionStartExcluding   The versionStartExcluding in the range
+     * @param versionStartIncluding   The versionStartIncluding in the range
+     * @param versionEndExcluding   The versionEndExcluding in the range
+     * @param versionEndIncluding   The versionEndIncluding in the range
      * @param exactVersion  The exact version in CpeMatch
      * @return The resulting {@link Vers}
      * @throws IllegalArgumentException When the provided cpe match is invalid,
