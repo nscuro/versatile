@@ -84,7 +84,8 @@ public final class VersUtils {
      * @throws VersException            When the produced {@link Vers} is invalid
      * @throws InvalidVersionException  When any version in the range is invalid according to the inferred {@link VersioningScheme}
      */
-    public static Vers versFromOsvRange(final String type, final String ecosystem, final List<Map.Entry<String, String>> events) {
+    public static Vers versFromOsvRange(final String type, final String ecosystem,
+                                        final List<Map.Entry<String, String>> events, final String databaseSpecificLastKnownAffected) {
         if (!"ecosystem".equalsIgnoreCase(type) && !"semver".equalsIgnoreCase(type)) {
             throw new IllegalArgumentException("Range type \"%s\" is not supported".formatted(type));
         }
@@ -97,7 +98,7 @@ public final class VersUtils {
 
             final Comparator comparator = switch (event.getKey()) {
                 case "introduced" -> Comparator.GREATER_THAN_OR_EQUAL;
-                case "fixed" -> Comparator.LESS_THAN;
+                case "fixed", "limit" -> Comparator.LESS_THAN;
                 case "last_affected" -> Comparator.LESS_THAN_OR_EQUAL;
                 default -> throw new IllegalArgumentException("Invalid event \"%s\" at position %d"
                         .formatted(event.getKey(), i));
@@ -114,6 +115,14 @@ public final class VersUtils {
             }
 
             versBuilder.withConstraint(comparator, event.getValue());
+        }
+
+        if (databaseSpecificLastKnownAffected != null) {
+            if (databaseSpecificLastKnownAffected.startsWith("<=")) {
+                versBuilder.withConstraint(Comparator.LESS_THAN_OR_EQUAL, databaseSpecificLastKnownAffected.replaceFirst("<=", "").trim());
+            } else if (databaseSpecificLastKnownAffected.startsWith("<")) {
+                versBuilder.withConstraint(Comparator.LESS_THAN, databaseSpecificLastKnownAffected.replaceFirst("<", "").trim());
+            }
         }
 
         return versBuilder.build();
