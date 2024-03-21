@@ -103,17 +103,17 @@ class VersUtilsTest {
                 ),
                 arguments(
                         List.of(Map.entry("last_affected", "3.2.1"), Map.entry("introduced", "1.2.3")),
-                        null,
+                        Map.of("foo", "bar"),
                         "vers:generic/>=1.2.3|<=3.2.1"
                 ),
                 arguments(
                         List.of(Map.entry("introduced", "1.2.3"), Map.entry("limit", "3.2.1")),
-                        null,
+                        Map.of("last_known_affected_version_range", Map.of("foo", "bar")),
                         "vers:generic/>=1.2.3|<3.2.1"
                 ),
                 arguments(
                         List.of(Map.entry("introduced", "4.5.6")),
-                        "<7.8.9",
+                        Map.of("last_known_affected_version_range", "<7.8.9"),
                         "vers:generic/>=4.5.6|<7.8.9"
                 )
         );
@@ -121,8 +121,8 @@ class VersUtilsTest {
 
     @ParameterizedTest
     @MethodSource("testVersFromOsvRangeArguments")
-    void testVersFromOsvRange(final List<Map.Entry<String, String>> events, final String lastKnownAffected, final String expectedVers) {
-        assertThat(versFromOsvRange("ecosystem", "other", events, lastKnownAffected)).hasToString(expectedVers);
+    void testVersFromOsvRange(final List<Map.Entry<String, String>> events, final Map<String, Object> databaseSpecific, final String expectedVers) {
+        assertThat(versFromOsvRange("ecosystem", "other", events, databaseSpecific)).hasToString(expectedVers);
     }
 
     @Test

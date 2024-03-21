@@ -85,7 +85,7 @@ public final class VersUtils {
      * @throws InvalidVersionException  When any version in the range is invalid according to the inferred {@link VersioningScheme}
      */
     public static Vers versFromOsvRange(final String type, final String ecosystem,
-                                        final List<Map.Entry<String, String>> events, final String databaseSpecificLastKnownAffected) {
+                                        final List<Map.Entry<String, String>> events, final Map<String, Object> databaseSpecific) {
         if (!"ecosystem".equalsIgnoreCase(type) && !"semver".equalsIgnoreCase(type)) {
             throw new IllegalArgumentException("Range type \"%s\" is not supported".formatted(type));
         }
@@ -117,11 +117,12 @@ public final class VersUtils {
             versBuilder.withConstraint(comparator, event.getValue());
         }
 
-        if (databaseSpecificLastKnownAffected != null) {
-            if (databaseSpecificLastKnownAffected.startsWith("<=")) {
-                versBuilder.withConstraint(Comparator.LESS_THAN_OR_EQUAL, databaseSpecificLastKnownAffected.replaceFirst("<=", "").trim());
-            } else if (databaseSpecificLastKnownAffected.startsWith("<")) {
-                versBuilder.withConstraint(Comparator.LESS_THAN, databaseSpecificLastKnownAffected.replaceFirst("<", "").trim());
+        if (databaseSpecific != null && databaseSpecific.get("last_known_affected_version_range") instanceof String) {
+            String lastKnownAffectedRange = (String) databaseSpecific.get("last_known_affected_version_range");
+            if (lastKnownAffectedRange.startsWith("<=")) {
+                versBuilder.withConstraint(Comparator.LESS_THAN_OR_EQUAL, lastKnownAffectedRange.replaceFirst("<=", "").trim());
+            } else if (lastKnownAffectedRange.startsWith("<")) {
+                versBuilder.withConstraint(Comparator.LESS_THAN, lastKnownAffectedRange.replaceFirst("<", "").trim());
             }
         }
 
