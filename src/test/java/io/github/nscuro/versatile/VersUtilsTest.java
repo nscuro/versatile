@@ -88,37 +88,51 @@ class VersUtilsTest {
         return Stream.of(
                 arguments(
                         List.of(Map.entry("introduced", "1.2.3")),
+                        null,
                         "vers:generic/>=1.2.3"
                 ),
                 arguments(
                         List.of(Map.entry("introduced", "1.2.3"), Map.entry("fixed", "3.2.1")),
+                        null,
                         "vers:generic/>=1.2.3|<3.2.1"
                 ),
                 arguments(
                         List.of(Map.entry("introduced", "1.2.3"), Map.entry("last_affected", "3.2.1")),
+                        null,
                         "vers:generic/>=1.2.3|<=3.2.1"
                 ),
                 arguments(
                         List.of(Map.entry("last_affected", "3.2.1"), Map.entry("introduced", "1.2.3")),
+                        Map.of("foo", "bar"),
                         "vers:generic/>=1.2.3|<=3.2.1"
+                ),
+                arguments(
+                        List.of(Map.entry("introduced", "1.2.3"), Map.entry("limit", "3.2.1")),
+                        Map.of("last_known_affected_version_range", Map.of("foo", "bar")),
+                        "vers:generic/>=1.2.3|<3.2.1"
+                ),
+                arguments(
+                        List.of(Map.entry("introduced", "4.5.6")),
+                        Map.of("last_known_affected_version_range", "<7.8.9"),
+                        "vers:generic/>=4.5.6|<7.8.9"
                 )
         );
     }
 
     @ParameterizedTest
     @MethodSource("testVersFromOsvRangeArguments")
-    void testVersFromOsvRange(final List<Map.Entry<String, String>> events, final String expectedVers) {
-        assertThat(versFromOsvRange("ecosystem", "other", events)).hasToString(expectedVers);
+    void testVersFromOsvRange(final List<Map.Entry<String, String>> events, final Map<String, Object> databaseSpecific, final String expectedVers) {
+        assertThat(versFromOsvRange("ecosystem", "other", events, databaseSpecific)).hasToString(expectedVers);
     }
 
     @Test
     void testVersFromOsvRangeWithInvalidRangeType() {
         final List<Map.Entry<String, String>> events = List.of(Map.entry("introduced", "0"));
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> versFromOsvRange(null, "other", events));
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> versFromOsvRange("", "other", events));
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> versFromOsvRange("git", "other", events));
-        assertThatNoException().isThrownBy(() -> versFromOsvRange("ecosystem", "other", events));
-        assertThatNoException().isThrownBy(() -> versFromOsvRange("semver", "other", events));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> versFromOsvRange(null, "other", events, null));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> versFromOsvRange("", "other", events, null));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> versFromOsvRange("git", "other", events, null));
+        assertThatNoException().isThrownBy(() -> versFromOsvRange("ecosystem", "other", events, null));
+        assertThatNoException().isThrownBy(() -> versFromOsvRange("semver", "other", events, null));
     }
 
     @ParameterizedTest
@@ -266,7 +280,7 @@ class VersUtilsTest {
                         }
 
                         try {
-                            final Vers vers = versFromOsvRange(range.get("type").asText(), ecosystem, events);
+                            final Vers vers = versFromOsvRange(range.get("type").asText(), ecosystem, events, null);
                             arrayNode.add(objectMapper.createObjectNode()
                                     .put("name", affected.get("package").get("name").asText())
                                     .putPOJO("events", events)
