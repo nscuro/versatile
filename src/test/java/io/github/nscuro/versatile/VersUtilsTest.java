@@ -51,6 +51,7 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -315,6 +316,10 @@ class VersUtilsTest {
                 arguments(
                         null, "2.2.0", null, null, "6.0.7",
                         "vers:generic/>=2.2.0"
+                ),
+                arguments(
+                        null, null, null, null, "-",
+                        null
                 )
         );
     }
@@ -324,7 +329,11 @@ class VersUtilsTest {
     void testVersFromNvdRange(final String versionStartExcluding, final String versionStartIncluding,
                               final String versionEndExcluding, final String versionEndIncluding,
                               final String exactVersion, final String expectedVers) {
-        assertThat(versFromNvdRange(versionStartExcluding, versionStartIncluding, versionEndExcluding, versionEndIncluding, exactVersion))
-                .hasToString(expectedVers);
+        final Optional<Vers> optionalVers = versFromNvdRange(versionStartExcluding, versionStartIncluding, versionEndExcluding, versionEndIncluding, exactVersion);
+        if (expectedVers == null) {
+            assertThat(optionalVers).isNotPresent();
+        } else {
+            assertThat(optionalVers).map(Vers::toString).contains(expectedVers);
+        }
     }
 }

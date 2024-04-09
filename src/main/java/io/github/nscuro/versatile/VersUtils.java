@@ -23,6 +23,7 @@ import io.github.nscuro.versatile.version.VersioningScheme;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.apache.commons.lang3.StringUtils.trimToNull;
@@ -105,8 +106,8 @@ public final class VersUtils {
             };
 
             if (scheme == VersioningScheme.DEB
-                    && (comparator == Comparator.LESS_THAN || comparator == Comparator.LESS_THAN_OR_EQUAL)
-                    && Set.of("<end-of-life>", "<unfixed>").contains(event.getValue())) {
+                && (comparator == Comparator.LESS_THAN || comparator == Comparator.LESS_THAN_OR_EQUAL)
+                && Set.of("<end-of-life>", "<unfixed>").contains(event.getValue())) {
                 // Some ranges in the Debian ecosystem use these special values for their upper bound,
                 // to signal that all versions are affected. As they are not valid versions, we skip them.
                 //
@@ -132,20 +133,21 @@ public final class VersUtils {
     /**
      * Convert ranges or exact version as used by NVD to a {@link Vers} range.
      *
-     * @param versionStartExcluding   The versionStartExcluding in the range
-     * @param versionStartIncluding   The versionStartIncluding in the range
+     * @param versionStartExcluding The versionStartExcluding in the range
+     * @param versionStartIncluding The versionStartIncluding in the range
      * @param versionEndExcluding   The versionEndExcluding in the range
      * @param versionEndIncluding   The versionEndIncluding in the range
-     * @param exactVersion  The exact version in CpeMatch
-     * @return The resulting {@link Vers}
+     * @param exactVersion          The exact version in CpeMatch
+     * @return An {@link Optional} containing the resulting {@link Vers}, or {@link Optional#empty()}
+     * when no constraints could be inferred from the given parameters
      * @throws IllegalArgumentException When the provided cpe match is invalid,
      *                                  or the provided {@code events} contains an invalid event
      * @throws VersException            When the produced {@link Vers} is invalid
      * @throws InvalidVersionException  When any version in the range is invalid according to the inferred {@link VersioningScheme}
      */
-    public static Vers versFromNvdRange(final String versionStartExcluding, final String versionStartIncluding,
-                                        final String versionEndExcluding, final String versionEndIncluding,
-                                        final String exactVersion) {
+    public static Optional<Vers> versFromNvdRange(final String versionStartExcluding, final String versionStartIncluding,
+                                                  final String versionEndExcluding, final String versionEndIncluding,
+                                                  final String exactVersion) {
 
         // Using 'generic' as versioning scheme for NVD due to lack of package data.
         final var versBuilder = Vers.builder(VersioningScheme.GENERIC);
@@ -178,7 +180,13 @@ public final class VersUtils {
                 versBuilder.withConstraint(Comparator.WILDCARD, null);
             }
         }
-        return versBuilder.build();
+
+        if (!versBuilder.hasConstraints()) {
+            // NB: This happens when the CPE's version is NA ("-").
+            return Optional.empty();
+        }
+
+        return Optional.of(versBuilder.build());
     }
 
     static VersioningScheme schemeFromGhsaEcosystem(final String ecosystem) {
