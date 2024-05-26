@@ -57,7 +57,7 @@
         <maven.compiler.target>17</maven.compiler.target>
 
         <!-- Dependency Versions -->
-        <lib.assertj.version>3.25.3</lib.assertj.version>
+        <lib.assertj.version>3.26.0</lib.assertj.version>
         <lib.checkstyle.version>10.16.0</lib.checkstyle.version>
         <lib.jackson-databind.version>2.17.1</lib.jackson-databind.version>
         <lib.json-path.version>2.9.0</lib.json-path.version>
