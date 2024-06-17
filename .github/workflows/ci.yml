@@ -19,6 +19,11 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    strategy:
+      matrix:
+        java-version:
+        - 17
+        - 21
     permissions:
       contents: read
     steps:
@@ -27,7 +32,7 @@ jobs:
     - name: Set up Java
       uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4
       with:
-        java-version: "17"
+        java-version: ${{ matrix.java-version }}
         distribution: "temurin"
         cache: "maven"
     - name: Test
