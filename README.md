@@ -27,8 +27,9 @@ Java implementation of [vers](https://github.com/package-url/purl-spec/blob/vers
 | PyPI     |     ❌     |
 | RPM      |     ✅     |
 
-> **Note**  
-> Versions for which the appropriate scheme is not currently supported will fall back to `generic`
+> [!NOTE]
+> Support for new schemes can be added, and default implementations overwritten, by [extending *versatile*](#extending-versatile)!
+> Versions for which the appropriate scheme is not currently supported will fall back to `generic`.
 
 ## Usage
 
@@ -50,7 +51,7 @@ Java implementation of [vers](https://github.com/package-url/purl-spec/blob/vers
 Ranges are constructed using a builder. Builders must be initialized with a versioning scheme.
 `Constraint`s may be provided in structured, or freeform format. Versions used in constraints must
 be valid according to the chosen versioning scheme. When `VersBuilder#build` is called, constraints are sorted
-by version, and the built `Vers` is validated. If the range turns out to be invalid, an `InvalidVersionException` is thrown.
+by version, and the built `Vers` is validated. If the range turns out to be invalid, an `VersException` is thrown.
 
 ```java
 import io.github.nscuro.versatile.Comparator;
