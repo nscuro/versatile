@@ -37,7 +37,7 @@ Java implementation of [vers](https://github.com/package-url/purl-spec/blob/vers
 ```xml
 <dependency>
     <groupId>io.github.nscuro</groupId>
-    <artifactId>versatile</artifactId>
+    <artifactId>versatile-core</artifactId>
     <version>${versatile.version}</version>
 </dependency>
 ```
@@ -47,20 +47,21 @@ Java implementation of [vers](https://github.com/package-url/purl-spec/blob/vers
 
 ### Constructing `vers` Ranges
 
-Ranges are constructed using a builder. Builders must be initialized with a `VersioningScheme`.
+Ranges are constructed using a builder. Builders must be initialized with a versioning scheme.
 `Constraint`s may be provided in structured, or freeform format. Versions used in constraints must
-be valid according to the chosen `VersioningScheme`. When `VersBuilder#build` is called, constraints are sorted
-by version, and the built `Vers` is validated. If the range turns out to be invalid, a `VersException` is thrown.
+be valid according to the chosen versioning scheme. When `VersBuilder#build` is called, constraints are sorted
+by version, and the built `Vers` is validated. If the range turns out to be invalid, an `InvalidVersionException` is thrown.
 
 ```java
 import io.github.nscuro.versatile.Comparator;
 import io.github.nscuro.versatile.Vers;
-import io.github.nscuro.versatile.version.VersioningScheme;
+
+import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_GOLANG;
 
 class ConstructVers {
 
     void shouldConstructVers() {
-        Vers vers = Vers.builder(VersioningScheme.GOLANG)
+        Vers vers = Vers.builder(SCHEME_GOLANG)
                 .withConstraint(Comparator.GREATER_THAN, "v1.2.3")
                 .withConstraint(Comparator.LESS_THAN_OR_EQUAL, "v3.2.1")
                 .withConstraint("!= v2.1.3")
@@ -80,14 +81,15 @@ using the `Vers#parse` method. If the range turns out to be invalid, a `VersExce
 
 ```java
 import io.github.nscuro.versatile.Vers;
-import io.github.nscuro.versatile.version.VersioningScheme;
+
+import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_GOLANG;
 
 class ParseVers {
 
     void shouldParseVers() {
         Vers vers = Vers.parse("vers:golang/>v1.2.3|!=v2.1.3|<=v3.2.1");
 
-        assert vers.scheme() == VersioningScheme.GOLANG;
+        assert SCHEME_GOLANG.equals(vers.scheme());
         assert vers.constraints().size() == 3;
     }
 
@@ -123,7 +125,7 @@ class SimplifyVers {
 To check whether a given `vers`
 range [contains](https://github.com/package-url/purl-spec/blob/version-range-spec/VERSION-RANGE-SPEC.rst#checking-if-a-version-is-contained-within-a-range)
 a specific version, the `Vers#contains` method may be used. The provided version must be valid according
-to the range's `VersioningScheme`.
+to the range's versioning scheme.
 
 ```java
 import io.github.nscuro.versatile.Vers;
@@ -146,3 +148,69 @@ class VersContains {
 
 }
 ```
+
+### Working With Versions
+
+Versions can be used directly, outside the context of a `vers` range. To acquire a `Version` object,
+`VersionFactory` may be used:
+
+```java
+import io.github.nscuro.versatile.VersionFactory;
+import io.github.nscuro.versatile.version.GoVersion;
+import io.github.nscuro.versatile.version.Version;
+
+import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_GOLANG;
+
+class VersContains {
+
+    void shouldReturnGoVersion() {
+        Version version = VersionFactory.getVersion(SCHEME_GOLANG, "v1.2.4");
+        assert version instanceof GoVersion;
+        assert "golang".equals(version.scheme());
+    }
+
+    void shouldFallbackToGenericVersion() {
+        Version version = VersionFactory.getVersion("foobar", "v1.2.4");
+        assert version instanceof GenericVersion;
+        assert "foobar".equals(version.scheme());
+    }
+
+}
+```
+
+As shown above, if *versatile* doesn't recognize the provided versioning scheme, it will fall back
+to `GenericVersion`. Support for additional schemes can be added by [extending *versatile*](#extending-versatile).
+
+### Extending *versatile*
+
+#### Versioning Schemes
+
+*versatile* ships with support for a few versioning schemes (see [Supported Versioning Schemes](#supported-versioning-schemes)).
+
+While contributions to add support for more schemes is highly appreciated, it's not always feasible to wait for changes
+to be released. It should be possible to leverage *versatile*'s `vers` functionality, without being reliant on
+how fast support for new schemes is added upstream.
+
+On the other hand, the default implementations may not always align with the desired behavior. Perhaps they are too strict,
+and a more lax parsing logic is required. In that case, the default will need to be overwritten.
+
+To address these concerns, *versatile* exposes an [SPI](https://docs.oracle.com/javase%2Ftutorial%2F/sound/SPI-intro.html) 
+for versioning scheme support.
+
+To add support for a new scheme, let's say `alpine`, the following steps may be performed:
+
+1. Add either `versatile-core`, or `versatile-spi` as dependency to your project
+2. Create a class `AlpineVersion` that extends `io.github.nscuro.versatile.version.Version`
+3. Implement the version parsing logic as desired
+    * Be sure to overwrite `compareTo`, `equals`, `hashCode`, and `toString`
+4. Create a class `AlpineVersionProvider` that implements `io.github.nscuro.versatile.version.VersionProvider`
+    * Implement `#supportsScheme(String scheme)` to return `true` for the `alpine` scheme
+    * Implement `#getVersion(String scheme, String verstionStr)` to return an instance of `AlpineVersion`
+    * Implement `#priority()` to return a value between `0` (lowest), and `Integer.MAX_VALUE` (highest)
+        * Built-in providers have a priority of `50` (`VersionProvider#PRIORITY_BUILTIN`)
+        * By defining a priority higher than `50`, built-in providers can effectively be overwritten
+5. Create a file `src/main/resources/META-INF/services/io.github.nscuro.versatile.version.VersionProvider`
+6. List the fully qualified package name of all custom `VersionProvider` implementations, one per line
+    * e.g. `com.acme.AlpineVersionProvider`
+
+That's it! Now, whenever *versatile* encounters a `vers` range with the scheme `alpine`, it will use your `AlpineVersion`!

@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.nscuro</groupId>
-    <artifactId>versatile</artifactId>
+    <artifactId>versatile-parent</artifactId>
     <version>0.8.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <name>versatile</name>
     <description>Java implementation of vers, a mostly universal version range specifier</description>
@@ -18,6 +19,11 @@
             <url>https://github.com/nscuro</url>
         </developer>
     </developers>
+
+    <modules>
+        <module>versatile-spi</module>
+        <module>versatile-core</module>
+    </modules>
 
     <licenses>
         <license>
@@ -55,6 +61,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
+        <project.parentBaseDir>.</project.parentBaseDir>
 
         <!-- Dependency Versions -->
         <lib.assertj.version>3.26.0</lib.assertj.version>
@@ -72,60 +79,63 @@
         <scm.url>https://github.com/nscuro/versatile.git</scm.url>
     </properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-artifact</artifactId>
-            <version>${lib.maven-artifact.version}</version>
-        </dependency>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.github.nscuro</groupId>
+                <artifactId>versatile-spi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
-        <dependency>
-            <groupId>com.github.package-url</groupId>
-            <artifactId>packageurl-java</artifactId>
-            <version>${lib.packageurl-java.version}</version>
-        </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-artifact</artifactId>
+                <version>${lib.maven-artifact.version}</version>
+            </dependency>
 
-        <dependency>
-            <groupId>com.vdurmont</groupId>
-            <artifactId>semver4j</artifactId>
-            <version>${lib.semver4j.version}</version>
-        </dependency>
+            <dependency>
+                <groupId>com.github.package-url</groupId>
+                <artifactId>packageurl-java</artifactId>
+                <version>${lib.packageurl-java.version}</version>
+            </dependency>
 
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${lib.junit-jupiter.version}</version>
-            <scope>test</scope>
-        </dependency>
+            <dependency>
+                <groupId>com.vdurmont</groupId>
+                <artifactId>semver4j</artifactId>
+                <version>${lib.semver4j.version}</version>
+            </dependency>
 
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <version>${lib.assertj.version}</version>
-            <scope>test</scope>
-        </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${lib.junit-jupiter.version}</version>
+            </dependency>
 
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${lib.jackson-databind.version}</version>
-            <scope>test</scope>
-        </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${lib.assertj.version}</version>
+            </dependency>
 
-        <dependency>
-            <groupId>com.jayway.jsonpath</groupId>
-            <artifactId>json-path</artifactId>
-            <version>${lib.json-path.version}</version>
-            <scope>test</scope>
-        </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${lib.jackson-databind.version}</version>
+            </dependency>
 
-        <dependency>
-            <groupId>io.github.jeremylong</groupId>
-            <artifactId>open-vulnerability-clients</artifactId>
-            <version>${lib.open-vulnerability-clients.version}</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+            <dependency>
+                <groupId>com.jayway.jsonpath</groupId>
+                <artifactId>json-path</artifactId>
+                <version>${lib.json-path.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.jeremylong</groupId>
+                <artifactId>open-vulnerability-clients</artifactId>
+                <version>${lib.open-vulnerability-clients.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <plugins>
@@ -138,6 +148,9 @@
                     <includeResources>false</includeResources>
                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
                     <includeTestResources>false</includeTestResources>
+                    <propertyExpansion>
+                        parentBaseDir=${project.parentBaseDir}
+                    </propertyExpansion>
                 </configuration>
                 <executions>
                     <execution>
@@ -189,6 +202,7 @@
                 <artifactId>maven-release-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
                     <projectVersionPolicyId>SemVerVersionPolicy</projectVersionPolicyId>
                     <tagNameFormat>v@{project.version}</tagNameFormat>
                     <useReleaseProfile>false</useReleaseProfile>
