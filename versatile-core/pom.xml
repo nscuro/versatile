@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.github.nscuro</groupId>
         <artifactId>versatile-parent</artifactId>
-        <version>0.9.1-SNAPSHOT</version>
+        <version>0.9.1</version>
     </parent>
     <artifactId>versatile-core</artifactId>
 
