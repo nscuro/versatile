@@ -19,6 +19,7 @@
 package io.github.nscuro.versatile;
 
 import io.github.nscuro.versatile.version.InvalidVersionException;
+import io.github.nscuro.versatile.version.KnownVersioningSchemes;
 
 import java.util.List;
 import java.util.Map;
@@ -47,7 +48,7 @@ public final class VersUtils {
      * @see <a href="https://docs.github.com/en/rest/security-advisories/global-advisories?apiVersion=2022-11-28#get-a-global-security-advisory">GitHub Security Advisories API documentation</a>
      */
     public static Vers versFromGhsaRange(final String ecosystem, final String rangeExpr) {
-        final var versBuilder = Vers.builder(schemeFromGhsaEcosystem(ecosystem));
+        final var versBuilder = Vers.builder(schemeFromGhsaEcosystem(ecosystem).orElse(ecosystem));
 
         final String[] constraintExprs = rangeExpr.split(",");
 
@@ -84,13 +85,16 @@ public final class VersUtils {
      * @throws VersException            When the produced {@link Vers} is invalid
      * @throws InvalidVersionException  When any version in the range is invalid according to the inferred scheme
      */
-    public static Vers versFromOsvRange(final String type, final String ecosystem,
-                                        final List<Map.Entry<String, String>> events, final Map<String, Object> databaseSpecific) {
+    public static Vers versFromOsvRange(
+            final String type, final String ecosystem,
+            final List<Map.Entry<String, String>> events,
+            final Map<String, Object> databaseSpecific
+    ) {
         if (!"ecosystem".equalsIgnoreCase(type) && !"semver".equalsIgnoreCase(type)) {
             throw new IllegalArgumentException("Range type \"%s\" is not supported".formatted(type));
         }
 
-        final var scheme = schemeFromOsvEcosystem(ecosystem);
+        final var scheme = schemeFromOsvEcosystem(ecosystem).orElse(ecosystem);
         final var versBuilder = Vers.builder(scheme);
 
         for (int i = 0; i < events.size(); i++) {
@@ -144,9 +148,13 @@ public final class VersUtils {
      * @throws VersException            When the produced {@link Vers} is invalid
      * @throws InvalidVersionException  When any version in the range is invalid according to the inferred scheme
      */
-    public static Optional<Vers> versFromNvdRange(final String versionStartExcluding, final String versionStartIncluding,
-                                                  final String versionEndExcluding, final String versionEndIncluding,
-                                                  final String exactVersion) {
+    public static Optional<Vers> versFromNvdRange(
+            final String versionStartExcluding,
+            final String versionStartIncluding,
+            final String versionEndExcluding,
+            final String versionEndIncluding,
+            final String exactVersion
+    ) {
 
         // Using 'generic' as versioning scheme for NVD due to lack of package data.
         final var versBuilder = Vers.builder("generic");
@@ -188,25 +196,47 @@ public final class VersUtils {
         return Optional.of(versBuilder.build());
     }
 
-    static String schemeFromGhsaEcosystem(final String ecosystem) {
+    public static Optional<String> schemeFromGhsaEcosystem(final String ecosystem) {
         // Can be one of: actions, composer, erlang, go, maven, npm, nuget, other, pip, pub, rubygems, rust.
         return switch (ecosystem.toLowerCase()) {
-            case "go" -> "golang";
-            case "maven", "npm", "nuget" -> ecosystem.toLowerCase();
-            case "pip" -> "pypi";
-            case "rubygems" -> "gem";
-            default -> "generic";
+            case "go" -> Optional.of(KnownVersioningSchemes.SCHEME_GOLANG);
+            case "maven" -> Optional.of(KnownVersioningSchemes.SCHEME_MAVEN);
+            case "npm" -> Optional.of(KnownVersioningSchemes.SCHEME_NPM);
+            case "nuget" -> Optional.of(KnownVersioningSchemes.SCHEME_NUGET);
+            case "pip" -> Optional.of(KnownVersioningSchemes.SCHEME_PYPI);
+            case "rubygems" -> Optional.of(KnownVersioningSchemes.SCHEME_GEM);
+            default -> Optional.empty();
         };
     }
 
-    static String schemeFromOsvEcosystem(final String ecosystem) {
+    public static Optional<String> schemeFromOsvEcosystem(final String ecosystem) {
         // https://github.com/ossf/osv-schema/blob/main/docs/schema.md#affectedpackage-field
+
+        // NB: Linux distros can have an optional ":<RELEASE>" suffix.
+        if (ecosystem.startsWith("AlmaLinux")) {
+            return Optional.of(KnownVersioningSchemes.SCHEME_RPM);
+        } else if (ecosystem.startsWith("Alpine")) {
+            return Optional.of(KnownVersioningSchemes.SCHEME_ALPINE);
+        } else if (ecosystem.startsWith("Debian")) {
+            return Optional.of(KnownVersioningSchemes.SCHEME_DEBIAN);
+        } else if (ecosystem.startsWith("Mageia")) {
+            return Optional.of(KnownVersioningSchemes.SCHEME_RPM);
+        } else if (ecosystem.startsWith("Photon OS")) {
+            return Optional.of(KnownVersioningSchemes.SCHEME_RPM);
+        } else if (ecosystem.startsWith("Rocky Linux")) {
+            return Optional.of(KnownVersioningSchemes.SCHEME_RPM);
+        } else if (ecosystem.startsWith("Ubuntu")) {
+            return Optional.of(KnownVersioningSchemes.SCHEME_DEBIAN);
+        }
+
         return switch (ecosystem.toLowerCase()) {
-            case "debian" -> "deb";
-            case "go" -> "golang";
-            case "maven", "npm", "nuget", "pypi" -> ecosystem.toLowerCase();
-            case "rubygems" -> "gem";
-            default -> "generic";
+            case "go" -> Optional.of(KnownVersioningSchemes.SCHEME_GOLANG);
+            case "maven" -> Optional.of(KnownVersioningSchemes.SCHEME_MAVEN);
+            case "npm" -> Optional.of(KnownVersioningSchemes.SCHEME_NPM);
+            case "nuget" -> Optional.of(KnownVersioningSchemes.SCHEME_NUGET);
+            case "pypi" -> Optional.of(KnownVersioningSchemes.SCHEME_PYPI);
+            case "rubygems" -> Optional.of(KnownVersioningSchemes.SCHEME_GEM);
+            default -> Optional.empty();
         };
     }
 
