@@ -157,7 +157,7 @@ public final class VersUtils {
         // Using 'generic' as versioning scheme for NVD due to lack of package data.
         final var versBuilder = Vers.builder("generic");
 
-        if (versionStartExcluding != null && !versionStartIncluding.isBlank()) {
+        if (versionStartExcluding != null && !versionStartExcluding.isBlank()) {
             versBuilder.withConstraint(Comparator.GREATER_THAN, versionStartExcluding);
         }
         if (versionStartIncluding != null && !versionStartIncluding.isBlank()) {
