@@ -18,13 +18,12 @@
  */
 package io.github.nscuro.versatile.version;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.Map;
 import java.util.Objects;
 
 import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_GOLANG;
-import static org.apache.commons.lang3.CharUtils.isAsciiAlphanumeric;
+import static io.github.nscuro.versatile.version.VersionUtils.isAlphaNumeric;
+import static io.github.nscuro.versatile.version.VersionUtils.isNumeric;
 
 /**
  * @see <a href="https://github.com/golang/mod/blob/v0.12.0/semver/semver.go">Go Modules semantic version implementation</a>
@@ -311,12 +310,12 @@ public class GoVersion extends Version {
 
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L296-L298
     private static boolean isIdentChar(final char versionChar) {
-        return isAsciiAlphanumeric(versionChar) || versionChar == '-';
+        return isAlphaNumeric(String.valueOf(versionChar));
     }
 
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L308-L314
     private static boolean isNum(final String v) {
-        return StringUtils.isNumeric(v);
+        return isNumeric(v);
     }
 
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L300-L306
