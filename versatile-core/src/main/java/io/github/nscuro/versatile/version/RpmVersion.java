@@ -25,7 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_RPM;
-import static org.apache.commons.lang3.StringUtils.isNumeric;
+import static io.github.nscuro.versatile.version.VersionUtils.isNumeric;
 
 /**
  * A {@link Version} implementation for the {@code rpm} versioning scheme.

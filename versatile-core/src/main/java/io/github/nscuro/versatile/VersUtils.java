@@ -26,8 +26,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.apache.commons.lang3.StringUtils.trimToNull;
-
 public final class VersUtils {
 
     private VersUtils() {
@@ -159,16 +157,16 @@ public final class VersUtils {
         // Using 'generic' as versioning scheme for NVD due to lack of package data.
         final var versBuilder = Vers.builder("generic");
 
-        if (trimToNull(versionStartExcluding) != null) {
+        if (versionStartExcluding != null && !versionStartIncluding.isBlank()) {
             versBuilder.withConstraint(Comparator.GREATER_THAN, versionStartExcluding);
         }
-        if (trimToNull(versionStartIncluding) != null) {
+        if (versionStartIncluding != null && !versionStartIncluding.isBlank()) {
             versBuilder.withConstraint(Comparator.GREATER_THAN_OR_EQUAL, versionStartIncluding);
         }
-        if (trimToNull(versionEndExcluding) != null) {
+        if (versionEndExcluding != null && !versionEndExcluding.isBlank()) {
             versBuilder.withConstraint(Comparator.LESS_THAN, versionEndExcluding);
         }
-        if (trimToNull(versionEndIncluding) != null) {
+        if (versionEndIncluding != null && !versionEndIncluding.isBlank()) {
             versBuilder.withConstraint(Comparator.LESS_THAN_OR_EQUAL, versionEndIncluding);
         }
         // If CpeMatch does not define a version range, but the CPE itself can
