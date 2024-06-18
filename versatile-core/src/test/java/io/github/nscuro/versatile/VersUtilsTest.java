@@ -30,6 +30,7 @@ import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.github.jeremylong.openvulnerability.client.ghsa.GitHubSecurityAdvisoryClient;
 import io.github.jeremylong.openvulnerability.client.ghsa.SecurityAdvisory;
 import io.github.jeremylong.openvulnerability.client.ghsa.Vulnerabilities;
+import io.github.nscuro.versatile.version.InvalidVersionException;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -71,13 +72,13 @@ class VersUtilsTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "> 1.2.3, vers:generic/>1.2.3",
-            ">= 1.2.3, vers:generic/>=1.2.3",
-            "= 1.2.3, vers:generic/1.2.3",
-            "'> 1.2.3, <= 3.2.1', vers:generic/>1.2.3|<=3.2.1",
-            "'<= 3.2.1, > 1.2.3', vers:generic/>1.2.3|<=3.2.1",
-            "<= 3.2.1, vers:generic/<=3.2.1",
-            "< 3.2.1, vers:generic/<3.2.1",
+            "> 1.2.3, vers:other/>1.2.3",
+            ">= 1.2.3, vers:other/>=1.2.3",
+            "= 1.2.3, vers:other/1.2.3",
+            "'> 1.2.3, <= 3.2.1', vers:other/>1.2.3|<=3.2.1",
+            "'<= 3.2.1, > 1.2.3', vers:other/>1.2.3|<=3.2.1",
+            "<= 3.2.1, vers:other/<=3.2.1",
+            "< 3.2.1, vers:other/<3.2.1",
 
     })
     void testVersFromGhsaRange(final String ghsaRange, final String expectedVers) {
@@ -89,32 +90,32 @@ class VersUtilsTest {
                 arguments(
                         List.of(Map.entry("introduced", "1.2.3")),
                         null,
-                        "vers:generic/>=1.2.3"
+                        "vers:other/>=1.2.3"
                 ),
                 arguments(
                         List.of(Map.entry("introduced", "1.2.3"), Map.entry("fixed", "3.2.1")),
                         null,
-                        "vers:generic/>=1.2.3|<3.2.1"
+                        "vers:other/>=1.2.3|<3.2.1"
                 ),
                 arguments(
                         List.of(Map.entry("introduced", "1.2.3"), Map.entry("last_affected", "3.2.1")),
                         null,
-                        "vers:generic/>=1.2.3|<=3.2.1"
+                        "vers:other/>=1.2.3|<=3.2.1"
                 ),
                 arguments(
                         List.of(Map.entry("last_affected", "3.2.1"), Map.entry("introduced", "1.2.3")),
                         Map.of("foo", "bar"),
-                        "vers:generic/>=1.2.3|<=3.2.1"
+                        "vers:other/>=1.2.3|<=3.2.1"
                 ),
                 arguments(
                         List.of(Map.entry("introduced", "1.2.3"), Map.entry("limit", "3.2.1")),
                         Map.of("last_known_affected_version_range", Map.of("foo", "bar")),
-                        "vers:generic/>=1.2.3|<3.2.1"
+                        "vers:other/>=1.2.3|<3.2.1"
                 ),
                 arguments(
                         List.of(Map.entry("introduced", "4.5.6")),
                         Map.of("last_known_affected_version_range", "<7.8.9"),
-                        "vers:generic/>=4.5.6|<7.8.9"
+                        "vers:other/>=4.5.6|<7.8.9"
                 )
         );
     }
@@ -137,54 +138,63 @@ class VersUtilsTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "actions, generic",
-            "composer, generic",
-            "erlang, generic",
+            "actions, ",
+            "composer, ",
+            "erlang, ",
             "go, golang",
             "maven, maven",
             "npm, npm",
             "nuget, nuget",
-            "other, generic",
+            "other, ",
             "pip, pypi",
-            "pub, generic",
+            "pub, ",
             "rubygems, gem",
-            "rust, generic",
-            "foo, generic",
+            "rust, ",
+            "foo, ",
     })
     void testSchemeFromGhsaEcosystem(final String ecosystem, final String expectedScheme) {
-        assertThat(schemeFromGhsaEcosystem(ecosystem)).isEqualTo(expectedScheme);
+        if (expectedScheme == null) {
+            assertThat(schemeFromGhsaEcosystem(ecosystem)).isEmpty();
+        } else {
+            assertThat(schemeFromGhsaEcosystem(ecosystem)).contains(expectedScheme);
+        }
     }
 
     @ParameterizedTest
     @CsvSource(value = {
-            "AlmaLinux, generic",
-            "Alpine, generic",
-            "Android, generic",
-            "Bioconductor, generic",
-            "Bitnami, generic",
-            "CRAN, generic",
-            "ConanCenter, generic",
+            "AlmaLinux, rpm",
+            "Alpine, alpine",
+            "Android, ",
+            "Bioconductor, ",
+            "Bitnami, ",
+            "CRAN, ",
+            "ConanCenter, ",
             "Debian, deb",
-            "GHC, generic",
-            "GitHub Actions, generic",
+            "GHC, ",
+            "GitHub Actions, ",
             "Go, golang",
-            "Hackage, generic",
-            "Hex, generic",
-            "Linux, generic",
+            "Hackage, ",
+            "Hex, ",
+            "Linux, ",
+            "Mageia, rpm",
             "Maven, maven",
-            "OSS-Fuzz, generic",
-            "Packagist, generic",
-            "Photon OS, generic",
-            "Pub, generic",
+            "OSS-Fuzz, ",
+            "Packagist, ",
+            "Photon OS, rpm",
+            "Pub, ",
             "PyPI, pypi",
-            "Rocky Linux, generic",
+            "Rocky Linux, rpm",
             "RubyGems, gem",
-            "SwiftURL, generic",
-            "crates.io, generic",
+            "SwiftURL, ",
+            "crates.io, ",
             "npm, npm",
     })
     void testSchemeFromOsvEcosystem(final String ecosystem, final String expectedScheme) {
-        assertThat(schemeFromOsvEcosystem(ecosystem)).isEqualTo(expectedScheme);
+        if (expectedScheme == null) {
+            assertThat(schemeFromOsvEcosystem(ecosystem)).isEmpty();
+        } else {
+            assertThat(schemeFromOsvEcosystem(ecosystem)).contains(expectedScheme);
+        }
     }
 
     @Test
@@ -285,7 +295,7 @@ class VersUtilsTest {
                                     .put("name", affected.get("package").get("name").asText())
                                     .putPOJO("events", events)
                                     .put("vers", vers.toString()));
-                        } catch (VersException e) {
+                        } catch (VersException | InvalidVersionException e) {
                             System.out.println("Failed to convert range %s: %s".formatted(range, e));
                         }
                     }

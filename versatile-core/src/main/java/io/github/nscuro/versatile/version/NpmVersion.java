@@ -19,6 +19,7 @@
 package io.github.nscuro.versatile.version;
 
 import com.vdurmont.semver4j.Semver;
+import com.vdurmont.semver4j.SemverException;
 
 import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_NPM;
 
@@ -28,7 +29,11 @@ public class NpmVersion extends Version {
 
     NpmVersion(final String versionStr) {
         super(SCHEME_NPM, versionStr);
-        this.delegate = new Semver(versionStr, Semver.SemverType.NPM);
+        try {
+            this.delegate = new Semver(versionStr, Semver.SemverType.NPM);
+        } catch (SemverException e) {
+            throw new InvalidVersionException(versionStr, "Invalid according to SemVer", e);
+        }
     }
 
     /**
