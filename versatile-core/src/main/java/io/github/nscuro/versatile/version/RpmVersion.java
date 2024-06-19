@@ -63,7 +63,7 @@ public class RpmVersion extends Version {
 
         this.epoch = Optional.ofNullable(versionMatcher.group("epoch")).map(Integer::parseInt).orElse(0);
         this.version = versionMatcher.group("version");
-        this.release = versionMatcher.group("release");
+        this.release = Optional.ofNullable(versionMatcher.group("release")).orElse("0");
 
         if (this.version == null) {
             throw new InvalidVersionException(versionStr, """
