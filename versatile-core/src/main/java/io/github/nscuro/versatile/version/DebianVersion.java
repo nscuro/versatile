@@ -54,7 +54,7 @@ public class DebianVersion extends Version {
 
         this.epoch = Optional.ofNullable(versionMatcher.group("epoch")).map(Integer::parseInt).orElse(0);
         this.upstreamVersion = versionMatcher.group("upstreamVersion");
-        this.debianRevision = versionMatcher.group("debianRevision");
+        this.debianRevision = Optional.ofNullable(versionMatcher.group("debianRevision")).orElse("0");
 
         if (this.upstreamVersion == null) {
             throw new InvalidVersionException(versionStr, """
