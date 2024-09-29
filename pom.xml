@@ -64,7 +64,7 @@
 
         <!-- Dependency Versions -->
         <lib.assertj.version>3.26.3</lib.assertj.version>
-        <lib.checkstyle.version>10.18.1</lib.checkstyle.version>
+        <lib.checkstyle.version>10.18.2</lib.checkstyle.version>
         <lib.jackson-databind.version>2.18.0</lib.jackson-databind.version>
         <lib.json-path.version>2.9.0</lib.json-path.version>
         <lib.junit-jupiter.version>5.11.1</lib.junit-jupiter.version>
