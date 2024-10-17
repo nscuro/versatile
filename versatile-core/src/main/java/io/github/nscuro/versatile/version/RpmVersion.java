@@ -21,6 +21,7 @@ package io.github.nscuro.versatile.version;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,6 +35,17 @@ import static io.github.nscuro.versatile.version.VersionUtils.isNumeric;
  * @see <a href="https://github.com/rpm-software-management/rpm/blob/rpm-4.19.0-rc1/rpmio/rpmvercmp.c">RPM version comparison logic</a>
  */
 public class RpmVersion extends Version {
+
+    /**
+     * @since 0.8.0
+     */
+    public static class Provider extends AbstractBuiltinVersionProvider {
+
+        public Provider() {
+            super(Set.of(SCHEME_RPM), (scheme, versionStr) -> new RpmVersion(versionStr));
+        }
+
+    }
 
     private static final Pattern VERSION_PATTERN = Pattern.compile("""
             ^((?<epoch>\\d+):)?(?<version>[^-]+?)(-(?<release>[^-]+))?$\

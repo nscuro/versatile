@@ -20,6 +20,7 @@ package io.github.nscuro.versatile.version;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +32,17 @@ import static io.github.nscuro.versatile.version.VersionUtils.isNumeric;
  * @see <a href="https://github.com/romlok/python-debian/blob/be7a55c8415da239fb408ca4d22d5d3a52fbede1/lib/debian/debian_support.py#L177-L258">python-debian implementation</a>
  */
 public class DebianVersion extends Version {
+
+    /**
+     * @since 0.8.0
+     */
+    public static class Provider extends AbstractBuiltinVersionProvider {
+
+        public Provider() {
+            super(Set.of(SCHEME_DEBIAN), (scheme, versionStr) -> new DebianVersion(versionStr));
+        }
+
+    }
 
     private static final Pattern VERSION_PATTERN = Pattern.compile("""
             ^((?<epoch>\\d+):)?(?<upstreamVersion>[A-Za-z0-9.+-:~]+?)(-(?<debianRevision>[A-Za-z0-9+.~]+))?$\

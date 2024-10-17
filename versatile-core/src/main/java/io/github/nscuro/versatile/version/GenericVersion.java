@@ -20,7 +20,22 @@ package io.github.nscuro.versatile.version;
 
 import io.github.nscuro.versatile.version.ext.ComponentVersion;
 
+import java.util.Set;
+
+import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_GENERIC;
+
 public class GenericVersion extends Version {
+
+    /**
+     * @since 0.8.0
+     */
+    public static class Provider extends AbstractBuiltinVersionProvider {
+
+        public Provider() {
+            super(Set.of(SCHEME_GENERIC), GenericVersion::new);
+        }
+
+    }
 
     private final ComponentVersion delegate; // TODO: Use a custom implementation.
 

@@ -1,6 +1,6 @@
-io.github.nscuro.versatile.version.DebianVersionProvider
-io.github.nscuro.versatile.version.GenericVersionProvider
-io.github.nscuro.versatile.version.GoVersionProvider
-io.github.nscuro.versatile.version.MavenVersionProvider
-io.github.nscuro.versatile.version.NpmVersionProvider
-io.github.nscuro.versatile.version.RpmVersionProvider
+io.github.nscuro.versatile.version.DebianVersion$Provider
+io.github.nscuro.versatile.version.GenericVersion$Provider
+io.github.nscuro.versatile.version.GoVersion$Provider
+io.github.nscuro.versatile.version.MavenVersion$Provider
+io.github.nscuro.versatile.version.NpmVersion$Provider
+io.github.nscuro.versatile.version.RpmVersion$Provider
