@@ -21,11 +21,23 @@ package io.github.nscuro.versatile.version;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_MAVEN;
 
 public class MavenVersion extends Version {
+
+    /**
+     * @since 0.8.0
+     */
+    public static class Provider extends AbstractBuiltinVersionProvider {
+
+        public Provider() {
+            super(Set.of(SCHEME_MAVEN), (scheme, versionStr) -> new MavenVersion(versionStr));
+        }
+
+    }
 
     private static final Pattern UNSTABLE_QUALIFIER_PATTERN = Pattern.compile("""
             ^(snapshot|rc\\d*|alpha\\.?\\d*|beta\\.?\\d*|m\\.?\\d*|milestone\\.\\d*)$

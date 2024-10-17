@@ -20,6 +20,7 @@ package io.github.nscuro.versatile.version;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_GOLANG;
 import static io.github.nscuro.versatile.version.VersionUtils.isAlphaNumeric;
@@ -30,6 +31,17 @@ import static io.github.nscuro.versatile.version.VersionUtils.isNumeric;
  * @see <a href="https://github.com/golang/mod/blob/v0.12.0/module/pseudo.go">Go Modules pseudo version implementation</a>
  */
 public class GoVersion extends Version {
+
+    /**
+     * @since 0.8.0
+     */
+    public static class Provider extends AbstractBuiltinVersionProvider {
+
+        public Provider() {
+            super(Set.of(SCHEME_GOLANG), (scheme, versionStr) -> new GoVersion(versionStr));
+        }
+
+    }
 
     private final String major;
     private final String minor;

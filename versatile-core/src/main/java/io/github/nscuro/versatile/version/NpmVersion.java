@@ -21,9 +21,22 @@ package io.github.nscuro.versatile.version;
 import com.vdurmont.semver4j.Semver;
 import com.vdurmont.semver4j.SemverException;
 
+import java.util.Set;
+
 import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_NPM;
 
 public class NpmVersion extends Version {
+
+    /**
+     * @since 0.8.0
+     */
+    public static class Provider extends AbstractBuiltinVersionProvider {
+
+        public Provider() {
+            super(Set.of(SCHEME_NPM), (scheme, versionStr) -> new NpmVersion(versionStr));
+        }
+
+    }
 
     private final Semver delegate;
 
