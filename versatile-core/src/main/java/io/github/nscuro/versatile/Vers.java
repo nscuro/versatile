@@ -403,6 +403,102 @@ public record Vers(String scheme, List<Constraint> constraints) {
         return this;
     }
 
+    /**
+     * Checks if his vers has a potential version overlap with another vers
+     *
+     * @param vers the vers to check for overlap with
+     * @return true if there is an overlap, false otherwise
+     * @throws VersException if the compared verses have different schemes
+     */
+    public boolean overlapsWith(Vers vers) {
+
+        // Ensure both Vers use the same scheme
+        if (!this.constraints().get(0).scheme().equals(vers.constraints().get(0).scheme())) {
+            throw new VersException(
+                "Vers ranges with different schemes cannot be checked for an overlap");
+        }
+        // if one of the vers is empty, there can't be an overlap
+        if (this.constraints().isEmpty() || vers.constraints().isEmpty()) {
+            return false;
+        }
+
+        // there is always an overlap if one of the versions is a wildcard
+        if (this.isWildcard() || vers.isWildcard()) {
+            return true;
+        }
+
+        // check if any version denoted as equal, greaterOrEqual or smallerOrEqual constraint is part of the other range
+        if (isPartOf(this, vers) || isPartOf(vers, this)) {
+            return true;
+        }
+
+        // we checked all the equality parts, we can remove all equal parts and do upper / lower bounds
+        // check on the rest
+        var const1 =
+            this.constraints().stream()
+                .filter(
+                    c ->
+                        !c.comparator().equals(Comparator.EQUAL)
+                            && !c.comparator().equals(Comparator.NOT_EQUAL))
+                .toList();
+        var const2 =
+            vers.constraints().stream()
+                .filter(
+                    c ->
+                        !c.comparator().equals(Comparator.EQUAL)
+                            && !c.comparator().equals(Comparator.NOT_EQUAL))
+                .toList();
+
+        // if one of the vers doesn't contain ranges anymore, we are done
+        if (const1.isEmpty() || const2.isEmpty()) {
+            return false;
+        }
+
+
+        // This ensures we have pairs of < then > then < then > and so on
+        //   without cases of < or <= being followed by < or <=
+        // From this point on we do not care about the `orEqual` anymore,as it was checked before already
+        var vers1 = new Vers(this.scheme(), const1).simplify();
+        var vers2 = new Vers(vers.scheme(), const2).simplify();
+
+
+        // unbounded constraints are < at the beginning or > at the end of a vers
+        // this may be mergeable with the bounds checks happening later
+        if (overlapsWithUnboundedConstraint(vers1, vers2) || overlapsWithUnboundedConstraint(vers2, vers1)) {
+            return true;
+        }
+
+        // we can drop all unbounded constraints, they have no relevance for an overlap anymore
+        const1 = removeUnboundedConstraints(vers1);
+        const2 = removeUnboundedConstraints(vers2);
+
+        if (const1.isEmpty() || const2.isEmpty()) {
+            return false;
+        }
+        vers1 = new Vers(vers1.scheme(), const1);
+        vers2 = new Vers(vers2.scheme(), const2);
+
+        // at this point both vers contains pairs of boundaries starting with > < > < > <
+        // it should always be an even number of boundaries. we can split those up into ranges
+        if (vers1.constraints().size() % 2 != 0 || vers2.constraints().size() % 2 != 0) {
+            throw new RuntimeException("Unexpected behavior detected! Please file a bug");
+        }
+
+        for (var i = 0; i < vers1.constraints().size(); i = i + 2) {
+            for (var j = 0; j < vers2.constraints().size(); j = j + 2) {
+
+                if (boundsOverlap(
+                    vers1.constraints().get(i).version(),
+                    vers1.constraints().get(i + 1).version(),
+                    vers2.constraints().get(j).version(),
+                    vers2.constraints().get(j + 1).version())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     @Override
     public String toString() {
         final String schemeStr = scheme().toLowerCase();
@@ -420,6 +516,86 @@ public record Vers(String scheme, List<Constraint> constraints) {
     private static boolean isUpperBoundConstraint(final Constraint constraint) {
         return constraint != null && (constraint.comparator() == Comparator.LESS_THAN
                 || constraint.comparator() == Comparator.LESS_THAN_OR_EQUAL);
+    }
+
+
+    private static boolean isPartOf(Vers vers1, Vers vers2) {
+        // get all equal constraints
+        var equalityConstraints =
+            vers1.constraints().stream()
+                .filter(
+                    c ->
+                        c.comparator().equals(Comparator.EQUAL)
+                            || c.comparator().equals(Comparator.GREATER_THAN_OR_EQUAL)
+                            || c.comparator().equals(Comparator.LESS_THAN_OR_EQUAL))
+                .toList();
+
+        for (var constraint : equalityConstraints) {
+            if (vers2.contains(constraint.version().toString())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean overlapsWithUnboundedConstraint(Vers vers1, Vers vers2) {
+        // if first constraint is < or last constraint is > than this is an unbound constraint
+        var first = vers1.constraints().get(0);
+        if (isUpperBoundConstraint(first)) {
+            // this is an upper bound without limit such as "vers:generic/<1.2.3" should overlap with
+            // "vers:generic/<1.2.1|>1.3.0"
+            // if the version is larger than any of the versions of vers2, than we have an overlap
+            for (var constraint2 : vers2.constraints()) {
+                if (first.version().compareTo(constraint2.version()) > 0) {
+                    return true;
+                }
+            }
+        }
+
+        var last = vers1.constraints().get(vers1.constraints().size() - 1);
+        if (isLowerBoundConstraint(last)) {
+            // this is a lower bound without limit such as "vers:generic/>1.2.3",
+            // "vers:generic/>1.2.9|<1.3.0", "vers:generic/<1.3.0"
+            // if the version is smaller than any of the versions of vers2, than we have an overlap
+            for (var constraint2 : vers2.constraints()) {
+                if (last.version().compareTo(constraint2.version()) < 0) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean boundsOverlap(
+        Version lower1, Version upper1, Version lower2, Version upper2) {
+
+        // Check if the ranges overlap
+        return lower1.compareTo(upper2) < 0 && lower2.compareTo(upper1) < 0;
+    }
+
+    public static List<Constraint> removeUnboundedConstraints(Vers vers) {
+
+        var constraints = vers.constraints();
+
+        if (constraints.isEmpty()) {
+            return constraints;
+        }
+
+        var first = constraints.get(0);
+        if (isUpperBoundConstraint(first)) {
+            constraints = constraints.stream().filter(c -> !c.equals(first)).toList();
+        }
+
+        if (constraints.isEmpty()) {
+            return constraints;
+        }
+
+        var last = constraints.get(constraints.size() - 1);
+        if (isLowerBoundConstraint(last)) {
+            constraints = constraints.stream().filter(c -> !c.equals(last)).toList();
+        }
+        return constraints;
     }
 
     public static class Builder {
