@@ -180,4 +180,45 @@ class VersTest {
 
     }
 
+    @ParameterizedTest
+    @CsvSource({
+        "'vers:generic/1.2.3', 'vers:generic/1.2.3', true",
+        "'vers:generic/>=1.2.0|<2.0.0', 'vers:generic/1.5.0', true",
+        "'vers:generic/<1.2.0', 'vers:generic/>=1.2.0', false",
+        "'vers:generic/>=1.0.0|<3.0.0', 'vers:generic/2.5.0', true",
+        "'vers:generic/1.0.0|2.0.0', 'vers:generic/2.0.0|3.0.0', true",
+        "'vers:generic/<2.0.0', 'vers:generic/>=2.0.0', false",
+        "'vers:generic/>=1.0.0|<3.0.0', 'vers:generic/>=2.5.0|<4.0.0', true",
+        "'vers:generic/1.0.0|1.1.0', 'vers:generic/1.2.0|1.3.0', false",
+        "'vers:generic/<1.0.0|>=3.0.0', 'vers:generic/1.5.0|2.5.0', false",
+        "'vers:generic/>=1.0.0|<2.5.0|>=3.0.0|<4.0.0', 'vers:generic/>=2.0.0|<3.5.0', true",
+        "'vers:generic/<1.0.0|>=2.0.0|<2.5.0', 'vers:generic/1.0.5|>=3.0.0', false",
+        "'vers:generic/>=1.0.0|<3.0.0', 'vers:generic/2.0.0|2.5.0', true",
+        "'vers:generic/1.0.0|1.2.0|1.4.0', 'vers:generic/1.1.0|1.3.0', false",
+        "'vers:generic/>=1.0.0|<5.0.0', 'vers:generic/>=2.0.0|<3.0.0', true",
+        "'vers:generic/>=1.0.0|<2.0.0', 'vers:generic/>=3.0.0|<4.0.0', false",
+        "'vers:generic/>=1.0.0|<3.0.0', 'vers:generic/2.5.1', true",
+        "'vers:generic/<2.0.0', 'vers:generic/>=2.0.0', false",
+        "'vers:generic/1.2.3', 'vers:generic/>1.0.0|!=1.2.3', false",
+        "'vers:generic/1.0.0|>=2.0.0|<4.0.0', 'vers:generic/>=3.5.0|<5.0.0', true",
+        "'vers:generic/1.0.0|>2.0.0|<2.5.0|>=3.0.0|<3.5.0', 'vers:generic/1.5.0|>=2.5.0|<3.0.0|>=4.0.0', false",
+        "'vers:generic/*', 'vers:generic/3.3.3', true",
+        "'vers:generic/*', 'vers:generic/<1.0.0|>=2.0.0|<3.0.0', true",
+        "'vers:generic/*', 'vers:generic/1.2.3|>=3.0.0', true",
+        "'vers:generic/*', 'vers:generic/2.0.0|3.0.0', true",
+        "'vers:generic/1.2.0|1.4.0', 'vers:generic/1.3.0|1.5.0', false",
+        "'vers:generic/>1.2.3', 'vers:generic/<1.3.0', true",
+        "'vers:generic/>1.2.3|<1.2.9', 'vers:generic/<1.3.0', true",
+        "'vers:generic/>1.2.3|<1.2.9', 'vers:generic/>1.2.9|<1.3.0', false",
+        "'vers:generic/>1.2.3|<1.3.1', 'vers:generic/>1.2.9|<1.3.0', true",
+        "'vers:generic/>1.2.3|<1.3.1', 'vers:generic/>1.2.9|<1.3.3', true",
+        "'vers:generic/>1.2.3|<1.3.1|>1.7', 'vers:generic/>1.3.2|<1.3.4|<1.6.9', false",
+        "'vers:generic/>1.2.3|<1.3.1|>1.7', 'vers:generic/>1.3.2|<1.3.4|<1.8', true"
+    })
+    void testHasOverlap(String version1, String version2, boolean expected) {
+        var v1 = Vers.parse(version1);
+        var v2 = Vers.parse(version2);
+        assertThat(v1.overlapsWith(v2)).isEqualTo(expected);
+        assertThat(v2.overlapsWith(v1)).isEqualTo(expected);
+    }
 }
