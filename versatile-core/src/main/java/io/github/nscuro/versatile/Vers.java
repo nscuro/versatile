@@ -499,6 +499,19 @@ public record Vers(String scheme, List<Constraint> constraints) {
         return false;
     }
 
+    /**
+     * Inverts a given vers expression and returns a new simplified vers
+     *
+     * @throws VersException if the vers is a wildcard
+     */
+    public Vers invert() {
+        if (isWildcard()) {
+            throw new VersException("Can not invert wildcard vers");
+        }
+        var inverted = constraints.stream().map(Constraint::invert).toList();
+        return new Vers(this.scheme(), inverted).simplify();
+    }
+
     @Override
     public String toString() {
         final String schemeStr = scheme().toLowerCase();
