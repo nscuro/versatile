@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 class VersTest {
@@ -220,5 +221,77 @@ class VersTest {
         var v2 = Vers.parse(version2);
         assertThat(v1.overlapsWith(v2)).isEqualTo(expected);
         assertThat(v2.overlapsWith(v1)).isEqualTo(expected);
+    }
+
+
+    @ParameterizedTest
+    @CsvSource({
+        "'vers:generic/1.2.3', 'vers:generic/!=1.2.3'",
+        "'vers:generic/>=1.2.0|<2.0.0', 'vers:generic/<1.2.0|>=2.0.0'",
+        "'vers:generic/<1.2.0', 'vers:generic/>=1.2.0'",
+        "'vers:generic/>=1.0.0|<3.0.0', 'vers:generic/<1.0.0|>=3.0.0'",
+        "'vers:generic/1.0.0|2.0.0', 'vers:generic/!=1.0.0|!=2.0.0'",
+        "'vers:generic/<2.0.0', 'vers:generic/>=2.0.0'",
+        "'vers:generic/>=1.0.0|<3.0.0', 'vers:generic/<1.0.0|>=3.0.0'",
+        "'vers:generic/1.0.0|1.1.0', 'vers:generic/!=1.0.0|!=1.1.0'",
+        "'vers:generic/<1.0.0|>=3.0.0', 'vers:generic/>=1.0.0|<3.0.0'",
+        "'vers:generic/>=1.0.0|<2.5.0|>=3.0.0|<4.0.0', 'vers:generic/<1.0.0|>=2.5.0|<3.0.0|>=4.0.0'",
+        "'vers:generic/<1.0.0|>=2.0.0|<2.5.0', 'vers:generic/>=1.0.0|<2.0.0|>=2.5.0'",
+        "'vers:generic/<3.0.0|>=1.0.0', 'vers:generic/<1.0.0|>=3.0.0'",
+        "'vers:generic/1.0.0|1.2.0|1.4.0', 'vers:generic/!=1.0.0|!=1.2.0|!=1.4.0'",
+        "'vers:generic/>=1.0.0|<5.0.0', 'vers:generic/<1.0.0|>=5.0.0'",
+        "'vers:generic/>=1.0.0|<2.0.0', 'vers:generic/<1.0.0|>=2.0.0'",
+        "'vers:generic/>1.2.3', 'vers:generic/<=1.2.3'",
+        "'vers:generic/>1.2.3|<1.2.9', 'vers:generic/<=1.2.3|>=1.2.9'",
+        "'vers:generic/>1.2.3|<1.3.1', 'vers:generic/<=1.2.3|>=1.3.1'",
+        "'vers:generic/>=1.0.0|<2.0.0|>=2.5.0|<3.5.0', 'vers:generic/<1.0.0|>=2.0.0|<2.5.0|>=3.5.0'",
+        "'vers:generic/<1.5.0|>=2.0.0|!=2.7.0|<3.2.0', 'vers:generic/>=1.5.0|<2.0.0|2.7.0|>=3.2.0'",
+        "'vers:generic/>=1.0.0|!=1.5.0|<2.5.0|>=3.0.0|!=3.2.0', 'vers:generic/<1.0.0|1.5.0|>=2.5.0|<3.0.0|3.2.0'",
+        "'vers:generic/>1.2.3|!=2.0.0|<=3.5.1|3.6.2|>4.0.0|<5.0.0', 'vers:generic/<=1.2.3|2.0.0|>3.5.1|!=3.6.2|<=4.0.0|>=5.0.0'",
+        "'vers:generic/>=1.1.0|<2.2.0|!=2.1.0|>=3.0.0|<4.0.0', 'vers:generic/<1.1.0|>=2.2.0|<3.0.0|>=4.0.0'"
+    })
+    void testInvert(String version, String expectedInverted) {
+        var v = Vers.parse(version);
+        var inverted = v.invert();
+        assertThat(inverted.toString()).isEqualTo(expectedInverted);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "'vers:generic/1.2.3'",
+        "'vers:generic/>=1.2.0|<2.0.0'",
+        "'vers:generic/<1.2.0'",
+        "'vers:generic/>=1.0.0|<3.0.0'",
+        "'vers:generic/1.0.0|2.0.0'",
+        "'vers:generic/<2.0.0'",
+        "'vers:generic/>=1.0.0|<3.0.0'",
+        "'vers:generic/1.0.0|1.1.0'",
+        "'vers:generic/<1.0.0|>=3.0.0'",
+        "'vers:generic/>=1.0.0|<2.5.0|>=3.0.0|<4.0.0'",
+        "'vers:generic/<1.0.0|>=2.0.0|<2.5.0'",
+        "'vers:generic/>=1.0.0|<3.0.0'",
+        "'vers:generic/1.0.0|1.2.0|1.4.0'",
+        "'vers:generic/>=1.0.0|<5.0.0'",
+        "'vers:generic/>=1.0.0|<2.0.0'",
+        "'vers:generic/>1.2.3'",
+        "'vers:generic/>1.2.3|<1.2.9'",
+        "'vers:generic/>1.2.3|<1.3.1'",
+        "'vers:generic/>=1.0.0|<2.0.0|>=2.5.0|<3.5.0'",
+        "'vers:generic/<1.5.0|>=2.0.0|!=2.7.0|<3.2.0'",
+        "'vers:generic/>=1.0.0|!=1.5.0|<2.5.0|>=3.0.0|!=3.2.0'",
+        "'vers:generic/>1.2.3|!=2.0.0|<=3.5.1|>4.0.0|<5.0.0'",
+        "'vers:generic/>=1.1.0|<2.2.0|!=2.1.0|>=3.0.0|<4.0.0'"
+    })
+    void testInvertedDoesNotOverlap(String version) {
+        var v = Vers.parse(version);
+        var inverted = v.invert();
+        assertThat(v.overlapsWith(inverted)).isEqualTo(false);
+    }
+
+    @Test
+    void testInvertThrowsErrorOnWildcard() {
+        var v = Vers.parse("vers:generic/*");
+        assertThatThrownBy(v::invert)
+            .isInstanceOf(VersException.class);
     }
 }

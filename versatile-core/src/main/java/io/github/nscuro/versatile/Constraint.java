@@ -95,6 +95,22 @@ public class Constraint implements Comparable<Constraint> {
         };
     }
 
+  /**
+   * Inverts the comparator of the constraint e.g. {@code < 1.3} becomes {@code >= 1.3}
+   * @return a new inverted constraint and null if current comparator is a wildcard: *
+   */
+  Constraint invert(){
+        return switch (comparator) {
+            case LESS_THAN -> new Constraint(scheme, Comparator.GREATER_THAN_OR_EQUAL, version);
+            case LESS_THAN_OR_EQUAL -> new Constraint(scheme, Comparator.GREATER_THAN, version);
+            case GREATER_THAN_OR_EQUAL -> new Constraint(scheme, Comparator.LESS_THAN, version);
+            case GREATER_THAN -> new Constraint(scheme, Comparator.LESS_THAN_OR_EQUAL, version);
+            case EQUAL -> new Constraint(scheme, Comparator.NOT_EQUAL, version);
+            case NOT_EQUAL -> new Constraint(scheme, Comparator.EQUAL, version);
+            case WILDCARD -> null;
+        };
+    }
+
     private static String maybeUrlDecode(final String version) {
         if (version.contains("%")) {
             return URLDecoder.decode(version, StandardCharsets.UTF_8);
