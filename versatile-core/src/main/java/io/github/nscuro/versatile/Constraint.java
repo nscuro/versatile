@@ -96,7 +96,7 @@ public class Constraint implements Comparable<Constraint> {
     }
 
   /**
-   * Inverts the comparator of the constraint e.g. < 1.3 becomes >= 1.3
+   * Inverts the comparator of the constraint e.g. {@code < 1.3} becomes {@code >= 1.3}
    * @return a new inverted constraint and null if current comparator is a wildcard: *
    */
   Constraint invert(){
