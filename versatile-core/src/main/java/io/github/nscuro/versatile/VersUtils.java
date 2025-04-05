@@ -128,7 +128,29 @@ public final class VersUtils {
             }
         }
 
-        return versBuilder.build();
+        final Vers vers = versBuilder.build();
+
+        // >=0 is equivalent to *
+        if (vers.constraints().size() == 1
+            && Comparator.GREATER_THAN_OR_EQUAL == vers.constraints().get(0).comparator()
+            && "0".equals(vers.constraints().get(0).version().toString())) {
+            return Vers.builder(vers.scheme())
+                    .withConstraint(Comparator.WILDCARD, null)
+                    .build();
+        }
+
+        // >=0|<X is equivalent to <X
+        // >=0|<=X is equivalent to <=X
+        if (vers.constraints().size() == 2
+            && Comparator.GREATER_THAN_OR_EQUAL == vers.constraints().get(0).comparator()
+            && "0".equals(vers.constraints().get(0).version().toString())
+            && Set.of(Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL).contains(vers.constraints().get(1).comparator())) {
+            return Vers.builder(vers.scheme())
+                    .withConstraint(vers.constraints().get(1))
+                    .build();
+        }
+
+        return vers;
     }
 
     /**
