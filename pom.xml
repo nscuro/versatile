@@ -69,7 +69,7 @@
         <lib.json-path.version>2.9.0</lib.json-path.version>
         <lib.junit-jupiter.version>5.12.2</lib.junit-jupiter.version>
         <lib.maven-artifact.version>3.9.9</lib.maven-artifact.version>
-        <lib.open-vulnerability-clients.version>7.3.2</lib.open-vulnerability-clients.version>
+        <lib.open-vulnerability-clients.version>8.0.0</lib.open-vulnerability-clients.version>
         <lib.packageurl-java.version>1.5.0</lib.packageurl-java.version>
         <lib.semver4j.version>3.1.0</lib.semver4j.version>
 
