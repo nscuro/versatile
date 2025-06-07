@@ -8,6 +8,8 @@
     </parent>
     <artifactId>versatile-core</artifactId>
 
+    <name>${project.groupId}:${project.artifactId}</name>
+
     <properties>
         <project.parentBaseDir>../</project.parentBaseDir>
     </properties>
