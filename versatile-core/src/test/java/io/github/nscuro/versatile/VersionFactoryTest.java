@@ -18,9 +18,9 @@
  */
 package io.github.nscuro.versatile;
 
+import io.github.nscuro.versatile.spi.Version;
 import io.github.nscuro.versatile.version.GenericVersion;
 import io.github.nscuro.versatile.version.GoVersion;
-import io.github.nscuro.versatile.version.Version;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

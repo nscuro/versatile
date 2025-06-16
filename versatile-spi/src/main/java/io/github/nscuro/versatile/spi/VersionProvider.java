@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright (c) Niklas Düster. All Rights Reserved.
  */
-package io.github.nscuro.versatile.version;
+package io.github.nscuro.versatile.spi;
 
 /**
  * @since 0.8.0

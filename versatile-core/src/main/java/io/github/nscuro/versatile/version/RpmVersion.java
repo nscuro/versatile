@@ -18,6 +18,9 @@
  */
 package io.github.nscuro.versatile.version;
 
+import io.github.nscuro.versatile.spi.InvalidVersionException;
+import io.github.nscuro.versatile.spi.Version;
+
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;

@@ -20,6 +20,8 @@ package io.github.nscuro.versatile.version;
 
 import com.vdurmont.semver4j.Semver;
 import com.vdurmont.semver4j.SemverException;
+import io.github.nscuro.versatile.spi.InvalidVersionException;
+import io.github.nscuro.versatile.spi.Version;
 
 import java.util.Set;
 

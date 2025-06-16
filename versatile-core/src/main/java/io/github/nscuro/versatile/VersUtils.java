@@ -18,7 +18,7 @@
  */
 package io.github.nscuro.versatile;
 
-import io.github.nscuro.versatile.version.InvalidVersionException;
+import io.github.nscuro.versatile.spi.InvalidVersionException;
 import io.github.nscuro.versatile.version.KnownVersioningSchemes;
 
 import java.util.List;

@@ -18,6 +18,7 @@
  */
 package io.github.nscuro.versatile.version;
 
+import io.github.nscuro.versatile.spi.Version;
 import io.github.nscuro.versatile.version.ext.ComponentVersion;
 
 import java.util.Set;
