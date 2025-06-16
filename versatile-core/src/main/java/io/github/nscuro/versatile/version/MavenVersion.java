@@ -18,6 +18,7 @@
  */
 package io.github.nscuro.versatile.version;
 
+import io.github.nscuro.versatile.spi.Version;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 

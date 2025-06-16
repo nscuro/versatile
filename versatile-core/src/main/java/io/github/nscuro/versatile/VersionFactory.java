@@ -18,8 +18,8 @@
  */
 package io.github.nscuro.versatile;
 
-import io.github.nscuro.versatile.version.Version;
-import io.github.nscuro.versatile.version.VersionProvider;
+import io.github.nscuro.versatile.spi.Version;
+import io.github.nscuro.versatile.spi.VersionProvider;
 
 import java.util.Comparator;
 import java.util.HashMap;

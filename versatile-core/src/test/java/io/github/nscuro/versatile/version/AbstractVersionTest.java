@@ -18,6 +18,8 @@
  */
 package io.github.nscuro.versatile.version;
 
+import io.github.nscuro.versatile.spi.Version;
+
 import java.util.function.BiConsumer;
 
 import static org.assertj.core.api.Assertions.assertThat;

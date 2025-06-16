@@ -18,6 +18,9 @@
  */
 package io.github.nscuro.versatile.version;
 
+import io.github.nscuro.versatile.spi.Version;
+import io.github.nscuro.versatile.spi.VersionProvider;
+
 import java.util.Set;
 import java.util.function.BiFunction;
 
