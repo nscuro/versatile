@@ -54,7 +54,7 @@
         <!-- Dependency Versions -->
         <lib.assertj.version>3.27.4</lib.assertj.version>
         <lib.checkstyle.version>11.0.0</lib.checkstyle.version>
-        <lib.jackson-databind.version>2.19.2</lib.jackson-databind.version>
+        <lib.jackson-databind.version>2.20.0</lib.jackson-databind.version>
         <lib.json-path.version>2.9.0</lib.json-path.version>
         <lib.junit-jupiter.version>5.13.4</lib.junit-jupiter.version>
         <lib.maven-artifact.version>3.9.11</lib.maven-artifact.version>
