@@ -22,6 +22,7 @@
     <modules>
         <module>versatile-spi</module>
         <module>versatile-core</module>
+        <module>versatile-conformance</module>
     </modules>
 
     <licenses>
@@ -149,7 +150,7 @@
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>3.6.0</version>
                 <configuration>
-                    <configLocation>.checkstyle/config.xml</configLocation>
+                    <configLocation>${project.parentBaseDir}/.checkstyle/config.xml</configLocation>
                     <includeResources>false</includeResources>
                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
                     <includeTestResources>false</includeTestResources>

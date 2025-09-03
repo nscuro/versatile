@@ -76,4 +76,16 @@ public class MavenVersion extends Version {
                 .formatted(this.getClass().getName(), other.getClass().getName()));
     }
 
+    @Override
+    public boolean equals(final Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof final MavenVersion otherVersion)) {
+            return false;
+        }
+
+        return this.delegate.equals(otherVersion.delegate);
+    }
+
 }
