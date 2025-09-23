@@ -52,7 +52,7 @@
         <project.parentBaseDir>.</project.parentBaseDir>
 
         <!-- Dependency Versions -->
-        <lib.assertj.version>3.27.5</lib.assertj.version>
+        <lib.assertj.version>3.27.6</lib.assertj.version>
         <lib.checkstyle.version>11.0.1</lib.checkstyle.version>
         <lib.jackson-databind.version>2.20.0</lib.jackson-databind.version>
         <lib.json-path.version>2.9.0</lib.json-path.version>
