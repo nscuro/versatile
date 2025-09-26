@@ -22,6 +22,7 @@
     <modules>
         <module>versatile-spi</module>
         <module>versatile-core</module>
+        <module>versatile-conformance</module>
     </modules>
 
     <licenses>
