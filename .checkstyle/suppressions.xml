@@ -4,4 +4,5 @@
         "https://checkstyle.org/dtds/suppressions_1_2.dtd">
 <suppressions>
     <suppress checks="header" files="io[\\/]github[\\/]nscuro[\\/]versatile[\\/]version[\\/]ext[\\/]ComponentVersion.java" />
+    <suppress checks="Header" files="io[\\/]github[\\/]nscuro[\\/]versatile[\\/]VersSchemaBasedTest.java"/>
 </suppressions>
