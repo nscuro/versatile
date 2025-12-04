@@ -3,4 +3,5 @@ io.github.nscuro.versatile.version.GenericVersion$Provider
 io.github.nscuro.versatile.version.GoVersion$Provider
 io.github.nscuro.versatile.version.MavenVersion$Provider
 io.github.nscuro.versatile.version.NpmVersion$Provider
+io.github.nscuro.versatile.version.PythonVersion$Provider
 io.github.nscuro.versatile.version.RpmVersion$Provider

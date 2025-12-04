@@ -24,7 +24,7 @@ Java implementation of [vers](https://github.com/package-url/purl-spec/blob/vers
 | Maven    |     ✅     |
 | NPM      |     ✅     |
 | Nuget    |     ❌     |
-| PyPI     |     ❌     |
+| PyPI     |     ✅     |
 | RPM      |     ✅     |
 
 > [!NOTE]
