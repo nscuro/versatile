@@ -53,13 +53,14 @@
         <!-- Dependency Versions -->
         <lib.assertj.version>3.27.6</lib.assertj.version>
         <lib.checkstyle.version>12.2.0</lib.checkstyle.version>
-        <lib.jackson-databind.version>2.20.1</lib.jackson-databind.version>
+        <lib.jackson.version>2.20.1</lib.jackson.version>
         <lib.json-path.version>2.10.0</lib.json-path.version>
         <lib.junit-jupiter.version>6.0.1</lib.junit-jupiter.version>
         <lib.maven-artifact.version>3.9.11</lib.maven-artifact.version>
         <lib.open-vulnerability-clients.version>9.0.2</lib.open-vulnerability-clients.version>
         <lib.packageurl-java.version>1.5.0</lib.packageurl-java.version>
         <lib.semver4j.version>3.1.0</lib.semver4j.version>
+        <lib.slf4j.version>2.0.17</lib.slf4j.version>
 
         <!-- Default SCM Properties -->
         <scm.connection>scm:git:ssh://git@github.com/nscuro/versatile.git</scm.connection>
@@ -68,12 +69,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>io.github.nscuro</groupId>
-                <artifactId>versatile-spi</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
             <dependency>
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-artifact</artifactId>
@@ -93,9 +88,11 @@
             </dependency>
 
             <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter</artifactId>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
                 <version>${lib.junit-jupiter.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
             </dependency>
 
             <dependency>
@@ -105,9 +102,11 @@
             </dependency>
 
             <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${lib.jackson-databind.version}</version>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${lib.jackson.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
             </dependency>
 
             <dependency>
@@ -120,6 +119,14 @@
                 <groupId>io.github.jeremylong</groupId>
                 <artifactId>open-vulnerability-clients</artifactId>
                 <version>${lib.open-vulnerability-clients.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-bom</artifactId>
+                <version>${lib.slf4j.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
             </dependency>
         </dependencies>
     </dependencyManagement>
