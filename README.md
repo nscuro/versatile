@@ -14,7 +14,7 @@ Java implementation of [vers](https://github.com/package-url/purl-spec/blob/vers
 
 | Scheme   | Supported |
 |:---------|:---------:|
-| Alpine   |     ❌     |
+| Alpine   |     ✅     |
 | CPAN     |     ❌     |
 | Debian   |     ✅     |
 | Ruby Gem |     ❌     |
@@ -201,16 +201,16 @@ for versioning scheme support.
 To add support for a new scheme, let's say `alpine`, the following steps may be performed:
 
 1. Add either `versatile-core`, or `versatile-spi` as dependency to your project
-2. Create a class `AlpineVersion` that extends `io.github.nscuro.versatile.version.Version`
+2. Create a class `AlpineVersion` that extends `io.github.nscuro.versatile.spi.Version`
 3. Implement the version parsing logic as desired
     * Be sure to overwrite `compareTo`, `equals`, `hashCode`, and `toString`
-4. Create a class `AlpineVersionProvider` that implements `io.github.nscuro.versatile.version.VersionProvider`
+4. Create a class `AlpineVersionProvider` that implements `io.github.nscuro.versatile.spi.VersionProvider`
     * Implement `#supportsScheme(String scheme)` to return `true` for the `alpine` scheme
     * Implement `#getVersion(String scheme, String verstionStr)` to return an instance of `AlpineVersion`
     * Implement `#priority()` to return a value between `0` (lowest), and `Integer.MAX_VALUE` (highest)
         * Built-in providers have a priority of `50` (`VersionProvider#PRIORITY_BUILTIN`)
         * By defining a priority higher than `50`, built-in providers can effectively be overwritten
-5. Create a file `src/main/resources/META-INF/services/io.github.nscuro.versatile.version.VersionProvider`
+5. Create a file `src/main/resources/META-INF/services/io.github.nscuro.versatile.spi.VersionProvider`
 6. List the fully qualified package name of all custom `VersionProvider` implementations, one per line
     * e.g. `com.acme.AlpineVersionProvider`
 

@@ -1,11 +1,3 @@
-import io.github.nscuro.versatile.version.DebianVersion;
-import io.github.nscuro.versatile.version.GenericVersion;
-import io.github.nscuro.versatile.version.GoVersion;
-import io.github.nscuro.versatile.version.MavenVersion;
-import io.github.nscuro.versatile.version.NpmVersion;
-import io.github.nscuro.versatile.version.PythonVersion;
-import io.github.nscuro.versatile.version.RpmVersion;
-
 /*
  * This file is part of versatile.
  *
@@ -24,6 +16,16 @@ import io.github.nscuro.versatile.version.RpmVersion;
  * SPDX-License-Identifier: Apache-2.0
  * Copyright (c) Niklas Düster. All Rights Reserved.
  */
+
+import io.github.nscuro.versatile.version.AlpineVersion;
+import io.github.nscuro.versatile.version.DebianVersion;
+import io.github.nscuro.versatile.version.GenericVersion;
+import io.github.nscuro.versatile.version.GoVersion;
+import io.github.nscuro.versatile.version.MavenVersion;
+import io.github.nscuro.versatile.version.NpmVersion;
+import io.github.nscuro.versatile.version.PythonVersion;
+import io.github.nscuro.versatile.version.RpmVersion;
+
 module io.github.nscuro.versatile.core {
     exports io.github.nscuro.versatile.version;
     exports io.github.nscuro.versatile;
@@ -34,6 +36,7 @@ module io.github.nscuro.versatile.core {
     requires semver4j;
 
     provides io.github.nscuro.versatile.spi.VersionProvider with
+            AlpineVersion.Provider,
             DebianVersion.Provider,
             GenericVersion.Provider,
             GoVersion.Provider,
