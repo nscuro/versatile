@@ -38,12 +38,12 @@ jobs:
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         
-        mvn -B --no-transfer-progress -Pgithub-actions release:clean release:prepare
+        mvn -B -Pgithub-actions -pl '!versatile-conformance' release:clean release:prepare
         
         TAG_NAME="$(sed -nr 's/^scm.tag=(v[0-9.]+)$/\1/p' release.properties)"
         echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_OUTPUT
         
-        mvn -B --no-transfer-progress release:perform
+        mvn -B -pl '!versatile-conformance' release:perform
     - name: Create GitHub Release
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
