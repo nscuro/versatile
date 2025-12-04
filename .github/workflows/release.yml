@@ -38,12 +38,16 @@ jobs:
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         
-        mvn -B -Pgithub-actions -pl '!versatile-conformance' release:clean release:prepare
+        mvn -B -Pgithub-actions release:clean release:prepare
         
         TAG_NAME="$(sed -nr 's/^scm.tag=(v[0-9.]+)$/\1/p' release.properties)"
         echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_OUTPUT
         
-        mvn -B -pl '!versatile-conformance' release:perform
+        mvn -B release:perform
+    - name: Rollback Failed Release
+      if: always() && steps.perform-release.outcome == 'failure'
+      run: |-
+        mvn -B release:rollback
     - name: Create GitHub Release
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
