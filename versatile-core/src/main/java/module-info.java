@@ -1,3 +1,11 @@
+import io.github.nscuro.versatile.version.DebianVersion;
+import io.github.nscuro.versatile.version.GenericVersion;
+import io.github.nscuro.versatile.version.GoVersion;
+import io.github.nscuro.versatile.version.MavenVersion;
+import io.github.nscuro.versatile.version.NpmVersion;
+import io.github.nscuro.versatile.version.PythonVersion;
+import io.github.nscuro.versatile.version.RpmVersion;
+
 /*
  * This file is part of versatile.
  *
@@ -24,4 +32,15 @@ module io.github.nscuro.versatile.core {
     requires maven.artifact;
     requires packageurl.java;
     requires semver4j;
+
+    provides io.github.nscuro.versatile.spi.VersionProvider with
+            DebianVersion.Provider,
+            GenericVersion.Provider,
+            GoVersion.Provider,
+            MavenVersion.Provider,
+            NpmVersion.Provider,
+            PythonVersion.Provider,
+            RpmVersion.Provider;
+
+    uses io.github.nscuro.versatile.spi.VersionProvider;
 }
