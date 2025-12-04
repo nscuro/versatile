@@ -21,7 +21,7 @@ package io.github.nscuro.versatile.conformance;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.nscuro.versatile.VersionFactory;
 import io.github.nscuro.versatile.conformance.schema.VersTest;
-import io.github.nscuro.versatile.conformance.schema.VersTestSchema;
+import io.github.nscuro.versatile.conformance.schema.VersTestSchema01;
 import io.github.nscuro.versatile.spi.Version;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DynamicNode;
@@ -75,7 +75,7 @@ class VersConformanceTest {
 
         for (final Path testFilePath : testFilePaths) {
             try {
-                final var versTestsObject = objectMapper.readValue(testFilePath.toFile(), VersTestSchema.class);
+                final var versTestsObject = objectMapper.readValue(testFilePath.toFile(), VersTestSchema01.class);
                 versTests.addAll(versTestsObject.getTests());
             } catch (IOException e) {
                 LOGGER.warn("Failed to deserialize test file {}", testFilePath, e);
