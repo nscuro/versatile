@@ -44,7 +44,7 @@ Java implementation of [vers](https://github.com/package-url/purl-spec/blob/vers
 ```
 
 > [!NOTE]
-> *versatile* requires Java >= 17.
+> *versatile* requires Java >= 21.
 
 ### Constructing `vers` Ranges
 

@@ -22,8 +22,8 @@ jobs:
     strategy:
       matrix:
         java-version:
-        - 17
         - 21
+        - 25
     permissions:
       contents: read
     steps:
