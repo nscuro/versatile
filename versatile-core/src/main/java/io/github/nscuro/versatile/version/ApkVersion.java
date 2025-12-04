@@ -27,18 +27,18 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_ALPINE;
+import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_APK;
 
 /**
  * @see <a href="https://github.com/alpinelinux/apk-tools/blob/master/src/version.c">Alpine version comparison implementation</a>
  * @since 0.14.0
  */
-public class AlpineVersion extends Version {
+public class ApkVersion extends Version {
 
     public static class Provider extends AbstractBuiltinVersionProvider {
 
         public Provider() {
-            super(Set.of(SCHEME_ALPINE), (scheme, versionStr) -> new AlpineVersion(versionStr));
+            super(Set.of(SCHEME_APK), (scheme, versionStr) -> new ApkVersion(versionStr));
         }
 
     }
@@ -102,8 +102,8 @@ public class AlpineVersion extends Version {
 
     private final List<Token> tokens;
 
-    AlpineVersion(final String versionStr) {
-        super(SCHEME_ALPINE, versionStr);
+    ApkVersion(final String versionStr) {
+        super(SCHEME_APK, versionStr);
 
         this.tokens = parseVersion(versionStr);
         if (this.tokens.isEmpty()) {
@@ -124,7 +124,7 @@ public class AlpineVersion extends Version {
      */
     @Override
     public int compareTo(final Version other) {
-        if (other instanceof final AlpineVersion otherVersion) {
+        if (other instanceof final ApkVersion otherVersion) {
             return compareTokens(this.tokens, otherVersion.tokens);
         }
 
@@ -192,6 +192,15 @@ public class AlpineVersion extends Version {
                     return 1;
                 }
 
+                if (tokenA.type() == Token.Type.REVISION
+                        && (tokenB.type() == Token.Type.DIGIT || tokenB.type() == Token.Type.LETTER)) {
+                    return -1;
+                }
+                if (tokenB.type() == Token.Type.REVISION
+                        && (tokenA.type() == Token.Type.DIGIT || tokenA.type() == Token.Type.LETTER)) {
+                    return 1;
+                }
+
                 return Integer.compare(tokenA.type().ordinal(), tokenB.type().ordinal());
             }
 
@@ -213,9 +222,20 @@ public class AlpineVersion extends Version {
                     yield tokenA.value().compareTo(tokenB.value());
                 }
 
-                yield Integer.compare(
-                        Integer.parseInt(tokenA.value()),
-                        Integer.parseInt(tokenB.value()));
+                try {
+                    yield Integer.compare(
+                            Integer.parseInt(tokenA.value()),
+                            Integer.parseInt(tokenB.value()));
+                } catch (NumberFormatException e) {
+                    // Some digits might be timestamps that don't fit into integers.
+                    // Compare by length first, then lexicographically.
+                    final int lengthCompare = Integer.compare(tokenA.value().length(), tokenB.value().length());
+                    if (lengthCompare != 0) {
+                        yield lengthCompare;
+                    }
+
+                    yield tokenA.value().compareTo(tokenB.value());
+                }
             }
             case LETTER -> Character.compare(tokenA.value().charAt(0), tokenB.value().charAt(0));
             case REVISION -> Integer.compare(

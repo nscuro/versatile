@@ -134,7 +134,7 @@ class VersUtilsTest {
     @ParameterizedTest
     @CsvSource(value = {
             "AlmaLinux, rpm",
-            "Alpine, alpine",
+            "Alpine, apk",
             "Android, ",
             "Bioconductor, ",
             "Bitnami, ",

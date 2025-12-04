@@ -17,7 +17,7 @@
  * Copyright (c) Niklas Düster. All Rights Reserved.
  */
 
-import io.github.nscuro.versatile.version.AlpineVersion;
+import io.github.nscuro.versatile.version.ApkVersion;
 import io.github.nscuro.versatile.version.DebianVersion;
 import io.github.nscuro.versatile.version.GenericVersion;
 import io.github.nscuro.versatile.version.GoVersion;
@@ -36,7 +36,7 @@ module io.github.nscuro.versatile.core {
     requires semver4j;
 
     provides io.github.nscuro.versatile.spi.VersionProvider with
-            AlpineVersion.Provider,
+            ApkVersion.Provider,
             DebianVersion.Provider,
             GenericVersion.Provider,
             GoVersion.Provider,
