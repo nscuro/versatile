@@ -236,7 +236,7 @@ public final class VersUtils {
         if (ecosystem.startsWith("AlmaLinux")) {
             return Optional.of(KnownVersioningSchemes.SCHEME_RPM);
         } else if (ecosystem.startsWith("Alpine")) {
-            return Optional.of(KnownVersioningSchemes.SCHEME_ALPINE);
+            return Optional.of(KnownVersioningSchemes.SCHEME_APK);
         } else if (ecosystem.startsWith("Debian")) {
             return Optional.of(KnownVersioningSchemes.SCHEME_DEBIAN);
         } else if (ecosystem.startsWith("Mageia")) {

@@ -32,7 +32,7 @@ class KnownVersioningSchemesTest {
 
         @ParameterizedTest
         @CsvSource({
-                "pkg:apk/alpine/curl@7.83.0-r0, alpine",
+                "pkg:apk/alpine/curl@7.83.0-r0, apk",
                 "pkg:cpan/DROLSKY/DateTime@1.55, cpan",
                 "pkg:maven/org.apache.xmlgraphics/batik-anim@1.9.1, maven",
                 "pkg:gradle/org.apache.xmlgraphics/batik-anim@1.9.1, maven",

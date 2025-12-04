@@ -24,7 +24,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class AlpineVersionTest extends AbstractVersionTest {
+class ApkVersionTest extends AbstractVersionTest {
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -89,7 +89,7 @@ class AlpineVersionTest extends AbstractVersionTest {
             "0.1, IS_LOWER_THAN, 1.0"
     })
     void testCompareTo(final String versionA, final ComparisonExpectation expectation, final String versionB) {
-        expectation.evaluate(new AlpineVersion(versionA), new AlpineVersion(versionB));
+        expectation.evaluate(new ApkVersion(versionA), new ApkVersion(versionB));
     }
 
     @ParameterizedTest
@@ -105,12 +105,12 @@ class AlpineVersionTest extends AbstractVersionTest {
             "1.0_svn, true"
     })
     void testIsStable(final String version, final boolean expected) {
-        assertThat(new AlpineVersion(version).isStable()).isEqualTo(expected);
+        assertThat(new ApkVersion(version).isStable()).isEqualTo(expected);
     }
 
     @Test
     void testToString() {
-        final var version = new AlpineVersion("1.2.3-r4");
+        final var version = new ApkVersion("1.2.3-r4");
         assertThat(version.toString()).isEqualTo("1.2.3-r4");
     }
 
