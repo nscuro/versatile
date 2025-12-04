@@ -55,7 +55,7 @@
         <lib.assertj.version>3.27.6</lib.assertj.version>
         <lib.checkstyle.version>12.2.0</lib.checkstyle.version>
         <lib.jackson-databind.version>2.20.1</lib.jackson-databind.version>
-        <lib.json-path.version>2.9.0</lib.json-path.version>
+        <lib.json-path.version>2.10.0</lib.json-path.version>
         <lib.junit-jupiter.version>6.0.1</lib.junit-jupiter.version>
         <lib.maven-artifact.version>3.9.11</lib.maven-artifact.version>
         <lib.open-vulnerability-clients.version>9.0.1</lib.open-vulnerability-clients.version>
