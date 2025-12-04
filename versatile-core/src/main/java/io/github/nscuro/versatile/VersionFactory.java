@@ -22,17 +22,19 @@ import io.github.nscuro.versatile.spi.Version;
 import io.github.nscuro.versatile.spi.VersionProvider;
 
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.ServiceLoader;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_GENERIC;
 
 /**
  * @since 0.8.0
  */
 public class VersionFactory {
 
-    private static final Map<String, VersionProvider> PROVIDER_BY_SCHEME = new HashMap<>();
+    private static final Map<String, VersionProvider> PROVIDER_BY_SCHEME = new ConcurrentHashMap<>();
 
     private VersionFactory() {
     }
@@ -43,8 +45,8 @@ public class VersionFactory {
             return provider.getVersion(scheme, versionStr);
         }
 
-        if (!"generic".equals(scheme)) {
-            provider = PROVIDER_BY_SCHEME.computeIfAbsent("generic", VersionFactory::findProviderForScheme);
+        if (!SCHEME_GENERIC.equals(scheme)) {
+            provider = PROVIDER_BY_SCHEME.computeIfAbsent(SCHEME_GENERIC, VersionFactory::findProviderForScheme);
             if (provider != null) {
                 return provider.getVersion(scheme, versionStr);
             }
