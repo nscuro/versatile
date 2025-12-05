@@ -19,6 +19,7 @@
 package io.github.nscuro.versatile.conformance;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.nscuro.versatile.Vers;
 import io.github.nscuro.versatile.VersionFactory;
 import io.github.nscuro.versatile.conformance.schema.VersTest;
 import io.github.nscuro.versatile.conformance.schema.VersTestSchema01;
@@ -60,10 +61,7 @@ class VersConformanceTest {
             public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) {
                 if (!attrs.isDirectory()
                         && file.getFileName().toString().endsWith("_test.json")
-                        // TODO: Enable more schemes.
-                        && (file.getFileName().toString().startsWith("alpine_")
-                        || file.getFileName().toString().startsWith("maven_"))
-                        || file.getFileName().toString().startsWith("pypi_")) {
+                        && file.getFileName().toString().matches("^(?:alpine|maven|pypi)_.+\\.json$")) {
                     testFilePaths.add(file);
                 }
                 return FileVisitResult.CONTINUE;
@@ -83,8 +81,9 @@ class VersConformanceTest {
         }
 
         return versTests.stream()
-                .filter(test -> test.getTestType() == VersTest.TestType.EQUALITY || test.getTestType() == VersTest.TestType.COMPARISON)
-                .collect(Collectors.groupingBy(VersTest::getTestGroup, Collectors.groupingBy(VersTest::getTestType)))
+                .collect(Collectors.groupingBy(
+                        VersTest::getTestGroup,
+                        Collectors.groupingBy(VersTest::getTestType)))
                 .entrySet()
                 .stream()
                 .map(entry -> {
@@ -106,8 +105,9 @@ class VersConformanceTest {
     void executeTest(final VersTest versTest) {
         switch (versTest.getTestType()) {
             case COMPARISON -> testComparison(versTest);
+            case CONTAINMENT -> testContainment(versTest);
             case EQUALITY -> testEquality(versTest);
-            default -> Assumptions.assumeTrue(true, "Test type not supported yet");
+            default -> Assumptions.assumeTrue(false, "Test type not supported yet");
         }
     }
 
@@ -152,6 +152,28 @@ class VersConformanceTest {
                 .toList();
 
         assertThat(sortedVersions)
+                .as(versTest.getDescription())
+                .isEqualTo(expectedOutput);
+    }
+
+    @SuppressWarnings("unchecked")
+    void testContainment(final VersTest versTest) {
+        assertThat(versTest.getAdditionalProperties()).isNotNull();
+
+        final var inputObject = (Map<String, Object>) versTest.getAdditionalProperties().get("input");
+        assertThat(inputObject).isNotNull();
+
+        final var versStr = (String) inputObject.get("vers");
+        assertThat(versStr).isNotNull();
+
+        final var versionStr = (String) inputObject.get("version");
+        assertThat(versionStr).isNotNull();
+
+        final var expectedOutput = (Boolean) versTest.getAdditionalProperties().get("expected_output");
+        assertThat(expectedOutput).isNotNull();
+
+        final var vers = Vers.parse(versStr);
+        assertThat(vers.contains(versionStr))
                 .as(versTest.getDescription())
                 .isEqualTo(expectedOutput);
     }
