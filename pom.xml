@@ -52,7 +52,7 @@
 
         <!-- Dependency Versions -->
         <lib.assertj.version>3.27.6</lib.assertj.version>
-        <lib.checkstyle.version>12.2.0</lib.checkstyle.version>
+        <lib.checkstyle.version>12.3.1</lib.checkstyle.version>
         <lib.jackson.version>2.20.1</lib.jackson.version>
         <lib.json-path.version>2.10.0</lib.json-path.version>
         <lib.junit-jupiter.version>6.0.1</lib.junit-jupiter.version>
