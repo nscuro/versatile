@@ -69,7 +69,7 @@ public final class KnownVersioningSchemes {
      *
      * @param purl The {@link PackageURL} to match
      * @return An {@link Optional} containing the matched scheme, otherwise an empty {@link Optional}
-     * @see <a href="https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst">PURL Types</a>
+     * @see #fromPurlType(String)
      * @since 0.9.0
      */
     public static Optional<String> fromPurl(final PackageURL purl) {
@@ -78,7 +78,19 @@ public final class KnownVersioningSchemes {
         // NB: It may be necessary to inspect more than just the type to
         // determine the versioning scheme.
 
-        return switch (purl.getType()) {
+        return fromPurlType(purl.getType());
+    }
+
+    /**
+     * Attempt to match a given PURL type with any of the versioning schemes known to versatile.
+     *
+     * @param purlType The PURL type to match
+     * @return An {@link Optional} containing the matched scheme, otherwise an empty {@link Optional}
+     * @see <a href="https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst">PURL Types</a>
+     * @since 0.16.0
+     */
+    public static Optional<String> fromPurlType(final String purlType) {
+        return switch (purlType) {
             case "apk" -> Optional.of(SCHEME_APK);
             case "cpan" -> Optional.of(SCHEME_CPAN);
             case "clojars", "gradle", "maven" -> Optional.of(SCHEME_MAVEN);
