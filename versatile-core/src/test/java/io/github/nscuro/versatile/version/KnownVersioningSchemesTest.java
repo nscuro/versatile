@@ -57,4 +57,14 @@ class KnownVersioningSchemesTest {
 
     }
 
+    @Nested
+    class FromPurlTypeTest {
+
+        @Test
+        void shouldReturnEmptyOptionalForNull() {
+            assertThat(KnownVersioningSchemes.fromPurlType(null)).isEmpty();
+        }
+
+    }
+
 }

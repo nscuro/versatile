@@ -102,7 +102,7 @@ public final class KnownVersioningSchemes {
             case "nuget" -> Optional.of(SCHEME_NUGET);
             case "pypi" -> Optional.of(SCHEME_PYPI);
             case "rpm" -> Optional.of(SCHEME_RPM);
-            default -> Optional.empty();
+            case null, default -> Optional.empty();
         };
     }
 
