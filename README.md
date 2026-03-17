@@ -23,7 +23,7 @@ Java implementation of [vers](https://github.com/package-url/purl-spec/blob/vers
 | Go       |     ✅     |
 | Maven    |     ✅     |
 | NPM      |     ✅     |
-| Nuget    |     ❌     |
+| Nuget    |     ✅     |
 | PyPI     |     ✅     |
 | RPM      |     ✅     |
 
