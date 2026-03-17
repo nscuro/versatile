@@ -61,7 +61,7 @@ class VersConformanceTest {
             public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) {
                 if (!attrs.isDirectory()
                         && file.getFileName().toString().endsWith("_test.json")
-                        && file.getFileName().toString().matches("^(?:alpine|maven|pypi)_.+\\.json$")) {
+                        && file.getFileName().toString().matches("^(?:alpine|maven|nuget|pypi)_.+\\.json$")) {
                     testFilePaths.add(file);
                 }
                 return FileVisitResult.CONTINUE;
