@@ -15,6 +15,7 @@ Java implementation of [vers](https://github.com/package-url/purl-spec/blob/vers
 | Scheme   | Supported |
 |:---------|:---------:|
 | APK      |     ✅     |
+| Composer |     ✅     |
 | CPAN     |     ❌     |
 | Debian   |     ✅     |
 | Ruby Gem |     ❌     |
