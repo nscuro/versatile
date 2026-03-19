@@ -32,6 +32,7 @@ import static java.util.Objects.requireNonNull;
 public final class KnownVersioningSchemes {
 
     public static final String SCHEME_APK = "apk";
+    public static final String SCHEME_COMPOSER = "composer";
     public static final String SCHEME_CPAN = "cpan";
     public static final String SCHEME_DEBIAN = "deb";
     public static final String SCHEME_GEM = "gem";
@@ -92,6 +93,7 @@ public final class KnownVersioningSchemes {
     public static Optional<String> fromPurlType(final String purlType) {
         return switch (purlType) {
             case "apk" -> Optional.of(SCHEME_APK);
+            case "composer" -> Optional.of(SCHEME_COMPOSER);
             case "cpan" -> Optional.of(SCHEME_CPAN);
             case "clojars", "gradle", "maven" -> Optional.of(SCHEME_MAVEN);
             case "deb" -> Optional.of(SCHEME_DEBIAN);
