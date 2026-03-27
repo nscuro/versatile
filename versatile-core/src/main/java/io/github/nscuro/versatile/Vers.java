@@ -37,7 +37,7 @@ import static java.util.function.Predicate.not;
  *
  * @param scheme      The versioning scheme of this version range
  * @param constraints The {@link Constraint}s composing this version range
- * @see <a href="https://github.com/package-url/purl-spec/tree/version-range-spec">vers specification</a>
+ * @see <a href="https://github.com/package-url/vers-spec">vers specification</a>
  */
 public record Vers(String scheme, List<Constraint> constraints) {
 
@@ -339,7 +339,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
         // It must be used alone exclusive of any other constraint and must not be followed by a version.
         // For example "vers:deb/*" represent all the versions of a Debian package.
         // This includes past, current and possible future versions.
-        // https://github.com/package-url/purl-spec/blob/version-range-spec/VERSION-RANGE-SPEC.rst#version-constraint
+        // https://github.com/package-url/vers-spec/blob/main/docs/standard/specification.md#version-constraints
         final boolean containsWildcard = constraints.stream()
                 .map(Constraint::comparator)
                 .anyMatch(Comparator.WILDCARD::equals);

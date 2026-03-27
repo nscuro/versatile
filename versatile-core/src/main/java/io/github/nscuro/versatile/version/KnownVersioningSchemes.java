@@ -26,7 +26,7 @@ import java.util.Optional;
 import static java.util.Objects.requireNonNull;
 
 /**
- * @see <a href="https://github.com/package-url/purl-spec/blob/version-range-spec/VERSION-RANGE-SPEC.rst#some-of-the-known-versioning-schemes">List of known schemes</a>
+ * @see <a href="https://github.com/package-url/vers-spec/blob/main/docs/version-schemes.md">List of known schemes</a>
  * @since 0.8.0
  */
 public final class KnownVersioningSchemes {
