@@ -5,7 +5,7 @@
 [![javadoc](https://javadoc.io/badge2/io.github.nscuro/versatile-core/javadoc.svg)](https://javadoc.io/doc/io.github.nscuro/versatile-core)
 [![License](http://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
-Java implementation of [vers](https://github.com/package-url/purl-spec/blob/version-range-spec/VERSION-RANGE-SPEC.rst),
+Java implementation of [vers](https://github.com/package-url/vers-spec),
 *a mostly universal version range specifier*
 
 ## Introduction
@@ -78,7 +78,7 @@ class ConstructVers {
 ### Parsing `vers` Ranges
 
 `vers` ranges may
-be [parsed](https://github.com/package-url/purl-spec/blob/version-range-spec/VERSION-RANGE-SPEC.rst#parsing-and-validating-version-range-specifiers)
+be [parsed](https://github.com/package-url/vers-spec/blob/main/docs/how-to-parse.md)
 using the `Vers#parse` method. If the range turns out to be invalid, a `VersException` is thrown.
 
 ```java
@@ -101,7 +101,7 @@ class ParseVers {
 ### Simplifying `vers` Ranges
 
 The `vers` specification defines an algorithm
-to [simplify](https://github.com/package-url/purl-spec/blob/version-range-spec/VERSION-RANGE-SPEC.rst#version-constraints-simplification)
+to [simplify](https://github.com/package-url/vers-spec/blob/main/docs/how-to-parse.md#version-constraints-simplification)
 constraints in a range. This mechanism is exposed through the `Vers#simplify` method.
 
 ```java
@@ -125,7 +125,7 @@ class SimplifyVers {
 ### Checking if a Range Contains a Version
 
 To check whether a given `vers`
-range [contains](https://github.com/package-url/purl-spec/blob/version-range-spec/VERSION-RANGE-SPEC.rst#checking-if-a-version-is-contained-within-a-range)
+range [contains](https://github.com/package-url/vers-spec/blob/main/docs/how-to-parse.md#checking-if-a-version-is-contained-within-a-range)
 a specific version, the `Vers#contains` method may be used. The provided version must be valid according
 to the range's versioning scheme.
 
