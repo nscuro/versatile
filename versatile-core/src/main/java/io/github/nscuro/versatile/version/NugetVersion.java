@@ -57,6 +57,13 @@ public class NugetVersion extends Version {
 
         String remaining = versionStr;
 
+        if (Character.toLowerCase(remaining.charAt(0)) == 'v') {
+            remaining = remaining.substring(1);
+            if (remaining.isEmpty()) {
+                throw new InvalidVersionException(versionStr, "Version must not be empty");
+            }
+        }
+
         final int metaIndex = remaining.indexOf('+');
         if (metaIndex >= 0) {
             this.metadata = remaining.substring(metaIndex + 1);

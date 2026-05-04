@@ -92,6 +92,21 @@ class NugetVersionTest {
     }
 
     @Test
+    void testParseWithVPrefix() {
+        // https://github.com/nscuro/versatile/issues/301
+        final var version = new NugetVersion("v8.0.0");
+        assertThat(version.toString()).isEqualTo("8.0.0");
+        assertThat(version.isStable()).isTrue();
+    }
+
+    @Test
+    void testCompareWithVPrefix() {
+        // https://github.com/nscuro/versatile/issues/301
+        assertThat(new NugetVersion("v4.0.0")).isLessThan(new NugetVersion("8.0.0"));
+        assertThat(new NugetVersion("v8.0.0")).isEqualTo(new NugetVersion("8.0.0"));
+    }
+
+    @Test
     void testParseRealWorldPreview() {
         final var version = new NugetVersion("9.0.0-preview.1.24080.9");
         assertThat(version.toString()).isEqualTo("9.0.0-preview.1.24080.9");
