@@ -41,7 +41,7 @@ public class MavenVersion extends Version {
     }
 
     private static final Pattern UNSTABLE_QUALIFIER_PATTERN = Pattern.compile(
-            "^(snapshot|rc\\d*|alpha\\.?\\d*|beta\\.?\\d*|m\\.?\\d*|milestone\\.\\d*)$",
+            "^(snapshot|cr[-.]?\\d*|rc[-.]?\\d*|alpha[-.]?\\d*|beta[-.]?\\d*|m[-.]?\\d*|milestone[-.]?\\d*)$",
             Pattern.CASE_INSENSITIVE);
 
     private final ArtifactVersion delegate;
