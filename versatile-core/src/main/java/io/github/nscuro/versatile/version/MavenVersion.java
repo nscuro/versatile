@@ -40,9 +40,9 @@ public class MavenVersion extends Version {
 
     }
 
-    private static final Pattern UNSTABLE_QUALIFIER_PATTERN = Pattern.compile("""
-            ^(snapshot|rc\\d*|alpha\\.?\\d*|beta\\.?\\d*|m\\.?\\d*|milestone\\.\\d*)$
-            """, Pattern.CASE_INSENSITIVE);
+    private static final Pattern UNSTABLE_QUALIFIER_PATTERN = Pattern.compile(
+            "^(snapshot|rc\\d*|alpha\\.?\\d*|beta\\.?\\d*|m\\.?\\d*|milestone\\.\\d*)$",
+            Pattern.CASE_INSENSITIVE);
 
     private final ArtifactVersion delegate;
 
@@ -60,7 +60,7 @@ public class MavenVersion extends Version {
             return true;
         }
 
-        return UNSTABLE_QUALIFIER_PATTERN.matcher(delegate.getQualifier()).matches();
+        return !UNSTABLE_QUALIFIER_PATTERN.matcher(delegate.getQualifier()).matches();
     }
 
     /**
