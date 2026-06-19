@@ -23,6 +23,7 @@
         <module>versatile-spi</module>
         <module>versatile-core</module>
         <module>versatile-conformance</module>
+        <module>versatile-benchmark</module>
     </modules>
 
     <licenses>
@@ -54,6 +55,7 @@
         <lib.assertj.version>3.27.7</lib.assertj.version>
         <lib.checkstyle.version>13.5.0</lib.checkstyle.version>
         <lib.jackson.version>2.22.0</lib.jackson.version>
+        <lib.jmh.version>1.37</lib.jmh.version>
         <lib.json-path.version>3.0.0</lib.json-path.version>
         <lib.junit-jupiter.version>6.1.0</lib.junit-jupiter.version>
         <lib.maven-artifact.version>3.9.16</lib.maven-artifact.version>
@@ -107,6 +109,12 @@
                 <version>${lib.jackson.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
+            </dependency>
+
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-core</artifactId>
+                <version>${lib.jmh.version}</version>
             </dependency>
 
             <dependency>
@@ -249,6 +257,10 @@
                 <configuration>
                     <autoPublish>true</autoPublish>
                     <publishingServerId>central</publishingServerId>
+                    <excludeArtifacts>
+                        <artifact>versatile-benchmark</artifact>
+                        <artifact>versatile-conformance</artifact>
+                    </excludeArtifacts>
                 </configuration>
             </plugin>
         </plugins>
