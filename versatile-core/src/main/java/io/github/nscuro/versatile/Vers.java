@@ -18,15 +18,12 @@
  */
 package io.github.nscuro.versatile;
 
-import io.github.nscuro.versatile.PairwiseIterator.Pair;
 import io.github.nscuro.versatile.spi.Version;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -107,7 +104,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
                 constraintPair.clear();
             }
         }
-        if (constraintPair.size() > 0) {
+        if (!constraintPair.isEmpty()) {
             versList.add(new Vers(scheme, constraintPair));
         }
         return versList;
@@ -141,40 +138,56 @@ public record Vers(String scheme, List<Constraint> constraints) {
         // satisfies the comparator then the "tested version" is IN the range.
         // Check is finished.
         if (constraints.size() == 1) {
-            return constraints.get(0).matches(testedVersion);
+            return constraints.getFirst().matches(testedVersion);
         }
 
-        // If the "tested version" is equal to any of the constraint version where the
-        // constraint comparator is for equality (any of "=", "<=", or ">=") then the
-        // "tested version" is in the range. Check is finished.
-        final boolean equalityMatches = constraints.stream()
-                .filter(constraint -> constraint.comparator() == Comparator.LESS_THAN_OR_EQUAL
-                        || constraint.comparator() == Comparator.GREATER_THAN_OR_EQUAL
-                        || constraint.comparator() == Comparator.EQUAL)
-                .map(Constraint::version)
-                .anyMatch(Predicate.isEqual(testedVersion));
+        boolean equalityMatches = false;
+        boolean invertedEqualityMatches = false;
+        final var remainingConstraints = new ArrayList<Constraint>(constraints.size());
+
+        for (final Constraint constraint : constraints) {
+            final Comparator comparator = constraint.comparator();
+
+            // If the "tested version" is equal to any of the constraint version where the
+            // constraint comparator is for equality (any of "=", "<=", or ">=") then the
+            // "tested version" is in the range. Check is finished.
+            if (comparator == Comparator.EQUAL
+                    || comparator == Comparator.LESS_THAN_OR_EQUAL
+                    || comparator == Comparator.GREATER_THAN_OR_EQUAL) {
+                if (testedVersion.equals(constraint.version())) {
+                    equalityMatches = true;
+                }
+            }
+            // If the "tested version" is equal to any of the constraint version where
+            // the constraint comparator is "!=" then the "tested version" is NOT in the range.
+            // Check is finished.
+            else if (comparator == Comparator.NOT_EQUAL
+                    && testedVersion.equals(constraint.version())) {
+                invertedEqualityMatches = true;
+            }
+
+            // Everything except "=" and "!=" is a bound constraint ("<", "<=", ">", ">=")
+            // and participates in the pairwise pass below. Note that "<=" and ">=" take
+            // part in both the equality check above and the pairwise pass.
+            if (comparator != Comparator.EQUAL && comparator != Comparator.NOT_EQUAL) {
+                remainingConstraints.add(constraint);
+            }
+        }
+
+        // If the "tested version" is equal to any of the constraint versions where the
+        // constraint comparator is for equality (any of "=", "<=", or ">="), then the
+        // "tested version" is IN the range. This takes precedence over inverted equality,
+        // matching the order in which the spec evaluates these checks.
         if (equalityMatches) {
             return true;
         }
 
-        // If the "tested version" is equal to any of the constraint version where
+        // If the "tested version" is equal to any of the constraint versions where
         // the constraint comparator is "!=" then the "tested version" is NOT in the range.
-        // Check is finished.
-        final boolean invertedEqualityMatches = constraints.stream()
-                .filter(constraint -> constraint.comparator() == Comparator.NOT_EQUAL)
-                .map(Constraint::version)
-                .anyMatch(Predicate.isEqual(testedVersion));
         if (invertedEqualityMatches) {
             return false;
         }
 
-        // Split the constraint list in two sub lists:
-        //   * a first list where the comparator is "=" or "!="
-        //   * a second list where the comparator is neither "=" nor "!="
-        final List<Constraint> remainingConstraints = constraints.stream()
-                .filter(constraint -> constraint.comparator() != Comparator.EQUAL)
-                .filter(constraint -> constraint.comparator() != Comparator.NOT_EQUAL)
-                .toList();
         if (remainingConstraints.isEmpty()) {
             return false;
         }
@@ -187,29 +200,22 @@ public record Vers(String scheme, List<Constraint> constraints) {
         // the pairwise iteration below does not even start when fewer than two constraints
         // are left.
         if (remainingConstraints.size() == 1) {
-            return remainingConstraints.get(0).matches(testedVersion);
+            return remainingConstraints.getFirst().matches(testedVersion);
         }
 
-        // Iterate over the current and next contiguous constraints pairs
-        // (aka. pairwise) in the second list.
-        var firstIteration = true;
-        final PairwiseIterator<Constraint> constraintIter = new PairwiseIterator<>(remainingConstraints);
-        Constraint currConstraint, nextConstraint = null;
-        while (constraintIter.hasNext()) {
-            final Pair<Constraint> constraintPair = constraintIter.next();
-            currConstraint = constraintPair.left();
-            nextConstraint = constraintPair.right();
+        // Iterate over the current and next contiguous constraint pairs
+        // (aka. pairwise) in the remaining list.
+        for (int i = 0; i + 1 < remainingConstraints.size(); i++) {
+            final Constraint currConstraint = remainingConstraints.get(i);
+            final Constraint nextConstraint = remainingConstraints.get(i + 1);
 
             // If this is the first iteration and current comparator is "<" or <=" and
             // the "tested version" is less than the current version then the "tested version"
             // is IN the range. Check is finished.
-            if (firstIteration) {
-                if (isUpperBoundConstraint(currConstraint)
-                        && testedVersion.compareTo(currConstraint.version()) < 0) {
-                    return true;
-                }
-
-                firstIteration = false;
+            if (i == 0
+                    && isUpperBoundConstraint(currConstraint)
+                    && testedVersion.compareTo(currConstraint.version()) < 0) {
+                return true;
             }
 
             // If current comparator is ">" or >=" and next comparator is "<" or <=" and the "tested version"
@@ -236,10 +242,11 @@ public record Vers(String scheme, List<Constraint> constraints) {
             }
         }
 
-        // If this is the last iteration and next comparator is ">" or >=" and the "tested version"
-        // is greater than the next version then the "tested version" is IN the range. Check is finished.
-        if (isLowerBoundConstraint(nextConstraint)
-                && testedVersion.compareTo(nextConstraint.version()) > 0) {
+        // If the last constraint's comparator is ">" or >=" and the "tested version"
+        // is greater than its version then the "tested version" is IN the range.
+        final Constraint lastConstraint = remainingConstraints.getLast();
+        if (isLowerBoundConstraint(lastConstraint)
+                && testedVersion.compareTo(lastConstraint.version()) > 0) {
             return true;
         }
 
@@ -286,14 +293,14 @@ public record Vers(String scheme, List<Constraint> constraints) {
             final Comparator nextComparator = nextConstraint.comparator();
 
             // If current comparator is ">" or ">=" and next comparator is "=", ">" or ">=", discard next constraint.
-            if (Set.of(Comparator.GREATER_THAN, Comparator.GREATER_THAN_OR_EQUAL).contains(currComparator)
-                    && Set.of(Comparator.EQUAL, Comparator.GREATER_THAN, Comparator.GREATER_THAN_OR_EQUAL).contains(nextComparator)) {
+            if (isLowerBoundComparator(currComparator)
+                    && (nextComparator == Comparator.EQUAL || isLowerBoundComparator(nextComparator))) {
                 remainderConstraints.remove(nextIndex);
             }
 
             // If current comparator is "=", "<" or "<=" and next comparator is <" or <=", discard current constraint.
-            if (Set.of(Comparator.EQUAL, Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL).contains(currComparator)
-                    && Set.of(Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL).contains(nextComparator)) {
+            if ((currComparator == Comparator.EQUAL || isUpperBoundComparator(currComparator))
+                    && isUpperBoundComparator(nextComparator)) {
                 remainderConstraints.remove(currIndex);
 
                 // Previous constraint becomes current if it exists.
@@ -309,15 +316,15 @@ public record Vers(String scheme, List<Constraint> constraints) {
 
                 // If previous comparator is ">" or ">=" and current comparator is "=", ">" or ">=",
                 // discard current constraint.
-                if (Set.of(Comparator.GREATER_THAN, Comparator.GREATER_THAN_OR_EQUAL).contains(prevComparator)
-                        && Set.of(Comparator.EQUAL, Comparator.GREATER_THAN, Comparator.GREATER_THAN_OR_EQUAL).contains(currComparator)) {
+                if (isLowerBoundComparator(prevComparator)
+                        && (currComparator == Comparator.EQUAL || isLowerBoundComparator(currComparator))) {
                     remainderConstraints.remove(currIndex);
                 }
 
                 // If previous comparator is "=", "<" or "<=" and current comparator is <" or <=",
                 // discard previous constraint.
-                if (Set.of(Comparator.EQUAL, Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL).contains(prevComparator)
-                        && Set.of(Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL).contains(currComparator)) {
+                if ((prevComparator == Comparator.EQUAL || isUpperBoundComparator(prevComparator))
+                        && isUpperBoundComparator(currComparator)) {
                     remainderConstraints.remove(prevConstraint);
                 }
             }
@@ -340,63 +347,70 @@ public record Vers(String scheme, List<Constraint> constraints) {
         // For example "vers:deb/*" represent all the versions of a Debian package.
         // This includes past, current and possible future versions.
         // https://github.com/package-url/vers-spec/blob/main/docs/standard/specification.md#version-constraints
-        final boolean containsWildcard = constraints.stream()
-                .map(Constraint::comparator)
-                .anyMatch(Comparator.WILDCARD::equals);
+        boolean containsWildcard = false;
+        for (final Constraint constraint : constraints) {
+            if (constraint.comparator() == Comparator.WILDCARD) {
+                containsWildcard = true;
+                break;
+            }
+        }
         if (containsWildcard && constraints.size() > 1) {
-            throw new VersException("Invalid range %s: wildcard is only allowed with a single constraint".formatted(this));
+            throw new VersException("""
+                    Invalid range %s: wildcard is only allowed \
+                    with a single constraint""".formatted(this));
         }
 
         // Ignoring all constraints with "!=" comparators...
-        List<Constraint> tmpConstraints = constraints.stream()
-                .filter(constraint -> constraint.comparator() != Comparator.NOT_EQUAL)
-                .toList();
+        final List<Constraint> tmpConstraints = new ArrayList<>(constraints.size());
+        for (final Constraint constraint : constraints) {
+            if (constraint.comparator() != Comparator.NOT_EQUAL) {
+                tmpConstraints.add(constraint);
+            }
+        }
         if (tmpConstraints.size() < 2) {
             // No, or only one constraint remaining; Nothing to validate anymore.
             return this;
         }
 
         // A "=" constraint must be followed only by a constraint with one of "=", ">", ">=" as comparator (or no constraint).
-        var constraintIter = new PairwiseIterator<>(tmpConstraints);
-        while (constraintIter.hasNext()) {
-            final Pair<Constraint> constraintPair = constraintIter.next();
-            final Constraint currConstraint = constraintPair.left();
-            final Constraint nextConstraint = constraintPair.right();
+        for (int i = 0; i + 1 < tmpConstraints.size(); i++) {
+            final Comparator currComparator = tmpConstraints.get(i).comparator();
+            final Comparator nextComparator = tmpConstraints.get(i + 1).comparator();
 
-            if (currConstraint.comparator() == Comparator.EQUAL
-                    && !Set.of(Comparator.EQUAL, Comparator.GREATER_THAN, Comparator.GREATER_THAN_OR_EQUAL).contains(nextConstraint.comparator())) {
-                throw new VersException("Invalid range %s: A = comparator must only be followed by a > or >= operator, but got: %s"
-                        .formatted(this, nextConstraint.comparator().operator()));
+            if (currComparator == Comparator.EQUAL
+                    && nextComparator != Comparator.EQUAL
+                    && !isLowerBoundComparator(nextComparator)) {
+                throw new VersException("""
+                        Invalid range %s: A = comparator must only be \
+                        followed by a > or >= operator, but got: %s""".formatted(
+                        this, nextComparator.operator()));
             }
-        }
-
-        // And ignoring all constraints with "=" or "!=" comparators...
-        tmpConstraints = tmpConstraints.stream()
-                .filter(constraint -> constraint.comparator() != Comparator.EQUAL)
-                .toList();
-        if (tmpConstraints.size() < 2) {
-            // No, or only one constraint remaining; Nothing to validate anymore.
-            return this;
         }
 
         // ... the sequence of constraint comparators must be an alternation of greater and lesser comparators:
         //   * "<" and "<=" must be followed by one of ">", ">=" (or no constraint).
         //   * ">" and ">=" must be followed by one of "<", "<=" (or no constraint).
-        constraintIter = new PairwiseIterator<>(tmpConstraints);
-        while (constraintIter.hasNext()) {
-            final Pair<Constraint> constraintPair = constraintIter.next();
-            final Constraint currConstraint = constraintPair.left();
-            final Constraint nextConstraint = constraintPair.right();
+        tmpConstraints.removeIf(constraint -> constraint.comparator() == Comparator.EQUAL);
+        if (tmpConstraints.size() < 2) {
+            // No, or only one constraint remaining; Nothing to validate anymore.
+            return this;
+        }
 
-            if (Set.of(Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL).contains(currConstraint.comparator())
-                    && !Set.of(Comparator.GREATER_THAN, Comparator.GREATER_THAN_OR_EQUAL).contains(nextConstraint.comparator())) {
-                throw new VersException("Invalid range %s: A < or <= comparator must only be followed by a > or >= comparator, but got: %s"
-                        .formatted(this, nextConstraint.comparator().operator()));
+        for (int i = 0; i + 1 < tmpConstraints.size(); i++) {
+            final Comparator currComparator = tmpConstraints.get(i).comparator();
+            final Comparator nextComparator = tmpConstraints.get(i + 1).comparator();
+
+            if (isUpperBoundComparator(currComparator) && !isLowerBoundComparator(nextComparator)) {
+                throw new VersException("""
+                        Invalid range %s: A < or <= comparator must only be \
+                        followed by a > or >= comparator, but got: %s""".formatted(
+                        this, nextComparator.operator()));
             }
-            if (Set.of(Comparator.GREATER_THAN, Comparator.GREATER_THAN_OR_EQUAL).contains(currConstraint.comparator())
-                    && !Set.of(Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL).contains(nextConstraint.comparator())) {
-                throw new VersException("Invalid range %s: A > or >= comparator must only be followed by a < or <= comparator, but got: %s"
-                        .formatted(this, nextConstraint.comparator().operator()));
+            if (isLowerBoundComparator(currComparator) && !isUpperBoundComparator(nextComparator)) {
+                throw new VersException("""
+                        Invalid range %s: A > or >= comparator must only be \
+                        followed by a < or <= comparator, but got: %s""".formatted(
+                        this, nextComparator.operator()));
             }
         }
 
@@ -411,11 +425,10 @@ public record Vers(String scheme, List<Constraint> constraints) {
      * @throws VersException if the compared verses have different schemes
      */
     public boolean overlapsWith(Vers vers) {
-
         // Ensure both Vers use the same scheme
-        if (!this.constraints().get(0).scheme().equals(vers.constraints().get(0).scheme())) {
+        if (!this.constraints().getFirst().scheme().equals(vers.constraints().getFirst().scheme())) {
             throw new VersException(
-                "Vers ranges with different schemes cannot be checked for an overlap");
+                    "Vers ranges with different schemes cannot be checked for an overlap");
         }
         // if one of the vers is empty, there can't be an overlap
         if (this.constraints().isEmpty() || vers.constraints().isEmpty()) {
@@ -435,19 +448,15 @@ public record Vers(String scheme, List<Constraint> constraints) {
         // we checked all the equality parts, we can remove all equal parts and do upper / lower bounds
         // check on the rest
         var const1 =
-            this.constraints().stream()
-                .filter(
-                    c ->
-                        !c.comparator().equals(Comparator.EQUAL)
-                            && !c.comparator().equals(Comparator.NOT_EQUAL))
-                .toList();
+                this.constraints().stream()
+                        .filter(c -> !c.comparator().equals(Comparator.EQUAL)
+                                && !c.comparator().equals(Comparator.NOT_EQUAL))
+                        .toList();
         var const2 =
-            vers.constraints().stream()
-                .filter(
-                    c ->
-                        !c.comparator().equals(Comparator.EQUAL)
-                            && !c.comparator().equals(Comparator.NOT_EQUAL))
-                .toList();
+                vers.constraints().stream()
+                        .filter(c -> !c.comparator().equals(Comparator.EQUAL)
+                                && !c.comparator().equals(Comparator.NOT_EQUAL))
+                        .toList();
 
         // if one of the vers doesn't contain ranges anymore, we are done
         if (const1.isEmpty() || const2.isEmpty()) {
@@ -488,10 +497,10 @@ public record Vers(String scheme, List<Constraint> constraints) {
             for (var j = 0; j < vers2.constraints().size(); j = j + 2) {
 
                 if (boundsOverlap(
-                    vers1.constraints().get(i).version(),
-                    vers1.constraints().get(i + 1).version(),
-                    vers2.constraints().get(j).version(),
-                    vers2.constraints().get(j + 1).version())) {
+                        vers1.constraints().get(i).version(),
+                        vers1.constraints().get(i + 1).version(),
+                        vers2.constraints().get(j).version(),
+                        vers2.constraints().get(j + 1).version())) {
                     return true;
                 }
             }
@@ -522,26 +531,29 @@ public record Vers(String scheme, List<Constraint> constraints) {
     }
 
     private static boolean isLowerBoundConstraint(final Constraint constraint) {
-        return constraint != null && (constraint.comparator() == Comparator.GREATER_THAN
-                || constraint.comparator() == Comparator.GREATER_THAN_OR_EQUAL);
+        return constraint != null && isLowerBoundComparator(constraint.comparator());
     }
 
     private static boolean isUpperBoundConstraint(final Constraint constraint) {
-        return constraint != null && (constraint.comparator() == Comparator.LESS_THAN
-                || constraint.comparator() == Comparator.LESS_THAN_OR_EQUAL);
+        return constraint != null && isUpperBoundComparator(constraint.comparator());
     }
 
+    private static boolean isLowerBoundComparator(final Comparator comparator) {
+        return comparator == Comparator.GREATER_THAN || comparator == Comparator.GREATER_THAN_OR_EQUAL;
+    }
+
+    private static boolean isUpperBoundComparator(final Comparator comparator) {
+        return comparator == Comparator.LESS_THAN || comparator == Comparator.LESS_THAN_OR_EQUAL;
+    }
 
     private static boolean isPartOf(Vers vers1, Vers vers2) {
         // get all equal constraints
         var equalityConstraints =
-            vers1.constraints().stream()
-                .filter(
-                    c ->
-                        c.comparator().equals(Comparator.EQUAL)
-                            || c.comparator().equals(Comparator.GREATER_THAN_OR_EQUAL)
-                            || c.comparator().equals(Comparator.LESS_THAN_OR_EQUAL))
-                .toList();
+                vers1.constraints().stream()
+                        .filter(c -> c.comparator().equals(Comparator.EQUAL)
+                                || c.comparator().equals(Comparator.GREATER_THAN_OR_EQUAL)
+                                || c.comparator().equals(Comparator.LESS_THAN_OR_EQUAL))
+                        .toList();
 
         for (var constraint : equalityConstraints) {
             if (vers2.contains(constraint.version().toString())) {
@@ -553,7 +565,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
 
     private static boolean overlapsWithUnboundedConstraint(Vers vers1, Vers vers2) {
         // if first constraint is < or last constraint is > than this is an unbound constraint
-        var first = vers1.constraints().get(0);
+        var first = vers1.constraints().getFirst();
         if (isUpperBoundConstraint(first)) {
             // this is an upper bound without limit such as "vers:generic/<1.2.3" should overlap with
             // "vers:generic/<1.2.1|>1.3.0"
@@ -565,7 +577,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
             }
         }
 
-        var last = vers1.constraints().get(vers1.constraints().size() - 1);
+        var last = vers1.constraints().getLast();
         if (isLowerBoundConstraint(last)) {
             // this is a lower bound without limit such as "vers:generic/>1.2.3",
             // "vers:generic/>1.2.9|<1.3.0", "vers:generic/<1.3.0"
@@ -581,7 +593,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
     }
 
     private static boolean boundsOverlap(
-        Version lower1, Version upper1, Version lower2, Version upper2) {
+            Version lower1, Version upper1, Version lower2, Version upper2) {
 
         // Check if the ranges overlap
         return lower1.compareTo(upper2) < 0 && lower2.compareTo(upper1) < 0;
