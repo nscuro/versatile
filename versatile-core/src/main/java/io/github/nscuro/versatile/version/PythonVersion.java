@@ -67,6 +67,21 @@ public class PythonVersion extends Version {
                     (?:\\+(?<local>[a-zA-Z0-9]+(?:[-_.][a-zA-Z0-9]+)*))?\
                     $""",
             Pattern.CASE_INSENSITIVE);
+    private static final Pattern NORM_PATTERN_LEADING_V = Pattern.compile("^[vV]");
+    private static final Pattern NORM_PATTERN_EPOCH = Pattern.compile("^([0-9]+)!");
+    private static final Pattern NORM_PATTERN_ALPHA = Pattern.compile("[-_.]?(alpha)");
+    private static final Pattern NORM_PATTERN_BETA = Pattern.compile("[-_.]?(beta)");
+    private static final Pattern NORM_PATTERN_RC = Pattern.compile("[-_.]?(c|pre|preview)");
+    private static final Pattern NORM_PATTERN_PRE_NUM = Pattern.compile("(a|b|rc)[-_.]?([0-9]+)");
+    private static final Pattern NORM_PATTERN_PRE_IMPLICIT_NUM = Pattern.compile("(a|b|rc)(?![0-9])");
+    private static final Pattern NORM_PATTERN_POST = Pattern.compile("[-_.]?(post|rev|r)[-_.]?([0-9]+)");
+    private static final Pattern NORM_PATTERN_POST_IMPLICIT = Pattern.compile("-([0-9]+)(?!.*post)");
+    private static final Pattern NORM_PATTERN_DEV = Pattern.compile("[-_.]?dev[-_.]?([0-9]+)");
+    private static final Pattern NORM_PATTERN_DEV_IMPLICIT_NUM = Pattern.compile("[-_.]?dev(?![0-9])");
+    private static final Pattern NORM_PATTERN_LOCAL_SEP = Pattern.compile("\\+([a-zA-Z0-9]+)[-_.]");
+    private static final Pattern LOCAL_SEGMENT_SEPARATOR_PATTERN = Pattern.compile("\\.");
+    private static final Pattern LOCAL_NORMALIZE_PATTERN = Pattern.compile("[-_]");
+    private static final Pattern ASCII_DIGITS_PATTERN = Pattern.compile("\\d+");
 
     private final int epoch;
     private final List<Integer> release;
@@ -187,34 +202,54 @@ public class PythonVersion extends Version {
         // https://peps.python.org/pep-0440/#leading-and-trailing-whitespace
         String normalized = versionStr.strip();
 
+        // Avoid the heavy regex machinery when the version is simple, e.g. `666` or `6.6.6`.
+        if (isSimpleNumericVersion(normalized)) {
+            return normalized;
+        }
+
         // https://peps.python.org/pep-0440/#preceding-v-character
-        normalized = normalized.replaceFirst("^[vV]", "");
+        normalized = NORM_PATTERN_LEADING_V.matcher(normalized).replaceFirst("");
 
         // https://peps.python.org/pep-0440/#integer-normalization
-        normalized = normalized.replaceAll("^([0-9]+)!", "$1!");
+        normalized = NORM_PATTERN_EPOCH.matcher(normalized).replaceAll("$1!");
 
         // https://peps.python.org/pep-0440/#pre-release-separators
         // https://peps.python.org/pep-0440/#pre-release-spelling
-        normalized = normalized.replaceAll("[-_.]?(alpha)", "a");
-        normalized = normalized.replaceAll("[-_.]?(beta)", "b");
-        normalized = normalized.replaceAll("[-_.]?(c|pre|preview)", "rc");
-        normalized = normalized.replaceAll("(a|b|rc)[-_.]?([0-9]+)", "$1$2");
-        normalized = normalized.replaceAll("(a|b|rc)(?![0-9])", "$10");
+        normalized = NORM_PATTERN_ALPHA.matcher(normalized).replaceAll("a");
+        normalized = NORM_PATTERN_BETA.matcher(normalized).replaceAll("b");
+        normalized = NORM_PATTERN_RC.matcher(normalized).replaceAll("rc");
+        normalized = NORM_PATTERN_PRE_NUM.matcher(normalized).replaceAll("$1$2");
+        normalized = NORM_PATTERN_PRE_IMPLICIT_NUM.matcher(normalized).replaceAll("$10");
 
         // https://peps.python.org/pep-0440/#post-release-separators
         // https://peps.python.org/pep-0440/#post-release-spelling
-        normalized = normalized.replaceAll("[-_.]?(post|rev|r)[-_.]?([0-9]+)", ".post$2");
-        normalized = normalized.replaceAll("-([0-9]+)(?!.*post)", ".post$1");
+        normalized = NORM_PATTERN_POST.matcher(normalized).replaceAll(".post$2");
+        normalized = NORM_PATTERN_POST_IMPLICIT.matcher(normalized).replaceAll(".post$1");
 
         // https://peps.python.org/pep-0440/#development-release-separators
-        normalized = normalized.replaceAll("[-_.]?dev[-_.]?([0-9]+)", ".dev$1");
-        normalized = normalized.replaceAll("[-_.]?dev(?![0-9])", ".dev0");
+        normalized = NORM_PATTERN_DEV.matcher(normalized).replaceAll(".dev$1");
+        normalized = NORM_PATTERN_DEV_IMPLICIT_NUM.matcher(normalized).replaceAll(".dev0");
 
         // https://peps.python.org/pep-0440/#local-version-segments
-        normalized = normalized.replaceAll("\\+([a-zA-Z0-9]+)[-_.]", "+$1.");
+        normalized = NORM_PATTERN_LOCAL_SEP.matcher(normalized).replaceAll("+$1.");
 
         // https://peps.python.org/pep-0440/#case-sensitivity
         return normalized.toLowerCase(Locale.ROOT);
+    }
+
+    private static boolean isSimpleNumericVersion(String version) {
+        if (version.isEmpty()) {
+            return false;
+        }
+
+        for (int i = 0; i < version.length(); i++) {
+            final char c = version.charAt(i);
+            if ((c < '0' || c > '9') && c != '.') {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static int parseEpoch(final String epochStr) {
@@ -288,7 +323,7 @@ public class PythonVersion extends Version {
             return null;
         }
 
-        return localStr.toLowerCase(Locale.ROOT).replaceAll("[-_]", ".");
+        return LOCAL_NORMALIZE_PATTERN.matcher(localStr.toLowerCase(Locale.ROOT)).replaceAll(".");
     }
 
     private static int compareRelease(final List<Integer> release1, final List<Integer> release2) {
@@ -390,8 +425,8 @@ public class PythonVersion extends Version {
             return 1;
         }
 
-        final String[] parts1 = local1.split("\\.");
-        final String[] parts2 = local2.split("\\.");
+        final String[] parts1 = LOCAL_SEGMENT_SEPARATOR_PATTERN.split(local1);
+        final String[] parts2 = LOCAL_SEGMENT_SEPARATOR_PATTERN.split(local2);
         final int maxLen = Math.max(parts1.length, parts2.length);
 
         for (int i = 0; i < maxLen; i++) {
@@ -399,7 +434,7 @@ public class PythonVersion extends Version {
             final String p2 = i < parts2.length ? parts2[i] : "";
 
             final int result;
-            if (p1.matches("\\d+") && p2.matches("\\d+")) {
+            if (ASCII_DIGITS_PATTERN.matcher(p1).matches() && ASCII_DIGITS_PATTERN.matcher(p2).matches()) {
                 result = Integer.compare(Integer.parseInt(p1), Integer.parseInt(p2));
             } else {
                 result = p1.compareTo(p2);
