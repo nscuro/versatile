@@ -29,6 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_PYPI;
+import static io.github.nscuro.versatile.version.VersionUtils.isNumeric;
 
 /**
  * @see <a href="https://peps.python.org/pep-0440/">PEP 440 – Version Identification and Dependency Specification</a>
@@ -81,7 +82,6 @@ public class PythonVersion extends Version {
     private static final Pattern NORM_PATTERN_LOCAL_SEP = Pattern.compile("\\+([a-zA-Z0-9]+)[-_.]");
     private static final Pattern LOCAL_SEGMENT_SEPARATOR_PATTERN = Pattern.compile("\\.");
     private static final Pattern LOCAL_NORMALIZE_PATTERN = Pattern.compile("[-_]");
-    private static final Pattern ASCII_DIGITS_PATTERN = Pattern.compile("\\d+");
 
     private final int epoch;
     private final List<Integer> release;
@@ -434,7 +434,7 @@ public class PythonVersion extends Version {
             final String p2 = i < parts2.length ? parts2[i] : "";
 
             final int result;
-            if (ASCII_DIGITS_PATTERN.matcher(p1).matches() && ASCII_DIGITS_PATTERN.matcher(p2).matches()) {
+            if (isNumeric(p1) && isNumeric(p2)) {
                 result = Integer.compare(Integer.parseInt(p1), Integer.parseInt(p2));
             } else {
                 result = p1.compareTo(p2);

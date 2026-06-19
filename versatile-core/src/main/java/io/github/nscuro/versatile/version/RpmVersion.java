@@ -58,6 +58,8 @@ public class RpmVersion extends Version {
     private final int epoch;
     private final String version;
     private final String release;
+    private final String[] versionSegments;
+    private final String[] releaseSegments;
 
     /**
      * Create a new {@link RpmVersion}.
@@ -86,6 +88,9 @@ public class RpmVersion extends Version {
                     according to the RPM version format [epoch:]version[-release]\
                     """.formatted(versionStr));
         }
+
+        this.versionSegments = splitSegments(this.version);
+        this.releaseSegments = splitSegments(this.release);
     }
 
     /**
@@ -113,16 +118,21 @@ public class RpmVersion extends Version {
                 return comparisonResult;
             }
 
-            comparisonResult = rpmVerCmp(this.version, otherVersion.version);
+            comparisonResult = !this.version.equals(otherVersion.version)
+                    ? rpmVerCmp(this.versionSegments, otherVersion.versionSegments)
+                    : 0;
             if (comparisonResult != 0) {
                 return comparisonResult;
             }
 
-            return rpmVerCmp(this.release, otherVersion.release);
+            return !this.release.equals(otherVersion.release)
+                    ? rpmVerCmp(this.releaseSegments, otherVersion.releaseSegments)
+                    : 0;
         }
 
-        throw new IllegalArgumentException("%s can only be compared with its own type, but got %s"
-                .formatted(this.getClass().getName(), other.getClass().getName()));
+        throw new IllegalArgumentException(
+                "%s can only be compared with its own type, but got %s".formatted(
+                        this.getClass().getName(), other.getClass().getName()));
     }
 
     public int epoch() {
@@ -137,33 +147,21 @@ public class RpmVersion extends Version {
         return release;
     }
 
-    private static int rpmVerCmp(final String a, final String b) {
-        // Easy comparison to see if versions are identical.
-        if (Objects.equals(a, b)) {
-            return 0;
+    private static String[] splitSegments(String value) {
+        final var segments = new ArrayList<String>();
+        final Matcher matcher = VERSION_SEGMENT_PATTERN.matcher(value);
+        while (matcher.find()) {
+            segments.add(matcher.group());
         }
 
-        final var segmentsA = new ArrayList<String>();
-        final var segmentsB = new ArrayList<String>();
-        final Matcher matcherA = VERSION_SEGMENT_PATTERN.matcher(a);
-        while (matcherA.find()) {
-            segmentsA.add(matcherA.group());
-        }
-        final Matcher matcherB = VERSION_SEGMENT_PATTERN.matcher(b);
-        while (matcherB.find()) {
-            segmentsB.add(matcherB.group());
-        }
+        return segments.toArray(new String[0]);
+    }
 
+    private static int rpmVerCmp(String[] segmentsA, String[] segmentsB) {
         // Loop through each version segment of a and b, and compare them.
-        for (int i = 0; i < Math.max(segmentsA.size(), segmentsB.size()); i++) {
-            var segmentA = "";
-            if (segmentsA.size() >= (i + 1)) {
-                segmentA = segmentsA.get(i);
-            }
-            var segmentB = "";
-            if (segmentsB.size() >= (i + 1)) {
-                segmentB = segmentsB.get(i);
-            }
+        for (int i = 0; i < Math.max(segmentsA.length, segmentsB.length); i++) {
+            String segmentA = i < segmentsA.length ? segmentsA[i] : "";
+            String segmentB = i < segmentsB.length ? segmentsB[i] : "";
 
             // Handle the tilde separator, it sorts before everything else.
             if (segmentA.equals("~") || segmentB.equals("~")) {
@@ -206,32 +204,59 @@ public class RpmVersion extends Version {
                     return 1;
                 }
 
-                // Throw away any leading zeroes - it's a number, right?
-                segmentA = segmentA.replaceFirst("^0*", "");
-                segmentB = segmentB.replaceFirst("^0*", "");
-
-                // Whichever number has more digits wins.
-                if (segmentA.length() > segmentB.length()) {
-                    return 1;
-                } else if (segmentB.length() > segmentA.length()) {
-                    return -1;
+                // Compare numerically, ignoring any leading zeroes.
+                final int numComparisonResult = compareNumericSegments(segmentA, segmentB);
+                if (numComparisonResult != 0) {
+                    return numComparisonResult;
                 }
             } else if (isNumeric(segmentB)) {
                 return -1;
-            }
-
-            // Compare both segments as strings. Don't return if they are equal
-            // because there might be more segments to compare.
-            int strComparisonResult = segmentA.compareTo(segmentB);
-            if (strComparisonResult != 0) {
-                return strComparisonResult;
+            } else {
+                // Compare both segments as strings. Don't return if they are equal
+                // because there might be more segments to compare.
+                final int strComparisonResult = segmentA.compareTo(segmentB);
+                if (strComparisonResult != 0) {
+                    return strComparisonResult;
+                }
             }
         }
 
         // This catches the case where all numeric and alpha segments have
         // compared identically but the segment separating characters were
         // different.
-        return Integer.compare(segmentsA.size(), segmentsB.size());
+        return Integer.compare(segmentsA.length, segmentsB.length);
+    }
+
+    private static int compareNumericSegments(final String a, final String b) {
+        // Indices of the first non-zero digit (i.e. position after leading zeroes).
+        final int startA = leadingZeroEnd(a);
+        final int startB = leadingZeroEnd(b);
+        final int lenA = a.length() - startA;
+        final int lenB = b.length() - startB;
+
+        // Whichever number has more significant digits wins.
+        if (lenA != lenB) {
+            return lenA > lenB ? 1 : -1;
+        }
+
+        for (int i = 0; i < lenA; i++) {
+            final char ca = a.charAt(startA + i);
+            final char cb = b.charAt(startB + i);
+            if (ca != cb) {
+                return ca < cb ? -1 : 1;
+            }
+        }
+
+        return 0;
+    }
+
+    private static int leadingZeroEnd(String segment) {
+        int i = 0;
+        while (i < segment.length() && segment.charAt(i) == '0') {
+            i++;
+        }
+
+        return i;
     }
 
 }
