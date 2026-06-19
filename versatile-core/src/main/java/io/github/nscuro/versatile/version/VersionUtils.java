@@ -18,33 +18,46 @@
  */
 package io.github.nscuro.versatile.version;
 
-import java.util.regex.Pattern;
-
 /**
  * @since 0.9.0
  */
 final class VersionUtils {
 
-    private static final Pattern PATTERN_ALPHANUMERIC = Pattern.compile("^[a-zA-Z0-9\\-]+$");
-    private static final Pattern PATTERN_NUMERIC = Pattern.compile("^\\d+$");
-
     private VersionUtils() {
     }
 
-    static boolean isAlphaNumeric(final String str) {
-        if (str == null) {
+    static boolean isAlphaNumeric(String str) {
+        if (str == null || str.isEmpty()) {
             return false;
         }
 
-        return PATTERN_ALPHANUMERIC.matcher(str).matches();
+        for (int i = 0; i < str.length(); i++) {
+            final char c = str.charAt(i);
+            final boolean isAllowed = (c >= 'a' && c <= 'z')
+                    || (c >= 'A' && c <= 'Z')
+                    || (c >= '0' && c <= '9')
+                    || c == '-';
+            if (!isAllowed) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    static boolean isNumeric(final String str) {
-        if (str == null) {
+    static boolean isNumeric(String str) {
+        if (str == null || str.isEmpty()) {
             return false;
         }
 
-        return PATTERN_NUMERIC.matcher(str).matches();
+        for (int i = 0; i < str.length(); i++) {
+            final char c = str.charAt(i);
+            if (c < '0' || c > '9') {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 }

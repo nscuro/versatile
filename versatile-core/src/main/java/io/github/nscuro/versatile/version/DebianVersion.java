@@ -55,6 +55,8 @@ public class DebianVersion extends Version {
     private final int epoch;
     private final String upstreamVersion;
     private final String debianRevision;
+    private final String[] upstreamVersionSegments;
+    private final String[] debianRevisionSegments;
 
     DebianVersion(final String versionStr) {
         super(SCHEME_DEBIAN, versionStr);
@@ -77,6 +79,9 @@ public class DebianVersion extends Version {
                     according to the Debian version format [epoch:]upstream-version[-debian-revision]\
                     """.formatted(versionStr));
         }
+
+        this.upstreamVersionSegments = splitSegments(this.upstreamVersion);
+        this.debianRevisionSegments = splitSegments(this.debianRevision);
     }
 
     /**
@@ -93,19 +98,23 @@ public class DebianVersion extends Version {
      * {@inheritDoc}
      */
     @Override
-    public int compareTo(final Version other) {
+    public int compareTo(Version other) {
         if (other instanceof final DebianVersion otherVersion) {
             int comparisonResult = Integer.compare(this.epoch, otherVersion.epoch);
             if (comparisonResult != 0) {
                 return comparisonResult;
             }
 
-            comparisonResult = compareVersionPart(this.upstreamVersion, otherVersion.upstreamVersion);
+            comparisonResult = compareVersionPart(
+                    this.upstreamVersionSegments,
+                    otherVersion.upstreamVersionSegments);
             if (comparisonResult != 0) {
                 return comparisonResult;
             }
 
-            return compareVersionPart(this.debianRevision, otherVersion.debianRevision);
+            return compareVersionPart(
+                    this.debianRevisionSegments,
+                    otherVersion.debianRevisionSegments);
         }
 
         throw new IllegalArgumentException("%s can only be compared with its own type, but got %s"
@@ -124,44 +133,32 @@ public class DebianVersion extends Version {
         return debianRevision;
     }
 
-    private static int compareVersionPart(final String versionPartA, final String versionPartB) {
-        final var listA = new ArrayList<String>();
-        final var listB = new ArrayList<String>();
-
-        final Matcher matcherA = DIGIT_OR_NON_DIGIT_PATTERN.matcher(versionPartA);
-        while (matcherA.find()) {
-            listA.add(matcherA.group());
+    private static String[] splitSegments(String versionPart) {
+        final var segments = new ArrayList<String>();
+        final Matcher matcher = DIGIT_OR_NON_DIGIT_PATTERN.matcher(versionPart);
+        while (matcher.find()) {
+            segments.add(matcher.group());
         }
 
-        final Matcher matcherB = DIGIT_OR_NON_DIGIT_PATTERN.matcher(versionPartB);
-        while (matcherB.find()) {
-            listB.add(matcherB.group());
-        }
+        return segments.toArray(new String[0]);
+    }
 
-        while (!listA.isEmpty() || !listB.isEmpty()) {
-            var a = "0";
-            var b = "0";
+    private static int compareVersionPart(String[] segmentsA, String[] segmentsB) {
+        final int max = Math.max(segmentsA.length, segmentsB.length);
 
-            if (!listA.isEmpty()) {
-                a = listA.remove(0);
-            }
-            if (!listB.isEmpty()) {
-                b = listB.remove(0);
-            }
+        for (int i = 0; i < max; i++) {
+            final String a = i < segmentsA.length ? segmentsA[i] : "0";
+            final String b = i < segmentsB.length ? segmentsB[i] : "0";
 
+            final int comparisonResult;
             if (isNumeric(a) && isNumeric(b)) {
-                int intA = Integer.parseInt(a);
-                int intB = Integer.parseInt(b);
-                int comparisonResult = Integer.compare(intA, intB);
-
-                if (comparisonResult != 0) {
-                    return comparisonResult;
-                }
+                comparisonResult = Integer.compare(Integer.parseInt(a), Integer.parseInt(b));
             } else {
-                int comparisonResult = compareString(a, b);
-                if (comparisonResult != 0) {
-                    return comparisonResult;
-                }
+                comparisonResult = compareString(a, b);
+            }
+
+            if (comparisonResult != 0) {
+                return comparisonResult;
             }
         }
 
@@ -169,28 +166,17 @@ public class DebianVersion extends Version {
     }
 
     private static int compareString(final String versionPartA, final String versionPartB) {
-        final var listA = new ArrayList<Integer>();
-        final var listB = new ArrayList<Integer>();
+        final int max = Math.max(versionPartA.length(), versionPartB.length());
 
-        for (char charA : versionPartA.toCharArray()) {
-            listA.add(charOrder(charA));
-        }
-        for (char charB : versionPartB.toCharArray()) {
-            listB.add(charOrder(charB));
-        }
+        for (int i = 0; i < max; i++) {
+            final int a = i < versionPartA.length()
+                    ? charOrder(versionPartA.charAt(i))
+                    : 0;
+            final int b = i < versionPartB.length()
+                    ? charOrder(versionPartB.charAt(i))
+                    : 0;
 
-        while (!listA.isEmpty() || !listB.isEmpty()) {
-            int a = 0;
-            int b = 0;
-
-            if (!listA.isEmpty()) {
-                a = listA.remove(0);
-            }
-            if (!listB.isEmpty()) {
-                b = listB.remove(0);
-            }
-
-            int comparisonResult = Integer.compare(a, b);
+            final int comparisonResult = Integer.compare(a, b);
             if (comparisonResult != 0) {
                 return comparisonResult;
             }
