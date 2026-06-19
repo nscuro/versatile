@@ -32,6 +32,7 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @State(Scope.Thread)
@@ -41,6 +42,19 @@ import java.util.concurrent.TimeUnit;
 @Measurement(iterations = 5, time = 1)
 @Fork(2)
 public class VersionCompareBenchmark {
+
+    private static final Map<String, String[]> COMPLEX_PAIR_BY_SCHEME =
+            Map.ofEntries(
+                    Map.entry("apk", new String[]{"1.2.3_alpha1-r1", "1.2.3_alpha2-r1"}),
+                    Map.entry("composer", new String[]{"1.2.3-beta1", "1.2.3-beta2"}),
+                    Map.entry("deb", new String[]{"1:1.2.3-1ubuntu0.1", "1:1.2.3-1ubuntu0.2"}),
+                    Map.entry("generic", new String[]{"1.2.3-beta1", "1.2.3-beta2"}),
+                    Map.entry("golang", new String[]{"v1.2.3-beta.1", "v1.2.3-beta.2"}),
+                    Map.entry("maven", new String[]{"1.2.3-rc1", "1.2.3-rc2"}),
+                    Map.entry("npm", new String[]{"1.2.3-beta.1", "1.2.3-beta.2"}),
+                    Map.entry("nuget", new String[]{"1.2.3-beta.1", "1.2.3-beta.2"}),
+                    Map.entry("pypi", new String[]{"1.2.3a1.dev2", "1.2.3a1.dev3"}),
+                    Map.entry("rpm", new String[]{"1:1.2.3-1.el8", "1:1.2.3-2.el8"}));
 
     @Param({
             "apk",
@@ -56,13 +70,28 @@ public class VersionCompareBenchmark {
     })
     private String scheme;
 
+    @Param({"SIMPLE", "COMPLEX"})
+    private String complexity;
+
     private Version left;
     private Version right;
 
     @Setup
     public void setup() {
-        this.left = VersionFactory.forScheme(scheme, "1.2.3");
-        this.right = VersionFactory.forScheme(scheme, "1.2.4");
+        final String leftStr;
+        final String rightStr;
+
+        if ("SIMPLE".equals(complexity)) {
+            leftStr = "1.2.3";
+            rightStr = "1.2.4";
+        } else {
+            final String[] pair = COMPLEX_PAIR_BY_SCHEME.get(scheme);
+            leftStr = pair[0];
+            rightStr = pair[1];
+        }
+
+        this.left = VersionFactory.forScheme(scheme, leftStr);
+        this.right = VersionFactory.forScheme(scheme, rightStr);
     }
 
     @Benchmark

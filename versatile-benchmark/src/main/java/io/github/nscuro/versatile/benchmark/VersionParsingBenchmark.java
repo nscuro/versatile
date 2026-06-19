@@ -43,18 +43,30 @@ import java.util.concurrent.TimeUnit;
 @Fork(2)
 public class VersionParsingBenchmark {
 
-    private static final Map<String, String> VERSION_BY_SCHEME =
+    private static final Map<String, String> SIMPLE_BY_SCHEME =
             Map.ofEntries(
-                    Map.entry("apk", "1.2.3-r1"),
+                    Map.entry("apk", "1.2.3"),
                     Map.entry("composer", "1.2.3"),
-                    Map.entry("deb", "1.2.3-1"),
+                    Map.entry("deb", "1.2.3"),
                     Map.entry("generic", "1.2.3"),
                     Map.entry("golang", "v1.2.3"),
                     Map.entry("maven", "1.2.3"),
                     Map.entry("npm", "1.2.3"),
                     Map.entry("nuget", "1.2.3"),
                     Map.entry("pypi", "1.2.3"),
-                    Map.entry("rpm", "1.2.3-1"));
+                    Map.entry("rpm", "1.2.3"));
+    private static final Map<String, String> COMPLEX_BY_SCHEME =
+            Map.ofEntries(
+                    Map.entry("apk", "1.2.3_alpha1-r1"),
+                    Map.entry("composer", "1.2.3-beta1"),
+                    Map.entry("deb", "1:1.2.3-1ubuntu0.1"),
+                    Map.entry("generic", "1.2.3-beta1"),
+                    Map.entry("golang", "v1.2.3-beta.1+build.5"),
+                    Map.entry("maven", "1.2.3-rc.1-SNAPSHOT"),
+                    Map.entry("npm", "1.2.3-beta.1"),
+                    Map.entry("nuget", "1.2.3-beta.1+meta"),
+                    Map.entry("pypi", "1.2.3a1.dev2+local.1"),
+                    Map.entry("rpm", "1:1.2.3-1.el8"));
 
     @Param({
             "apk",
@@ -70,11 +82,16 @@ public class VersionParsingBenchmark {
     })
     private String scheme;
 
+    @Param({"SIMPLE", "COMPLEX"})
+    private String complexity;
+
     private String versionStr;
 
     @Setup
     public void setup() {
-        this.versionStr = VERSION_BY_SCHEME.get(scheme);
+        this.versionStr = "SIMPLE".equals(complexity)
+                ? SIMPLE_BY_SCHEME.get(scheme)
+                : COMPLEX_BY_SCHEME.get(scheme);
     }
 
     @Benchmark
