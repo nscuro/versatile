@@ -15,10 +15,11 @@ Java implementation of [vers](https://github.com/package-url/vers-spec),
 | Scheme   | Supported |
 |:---------|:---------:|
 | APK      |     ✅     |
+| Cargo    |     ✅     |
 | Composer |     ✅     |
 | CPAN     |     ❌     |
 | Debian   |     ✅     |
-| Ruby Gem |     ❌     |
+| Ruby Gem |     ✅     |
 | Generic  |     ✅     |
 | Gentoo   |     ❌     |
 | Go       |     ✅     |

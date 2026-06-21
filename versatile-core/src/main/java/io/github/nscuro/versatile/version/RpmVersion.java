@@ -29,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_RPM;
-import static io.github.nscuro.versatile.version.VersionUtils.isNumeric;
+import static io.github.nscuro.versatile.version.VersionUtils.isAsciiNumeric;
 
 /**
  * A {@link Version} implementation for the {@code rpm} versioning scheme.
@@ -198,9 +198,9 @@ public class RpmVersion extends Version {
                 break;
             }
 
-            if (isNumeric(segmentA)) {
+            if (isAsciiNumeric(segmentA)) {
                 // Numeric segments are always newer than alpha segments.
-                if (!isNumeric(segmentB)) {
+                if (!isAsciiNumeric(segmentB)) {
                     return 1;
                 }
 
@@ -209,7 +209,7 @@ public class RpmVersion extends Version {
                 if (numComparisonResult != 0) {
                     return numComparisonResult;
                 }
-            } else if (isNumeric(segmentB)) {
+            } else if (isAsciiNumeric(segmentB)) {
                 return -1;
             } else {
                 // Compare both segments as strings. Don't return if they are equal

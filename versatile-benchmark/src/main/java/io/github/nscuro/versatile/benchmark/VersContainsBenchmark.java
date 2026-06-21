@@ -46,8 +46,10 @@ public class VersContainsBenchmark {
 
     @Param({
             "apk",
+            "cargo",
             "composer",
             "deb",
+            "gem",
             "generic",
             "golang",
             "maven",

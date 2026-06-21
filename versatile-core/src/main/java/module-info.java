@@ -18,7 +18,9 @@
  */
 
 import io.github.nscuro.versatile.version.ApkVersion;
+import io.github.nscuro.versatile.version.CargoVersion;
 import io.github.nscuro.versatile.version.DebianVersion;
+import io.github.nscuro.versatile.version.GemVersion;
 import io.github.nscuro.versatile.version.GenericVersion;
 import io.github.nscuro.versatile.version.GoVersion;
 import io.github.nscuro.versatile.version.MavenVersion;
@@ -37,7 +39,9 @@ module io.github.nscuro.versatile.core {
 
     provides io.github.nscuro.versatile.spi.VersionProvider with
             ApkVersion.Provider,
+            CargoVersion.Provider,
             DebianVersion.Provider,
+            GemVersion.Provider,
             GenericVersion.Provider,
             GoVersion.Provider,
             MavenVersion.Provider,

@@ -29,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_PYPI;
-import static io.github.nscuro.versatile.version.VersionUtils.isNumeric;
+import static io.github.nscuro.versatile.version.VersionUtils.isAsciiNumeric;
 
 /**
  * @see <a href="https://peps.python.org/pep-0440/">PEP 440 – Version Identification and Dependency Specification</a>
@@ -434,7 +434,7 @@ public class PythonVersion extends Version {
             final String p2 = i < parts2.length ? parts2[i] : "";
 
             final int result;
-            if (isNumeric(p1) && isNumeric(p2)) {
+            if (isAsciiNumeric(p1) && isAsciiNumeric(p2)) {
                 result = Integer.compare(Integer.parseInt(p1), Integer.parseInt(p2));
             } else {
                 result = p1.compareTo(p2);

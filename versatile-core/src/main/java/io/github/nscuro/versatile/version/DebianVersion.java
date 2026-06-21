@@ -28,7 +28,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_DEBIAN;
-import static io.github.nscuro.versatile.version.VersionUtils.isNumeric;
+import static io.github.nscuro.versatile.version.VersionUtils.isAsciiNumeric;
 
 /**
  * @see <a href="https://manpages.debian.org/stretch/dpkg-dev/deb-version.5.en.html">Debian version format and sorting algorithm</a>
@@ -151,7 +151,7 @@ public class DebianVersion extends Version {
             final String b = i < segmentsB.length ? segmentsB[i] : "0";
 
             final int comparisonResult;
-            if (isNumeric(a) && isNumeric(b)) {
+            if (isAsciiNumeric(a) && isAsciiNumeric(b)) {
                 comparisonResult = Integer.compare(Integer.parseInt(a), Integer.parseInt(b));
             } else {
                 comparisonResult = compareString(a, b);
