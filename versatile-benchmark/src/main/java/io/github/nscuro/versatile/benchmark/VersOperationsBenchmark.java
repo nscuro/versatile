@@ -43,8 +43,10 @@ public class VersOperationsBenchmark {
 
     @Param({
             "apk",
+            "cargo",
             "composer",
             "deb",
+            "gem",
             "generic",
             "golang",
             "maven",

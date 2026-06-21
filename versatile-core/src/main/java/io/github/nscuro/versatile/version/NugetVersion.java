@@ -25,6 +25,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_NUGET;
+import static io.github.nscuro.versatile.version.VersionUtils.isAsciiNumeric;
 
 /**
  * @see <a href="https://github.com/NuGet/NuGet.Client/blob/dev/src/NuGet.Core/NuGet.Versioning/VersionComparer.cs">NuGet VersionComparer</a>
@@ -207,8 +208,8 @@ public class NugetVersion extends Version {
     }
 
     private static int compareRelease(String a, String b) {
-        final boolean aIsNum = isNumeric(a);
-        final boolean bIsNum = isNumeric(b);
+        final boolean aIsNum = isAsciiNumeric(a);
+        final boolean bIsNum = isAsciiNumeric(b);
 
         if (aIsNum && bIsNum) {
             return Integer.compare(Integer.parseInt(a), Integer.parseInt(b));
@@ -222,20 +223,6 @@ public class NugetVersion extends Version {
         }
 
         return a.compareToIgnoreCase(b);
-    }
-
-    private static boolean isNumeric(String s) {
-        if (s.isEmpty()) {
-            return false;
-        }
-
-        for (int i = 0; i < s.length(); i++) {
-            if (!Character.isDigit(s.charAt(i))) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     @Override

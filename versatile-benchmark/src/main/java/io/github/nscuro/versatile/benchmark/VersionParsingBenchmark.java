@@ -46,8 +46,10 @@ public class VersionParsingBenchmark {
     private static final Map<String, String> SIMPLE_BY_SCHEME =
             Map.ofEntries(
                     Map.entry("apk", "1.2.3"),
+                    Map.entry("cargo", "1.2.3"),
                     Map.entry("composer", "1.2.3"),
                     Map.entry("deb", "1.2.3"),
+                    Map.entry("gem", "1.2.3"),
                     Map.entry("generic", "1.2.3"),
                     Map.entry("golang", "v1.2.3"),
                     Map.entry("maven", "1.2.3"),
@@ -58,8 +60,10 @@ public class VersionParsingBenchmark {
     private static final Map<String, String> COMPLEX_BY_SCHEME =
             Map.ofEntries(
                     Map.entry("apk", "1.2.3_alpha1-r1"),
+                    Map.entry("cargo", "1.2.3-beta.1+build.5"),
                     Map.entry("composer", "1.2.3-beta1"),
                     Map.entry("deb", "1:1.2.3-1ubuntu0.1"),
+                    Map.entry("gem", "1.2.3.beta.1"),
                     Map.entry("generic", "1.2.3-beta1"),
                     Map.entry("golang", "v1.2.3-beta.1+build.5"),
                     Map.entry("maven", "1.2.3-rc.1-SNAPSHOT"),
@@ -70,8 +74,10 @@ public class VersionParsingBenchmark {
 
     @Param({
             "apk",
+            "cargo",
             "composer",
             "deb",
+            "gem",
             "generic",
             "golang",
             "maven",

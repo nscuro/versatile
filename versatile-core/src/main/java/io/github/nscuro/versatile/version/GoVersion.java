@@ -26,8 +26,9 @@ import java.util.Objects;
 import java.util.Set;
 
 import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_GOLANG;
-import static io.github.nscuro.versatile.version.VersionUtils.isAlphaNumeric;
-import static io.github.nscuro.versatile.version.VersionUtils.isNumeric;
+import static io.github.nscuro.versatile.version.VersionUtils.isAsciiAlphaNumeric;
+import static io.github.nscuro.versatile.version.VersionUtils.isAsciiDigit;
+import static io.github.nscuro.versatile.version.VersionUtils.isAsciiNumeric;
 
 /**
  * @see <a href="https://github.com/golang/mod/blob/v0.12.0/semver/semver.go">Go Modules semantic version implementation</a>
@@ -193,12 +194,12 @@ public class GoVersion extends Version {
 
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L227-L242
     private static Map.Entry<String, String> parseInt(final String version) {
-        if (!Character.isDigit(version.charAt(0))) {
+        if (!isAsciiDigit(version.charAt(0))) {
             return null;
         }
 
         int i = 1;
-        while (i < version.length() && Character.isDigit(version.charAt(i))) {
+        while (i < version.length() && isAsciiDigit(version.charAt(i))) {
             i++;
         }
 
@@ -325,18 +326,18 @@ public class GoVersion extends Version {
 
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L296-L298
     private static boolean isIdentChar(final char versionChar) {
-        return isAlphaNumeric(String.valueOf(versionChar));
+        return isAsciiAlphaNumeric(String.valueOf(versionChar));
     }
 
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L308-L314
     private static boolean isNum(final String v) {
-        return isNumeric(v);
+        return isAsciiNumeric(v);
     }
 
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L300-L306
     private static boolean isBadNum(final String version) {
         int i = 0;
-        for (/* i */; i < version.length() && '0' <= version.charAt(i) && version.charAt(i) <= '9'; i++) ;
+        for (/* i */; i < version.length() && isAsciiDigit(version.charAt(i)); i++) ;
         return i == version.length() && i > 1 && version.startsWith("0");
     }
 

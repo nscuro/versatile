@@ -26,18 +26,21 @@ final class VersionUtils {
     private VersionUtils() {
     }
 
-    static boolean isAlphaNumeric(String str) {
+    static boolean isAsciiDigit(char c) {
+        return c >= '0' && c <= '9';
+    }
+
+    static boolean isAsciiAlphaNumeric(char c) {
+        return isAsciiDigit(c) || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '-';
+    }
+
+    static boolean isAsciiAlphaNumeric(String str) {
         if (str == null || str.isEmpty()) {
             return false;
         }
 
         for (int i = 0; i < str.length(); i++) {
-            final char c = str.charAt(i);
-            final boolean isAllowed = (c >= 'a' && c <= 'z')
-                    || (c >= 'A' && c <= 'Z')
-                    || (c >= '0' && c <= '9')
-                    || c == '-';
-            if (!isAllowed) {
+            if (!isAsciiAlphaNumeric(str.charAt(i))) {
                 return false;
             }
         }
@@ -45,14 +48,13 @@ final class VersionUtils {
         return true;
     }
 
-    static boolean isNumeric(String str) {
+    static boolean isAsciiNumeric(String str) {
         if (str == null || str.isEmpty()) {
             return false;
         }
 
         for (int i = 0; i < str.length(); i++) {
-            final char c = str.charAt(i);
-            if (c < '0' || c > '9') {
+            if (!isAsciiDigit(str.charAt(i))) {
                 return false;
             }
         }

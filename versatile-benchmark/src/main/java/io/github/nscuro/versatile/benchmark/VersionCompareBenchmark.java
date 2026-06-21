@@ -46,8 +46,10 @@ public class VersionCompareBenchmark {
     private static final Map<String, String[]> COMPLEX_PAIR_BY_SCHEME =
             Map.ofEntries(
                     Map.entry("apk", new String[]{"1.2.3_alpha1-r1", "1.2.3_alpha2-r1"}),
+                    Map.entry("cargo", new String[]{"1.2.3-beta.1", "1.2.3-beta.2"}),
                     Map.entry("composer", new String[]{"1.2.3-beta1", "1.2.3-beta2"}),
                     Map.entry("deb", new String[]{"1:1.2.3-1ubuntu0.1", "1:1.2.3-1ubuntu0.2"}),
+                    Map.entry("gem", new String[]{"1.2.3.beta.1", "1.2.3.beta.2"}),
                     Map.entry("generic", new String[]{"1.2.3-beta1", "1.2.3-beta2"}),
                     Map.entry("golang", new String[]{"v1.2.3-beta.1", "v1.2.3-beta.2"}),
                     Map.entry("maven", new String[]{"1.2.3-rc1", "1.2.3-rc2"}),
@@ -58,8 +60,10 @@ public class VersionCompareBenchmark {
 
     @Param({
             "apk",
+            "cargo",
             "composer",
             "deb",
+            "gem",
             "generic",
             "golang",
             "maven",
