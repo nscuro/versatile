@@ -50,7 +50,11 @@ class CargoVersionTest extends AbstractVersionTest {
                 "1.2.3, IS_EQUAL_TO, 1.2.3",
                 "1.2.3+23, IS_EQUAL_TO, 1.2.3+42",
                 "1.2.3, IS_EQUAL_TO, 1.2.3+build",
-                "1.2.3-alpha+1, IS_EQUAL_TO, 1.2.3-alpha+2"
+                "1.2.3-alpha+1, IS_EQUAL_TO, 1.2.3-alpha+2",
+                "0, IS_EQUAL_TO, 0.0.0",
+                "0.16, IS_EQUAL_TO, 0.16.0",
+                "1, IS_LOWER_THAN, 1.0.1",
+                "0, IS_LOWER_THAN, 0.3.24"
             })
     void testCompareTo(String versionA, ComparisonExpectation expectation, String versionB) {
         expectation.evaluate(new CargoVersion(versionA), new CargoVersion(versionB));
@@ -65,8 +69,6 @@ class CargoVersionTest extends AbstractVersionTest {
     @ParameterizedTest
     @ValueSource(
             strings = {
-                "1",
-                "1.2",
                 "1.2.3-",
                 "a.b.c",
                 "1.2.3-01",

@@ -57,10 +57,18 @@ public class CargoVersion extends Version {
 
         final int[] cursor = {0};
         this.major = parseNumericField(versionStr, cursor);
-        expect(versionStr, cursor, '.');
-        this.minor = parseNumericField(versionStr, cursor);
-        expect(versionStr, cursor, '.');
-        this.patch = parseNumericField(versionStr, cursor);
+        if (peek(versionStr, cursor) == '.') {
+            cursor[0]++;
+            this.minor = parseNumericField(versionStr, cursor);
+        } else {
+            this.minor = 0;
+        }
+        if (peek(versionStr, cursor) == '.') {
+            cursor[0]++;
+            this.patch = parseNumericField(versionStr, cursor);
+        } else {
+            this.patch = 0;
+        }
 
         String[] pre = NO_PRERELEASE;
         if (peek(versionStr, cursor) == '-') {
@@ -210,14 +218,5 @@ public class CargoVersion extends Version {
 
     private static char peek(String versionStr, int[] cursor) {
         return cursor[0] < versionStr.length() ? versionStr.charAt(cursor[0]) : '\0';
-    }
-
-    private static void expect(String versionStr, int[] cursor, char expected) {
-        if (peek(versionStr, cursor) != expected) {
-            throw new InvalidVersionException(
-                    versionStr, "Expected '%c' at position %d".formatted(expected, cursor[0]));
-        }
-
-        cursor[0]++;
     }
 }

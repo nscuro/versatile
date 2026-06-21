@@ -264,10 +264,12 @@ public final class VersUtils {
         }
 
         return switch (ecosystem.toLowerCase()) {
+            case "crates.io" -> Optional.of(KnownVersioningSchemes.SCHEME_CARGO);
             case "go" -> Optional.of(KnownVersioningSchemes.SCHEME_GOLANG);
             case "maven" -> Optional.of(KnownVersioningSchemes.SCHEME_MAVEN);
             case "npm" -> Optional.of(KnownVersioningSchemes.SCHEME_NPM);
             case "nuget" -> Optional.of(KnownVersioningSchemes.SCHEME_NUGET);
+            case "packagist" -> Optional.of(KnownVersioningSchemes.SCHEME_COMPOSER);
             case "pypi" -> Optional.of(KnownVersioningSchemes.SCHEME_PYPI);
             case "rubygems" -> Optional.of(KnownVersioningSchemes.SCHEME_GEM);
             default -> Optional.empty();

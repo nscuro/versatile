@@ -148,14 +148,14 @@ class VersUtilsTest {
                 "Mageia, rpm",
                 "Maven, maven",
                 "OSS-Fuzz, ",
-                "Packagist, ",
+                "Packagist, composer",
                 "Photon OS, rpm",
                 "Pub, ",
                 "PyPI, pypi",
                 "Rocky Linux, rpm",
                 "RubyGems, gem",
                 "SwiftURL, ",
-                "crates.io, ",
+                "crates.io, cargo",
                 "npm, npm",
             })
     void testSchemeFromOsvEcosystem(final String ecosystem, final String expectedScheme) {
