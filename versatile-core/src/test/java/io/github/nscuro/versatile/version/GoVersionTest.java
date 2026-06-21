@@ -18,12 +18,12 @@
  */
 package io.github.nscuro.versatile.version;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.nscuro.versatile.version.AbstractVersionTest.ComparisonExpectation;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class GoVersionTest {
 
@@ -88,32 +88,32 @@ class GoVersionTest {
     }
 
     @ParameterizedTest
-    @CsvSource(value = {
-            "v1.0.0-alpha, IS_LOWER_THAN, v1.0.0-alpha.1",
-            "v1.0.0-alpha.1, IS_LOWER_THAN, v1.0.0-alpha.beta",
-            "v1.0.0-alpha.beta, IS_LOWER_THAN, v1.0.0-beta.2",
-            "v1.0.0-beta.2, IS_LOWER_THAN, v1.0.0-beta.11",
-            "v1.0.0-beta.11, IS_LOWER_THAN, v1.0.0-rc.1",
-            "v1.0.0-rc.1, IS_LOWER_THAN, v1",
-            "v1, IS_EQUAL_TO, v1.0",
-            "v1.0, IS_EQUAL_TO, v1.0.0",
-            "v1.0.0, IS_LOWER_THAN, v1.2",
-            "v1.2, IS_EQUAL_TO, v1.2.0",
-            "v1.2.0, IS_LOWER_THAN, v1.2.3-456",
-            "v1.2.3-456, IS_LOWER_THAN, v1.2.3-456.789",
-            "v1.2.3-456.789, IS_LOWER_THAN, v1.2.3-456-789",
-            "v1.2.3-456-789, IS_LOWER_THAN, v1.2.3-456a",
-            "v1.2.3-456a, IS_LOWER_THAN, v1.2.3-pre",
-            "v1.2.3-pre, IS_EQUAL_TO, v1.2.3-pre+meta",
-            "v1.2.3-pre+meta, IS_LOWER_THAN, v1.2.3-pre.1",
-            "v1.2.3-pre.1, IS_LOWER_THAN, v1.2.3-zzz",
-            "v1.2.3-zzz, IS_LOWER_THAN, v1.2.3",
-            "v1.2.3, IS_EQUAL_TO, v1.2.3+meta",
-            "v1.2.3+meta, IS_EQUAL_TO, v1.2.3+meta-pre",
-            "v1.2.3+meta-pre, IS_EQUAL_TO, v1.2.3+meta-pre.sha.256a",
-    })
+    @CsvSource(
+            value = {
+                "v1.0.0-alpha, IS_LOWER_THAN, v1.0.0-alpha.1",
+                "v1.0.0-alpha.1, IS_LOWER_THAN, v1.0.0-alpha.beta",
+                "v1.0.0-alpha.beta, IS_LOWER_THAN, v1.0.0-beta.2",
+                "v1.0.0-beta.2, IS_LOWER_THAN, v1.0.0-beta.11",
+                "v1.0.0-beta.11, IS_LOWER_THAN, v1.0.0-rc.1",
+                "v1.0.0-rc.1, IS_LOWER_THAN, v1",
+                "v1, IS_EQUAL_TO, v1.0",
+                "v1.0, IS_EQUAL_TO, v1.0.0",
+                "v1.0.0, IS_LOWER_THAN, v1.2",
+                "v1.2, IS_EQUAL_TO, v1.2.0",
+                "v1.2.0, IS_LOWER_THAN, v1.2.3-456",
+                "v1.2.3-456, IS_LOWER_THAN, v1.2.3-456.789",
+                "v1.2.3-456.789, IS_LOWER_THAN, v1.2.3-456-789",
+                "v1.2.3-456-789, IS_LOWER_THAN, v1.2.3-456a",
+                "v1.2.3-456a, IS_LOWER_THAN, v1.2.3-pre",
+                "v1.2.3-pre, IS_EQUAL_TO, v1.2.3-pre+meta",
+                "v1.2.3-pre+meta, IS_LOWER_THAN, v1.2.3-pre.1",
+                "v1.2.3-pre.1, IS_LOWER_THAN, v1.2.3-zzz",
+                "v1.2.3-zzz, IS_LOWER_THAN, v1.2.3",
+                "v1.2.3, IS_EQUAL_TO, v1.2.3+meta",
+                "v1.2.3+meta, IS_EQUAL_TO, v1.2.3+meta-pre",
+                "v1.2.3+meta-pre, IS_EQUAL_TO, v1.2.3+meta-pre.sha.256a",
+            })
     void testCompareTo(final String versionA, final ComparisonExpectation expectation, final String versionB) {
         expectation.evaluate(new GoVersion(versionA), new GoVersion(versionB));
     }
-
 }

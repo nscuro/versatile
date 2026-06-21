@@ -18,12 +18,11 @@
  */
 package io.github.nscuro.versatile.version;
 
+import static java.util.Objects.requireNonNull;
+
 import com.github.packageurl.MalformedPackageURLException;
 import com.github.packageurl.PackageURL;
-
 import java.util.Optional;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * @see <a href="https://github.com/package-url/vers-spec/blob/main/docs/version-schemes.md">List of known schemes</a>
@@ -46,8 +45,7 @@ public final class KnownVersioningSchemes {
     public static final String SCHEME_PYPI = "pypi";
     public static final String SCHEME_RPM = "rpm";
 
-    private KnownVersioningSchemes() {
-    }
+    private KnownVersioningSchemes() {}
 
     /**
      * Attempt to match a given Package URL with any of the versioning schemes known to versatile.
@@ -109,5 +107,4 @@ public final class KnownVersioningSchemes {
             case null, default -> Optional.empty();
         };
     }
-
 }

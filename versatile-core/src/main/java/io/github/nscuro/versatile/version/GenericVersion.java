@@ -18,12 +18,11 @@
  */
 package io.github.nscuro.versatile.version;
 
+import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_GENERIC;
+
 import io.github.nscuro.versatile.spi.Version;
 import io.github.nscuro.versatile.version.ext.ComponentVersion;
-
 import java.util.Set;
-
-import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_GENERIC;
 
 public class GenericVersion extends Version {
 
@@ -35,7 +34,6 @@ public class GenericVersion extends Version {
         public Provider() {
             super(Set.of(SCHEME_GENERIC), GenericVersion::new);
         }
-
     }
 
     private final ComponentVersion delegate; // TODO: Use a custom implementation.
@@ -66,5 +64,4 @@ public class GenericVersion extends Version {
         throw new IllegalArgumentException("%s can only be compared with its own type, but got %s"
                 .formatted(this.getClass().getName(), other.getClass().getName()));
     }
-
 }

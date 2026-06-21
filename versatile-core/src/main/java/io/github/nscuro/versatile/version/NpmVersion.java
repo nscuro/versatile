@@ -18,14 +18,13 @@
  */
 package io.github.nscuro.versatile.version;
 
+import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_NPM;
+
 import com.vdurmont.semver4j.Semver;
 import com.vdurmont.semver4j.SemverException;
 import io.github.nscuro.versatile.spi.InvalidVersionException;
 import io.github.nscuro.versatile.spi.Version;
-
 import java.util.Set;
-
-import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_NPM;
 
 public class NpmVersion extends Version {
 
@@ -37,7 +36,6 @@ public class NpmVersion extends Version {
         public Provider() {
             super(Set.of(SCHEME_NPM), (scheme, versionStr) -> new NpmVersion(versionStr));
         }
-
     }
 
     private final Semver delegate;
@@ -71,5 +69,4 @@ public class NpmVersion extends Version {
         throw new IllegalArgumentException("%s can only be compared with its own type, but got %s"
                 .formatted(this.getClass().getName(), other.getClass().getName()));
     }
-
 }

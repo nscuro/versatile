@@ -18,12 +18,12 @@
  */
 package io.github.nscuro.versatile;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.nscuro.versatile.spi.Version;
 import io.github.nscuro.versatile.version.GenericVersion;
 import io.github.nscuro.versatile.version.GoVersion;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class VersionFactoryTest {
 
@@ -40,5 +40,4 @@ class VersionFactoryTest {
         assertThat(version).isInstanceOf(GenericVersion.class);
         assertThat(version.scheme()).isEqualTo("foobar");
     }
-
 }

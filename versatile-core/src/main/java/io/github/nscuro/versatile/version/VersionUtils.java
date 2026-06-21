@@ -23,8 +23,7 @@ package io.github.nscuro.versatile.version;
  */
 final class VersionUtils {
 
-    private VersionUtils() {
-    }
+    private VersionUtils() {}
 
     static boolean isAsciiDigit(char c) {
         return c >= '0' && c <= '9';
@@ -61,5 +60,4 @@ final class VersionUtils {
 
         return true;
     }
-
 }

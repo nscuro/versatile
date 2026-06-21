@@ -45,5 +45,4 @@ public interface VersionProvider {
      * @throws InvalidVersionException When {@code versionStr} could not be used to construct a {@link Version}
      */
     Version getVersion(final String scheme, final String versionStr);
-
 }

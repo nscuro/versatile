@@ -18,6 +18,13 @@
  */
 package io.github.nscuro.versatile;
 
+import static io.github.jeremylong.openvulnerability.client.ghsa.GitHubSecurityAdvisoryClientBuilder.aGitHubSecurityAdvisoryClient;
+import static io.github.nscuro.versatile.VersUtils.versFromGhsaRange;
+import static io.github.nscuro.versatile.VersUtils.versFromOsvRange;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.params.ParameterizedTest.ARGUMENTS_WITH_NAMES_PLACEHOLDER;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -30,11 +37,6 @@ import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.github.jeremylong.openvulnerability.client.ghsa.GitHubSecurityAdvisoryClient;
 import io.github.jeremylong.openvulnerability.client.ghsa.SecurityAdvisory;
 import io.github.jeremylong.openvulnerability.client.ghsa.Vulnerabilities;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -48,13 +50,10 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import static io.github.jeremylong.openvulnerability.client.ghsa.GitHubSecurityAdvisoryClientBuilder.aGitHubSecurityAdvisoryClient;
-import static io.github.nscuro.versatile.VersUtils.versFromGhsaRange;
-import static io.github.nscuro.versatile.VersUtils.versFromOsvRange;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
-import static org.junit.jupiter.params.ParameterizedTest.ARGUMENTS_WITH_NAMES_PLACEHOLDER;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class VersUtilsIT {
 
@@ -88,13 +87,15 @@ public class VersUtilsIT {
                         .map(Vulnerabilities::getEdges)
                         .flatMap(Collection::stream)
                         .forEach(edge -> {
-                            final ObjectNode objectNode = objectMapper.createObjectNode()
+                            final ObjectNode objectNode = objectMapper
+                                    .createObjectNode()
                                     .put("ecosystem", edge.getPackage().getEcosystem())
                                     .put("package", edge.getPackage().getName())
                                     .put("range", edge.getVulnerableVersionRange());
 
                             try {
-                                final Vers vers = versFromGhsaRange(edge.getPackage().getEcosystem(), edge.getVulnerableVersionRange())
+                                final Vers vers = versFromGhsaRange(
+                                                edge.getPackage().getEcosystem(), edge.getVulnerableVersionRange())
                                         .simplify()
                                         .validate();
                                 resultsArrayNode.add(objectNode.put("vers", vers.toString()));
@@ -110,7 +111,8 @@ public class VersUtilsIT {
         }
 
         try (final var resultsFileOutputStream = Files.newOutputStream(Paths.get("target/results/ghsa.json"));
-             final var failuresFileOutputStream = Files.newOutputStream(Paths.get("target/results/ghsa-failures.json"))) {
+                final var failuresFileOutputStream =
+                        Files.newOutputStream(Paths.get("target/results/ghsa-failures.json"))) {
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(resultsFileOutputStream, resultsArrayNode);
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(failuresFileOutputStream, failuresArrayNode);
         }
@@ -119,29 +121,32 @@ public class VersUtilsIT {
     }
 
     @ParameterizedTest(name = ARGUMENTS_WITH_NAMES_PLACEHOLDER)
-    @ValueSource(strings = {
-            "AlmaLinux",
-            "Alpine",
-            "crates.io",
-            "Debian",
-            "Go",
-            "Maven",
-            "npm",
-            "NuGet",
-            "Packagist",
-            "PyPI",
-            "Rocky Linux",
-            "RubyGems",
-            "Ubuntu"
-    })
+    @ValueSource(
+            strings = {
+                "AlmaLinux",
+                "Alpine",
+                "crates.io",
+                "Debian",
+                "Go",
+                "Maven",
+                "npm",
+                "NuGet",
+                "Packagist",
+                "PyPI",
+                "Rocky Linux",
+                "RubyGems",
+                "Ubuntu"
+            })
     void testVersFromOsvRangeWithAllRanges(final String ecosystem) throws Exception {
         final Path tempFile = Files.createTempFile(null, null);
 
-        final HttpRequest request = HttpRequest.newBuilder().GET()
-                .uri(URI.create("https://osv-vulnerabilities.storage.googleapis.com/%s/all.zip".formatted(ecosystem.replace(" ", "%20"))))
+        final HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create("https://osv-vulnerabilities.storage.googleapis.com/%s/all.zip"
+                        .formatted(ecosystem.replace(" ", "%20"))))
                 .build();
-        final HttpResponse<Path> response = HttpClient.newHttpClient()
-                .send(request, HttpResponse.BodyHandlers.ofFile(tempFile));
+        final HttpResponse<Path> response =
+                HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofFile(tempFile));
         assertThat(response.statusCode()).isEqualTo(200);
 
         final var objectMapper = new ObjectMapper();
@@ -180,10 +185,12 @@ public class VersUtilsIT {
                         final var events = new ArrayList<Map.Entry<String, String>>();
                         for (final JsonNode eventNode : range.get("events")) {
                             final String fieldName = eventNode.fieldNames().next();
-                            events.add(Map.entry(fieldName, eventNode.get(fieldName).asText()));
+                            events.add(Map.entry(
+                                    fieldName, eventNode.get(fieldName).asText()));
                         }
 
-                        final ObjectNode objectNode = objectMapper.createObjectNode()
+                        final ObjectNode objectNode = objectMapper
+                                .createObjectNode()
                                 .put("name", affected.get("package").get("name").asText())
                                 .putPOJO("events", events);
 
@@ -201,13 +208,14 @@ public class VersUtilsIT {
             }
         }
 
-        try (final var resultsFileOutputStream = Files.newOutputStream(Paths.get("target/results/osv-%s.json".formatted(ecosystem)));
-             final var failuresFileOutputStream = Files.newOutputStream(Paths.get("target/results/osv-%s-failures.json".formatted(ecosystem)))) {
+        try (final var resultsFileOutputStream =
+                        Files.newOutputStream(Paths.get("target/results/osv-%s.json".formatted(ecosystem)));
+                final var failuresFileOutputStream =
+                        Files.newOutputStream(Paths.get("target/results/osv-%s-failures.json".formatted(ecosystem)))) {
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(resultsFileOutputStream, resultsArrayNode);
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(failuresFileOutputStream, failuresArrayNode);
         }
 
         assertThat(failuresArrayNode).isEmpty();
     }
-
 }

@@ -18,6 +18,9 @@
  */
 package io.github.nscuro.versatile.version;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import io.github.nscuro.versatile.spi.InvalidVersionException;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -25,77 +28,75 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 class PythonVersionTest extends AbstractVersionTest {
 
     @ParameterizedTest
-    @CsvSource(value = {
-            // Basic release comparisons
-            "1.0, IS_LOWER_THAN, 2.0",
-            "1.0, IS_EQUAL_TO, 1.0",
-            "2.0, IS_HIGHER_THAN, 1.0",
-            "1.0.0, IS_EQUAL_TO, 1.0",
-            "1.2.3, IS_LOWER_THAN, 1.2.4",
-            "1.2.3, IS_LOWER_THAN, 1.3.0",
-            "1.2.3, IS_LOWER_THAN, 2.0.0",
-            // Epoch comparisons
-            "1!1.0, IS_HIGHER_THAN, 2.0",
-            "2!1.0, IS_HIGHER_THAN, 1!2.0",
-            "1!1.0, IS_EQUAL_TO, 1!1.0",
-            // Pre-release comparisons (a < b < rc < final)
-            "1.0a1, IS_LOWER_THAN, 1.0",
-            "1.0b1, IS_LOWER_THAN, 1.0",
-            "1.0rc1, IS_LOWER_THAN, 1.0",
-            "1.0a1, IS_LOWER_THAN, 1.0b1",
-            "1.0b1, IS_LOWER_THAN, 1.0rc1",
-            "1.0a1, IS_LOWER_THAN, 1.0a2",
-            "1.0a2, IS_LOWER_THAN, 1.0b1",
-            "1.0rc1, IS_LOWER_THAN, 1.0rc2",
-            // Post-release comparisons
-            "1.0, IS_LOWER_THAN, 1.0.post1",
-            "1.0.post1, IS_LOWER_THAN, 1.0.post2",
-            "1.0.post1, IS_HIGHER_THAN, 1.0",
-            // Dev release comparisons
-            "1.0.dev1, IS_LOWER_THAN, 1.0a1",
-            "1.0.dev1, IS_LOWER_THAN, 1.0",
-            "1.0.dev1, IS_LOWER_THAN, 1.0.dev2",
-            "1.0a1.dev1, IS_LOWER_THAN, 1.0a1",
-            "1.0a1.dev1, IS_LOWER_THAN, 1.0a1.dev2",
-            // Complex ordering (dev < alpha < beta < rc < release < post)
-            "1.0.dev456, IS_LOWER_THAN, 1.0a1",
-            "1.0a1, IS_LOWER_THAN, 1.0a2.dev456",
-            "1.0a2.dev456, IS_LOWER_THAN, 1.0a12.dev456",
-            "1.0a12.dev456, IS_LOWER_THAN, 1.0a12",
-            "1.0a12, IS_LOWER_THAN, 1.0b2.post345.dev456",
-            "1.0b2.post345.dev456, IS_LOWER_THAN, 1.0b2.post345",
-            "1.0b2.post345, IS_LOWER_THAN, 1.0rc1.dev456",
-            "1.0rc1.dev456, IS_LOWER_THAN, 1.0rc1",
-            "1.0rc1, IS_LOWER_THAN, 1.0",
-            "1.0, IS_LOWER_THAN, 1.0.post456.dev34",
-            "1.0.post456.dev34, IS_LOWER_THAN, 1.0.post456",
-            "1.0.post456, IS_LOWER_THAN, 1.1.dev1",
-            // Local version comparisons
-            "1.0, IS_LOWER_THAN, 1.0+local",
-            "1.0+abc, IS_LOWER_THAN, 1.0+def",
-            "1.0+local1, IS_LOWER_THAN, 1.0+local2",
-            // Normalization equivalence
-            "v1.0, IS_EQUAL_TO, 1.0",
-            "1.0alpha1, IS_EQUAL_TO, 1.0a1",
-            "1.0beta1, IS_EQUAL_TO, 1.0b1",
-            "1.0c1, IS_EQUAL_TO, 1.0rc1",
-            "1.0-post1, IS_EQUAL_TO, 1.0.post1",
-            "1.0-1, IS_EQUAL_TO, 1.0.post1",
-            "1.0.dev1, IS_EQUAL_TO, 1.0-dev1",
-            // Real-world examples
-            "2.0.0, IS_HIGHER_THAN, 2.0.0rc1",
-            "3.0.0a1, IS_LOWER_THAN, 3.0.0",
-            "1.2.3.post1, IS_HIGHER_THAN, 1.2.3",
-            "0.9.0, IS_LOWER_THAN, 1.0.0",
-            "1.0.0, IS_LOWER_THAN, 1.0.1",
-            "1.11.0, IS_HIGHER_THAN, 1.2.0"
-    })
+    @CsvSource(
+            value = {
+                // Basic release comparisons
+                "1.0, IS_LOWER_THAN, 2.0",
+                "1.0, IS_EQUAL_TO, 1.0",
+                "2.0, IS_HIGHER_THAN, 1.0",
+                "1.0.0, IS_EQUAL_TO, 1.0",
+                "1.2.3, IS_LOWER_THAN, 1.2.4",
+                "1.2.3, IS_LOWER_THAN, 1.3.0",
+                "1.2.3, IS_LOWER_THAN, 2.0.0",
+                // Epoch comparisons
+                "1!1.0, IS_HIGHER_THAN, 2.0",
+                "2!1.0, IS_HIGHER_THAN, 1!2.0",
+                "1!1.0, IS_EQUAL_TO, 1!1.0",
+                // Pre-release comparisons (a < b < rc < final)
+                "1.0a1, IS_LOWER_THAN, 1.0",
+                "1.0b1, IS_LOWER_THAN, 1.0",
+                "1.0rc1, IS_LOWER_THAN, 1.0",
+                "1.0a1, IS_LOWER_THAN, 1.0b1",
+                "1.0b1, IS_LOWER_THAN, 1.0rc1",
+                "1.0a1, IS_LOWER_THAN, 1.0a2",
+                "1.0a2, IS_LOWER_THAN, 1.0b1",
+                "1.0rc1, IS_LOWER_THAN, 1.0rc2",
+                // Post-release comparisons
+                "1.0, IS_LOWER_THAN, 1.0.post1",
+                "1.0.post1, IS_LOWER_THAN, 1.0.post2",
+                "1.0.post1, IS_HIGHER_THAN, 1.0",
+                // Dev release comparisons
+                "1.0.dev1, IS_LOWER_THAN, 1.0a1",
+                "1.0.dev1, IS_LOWER_THAN, 1.0",
+                "1.0.dev1, IS_LOWER_THAN, 1.0.dev2",
+                "1.0a1.dev1, IS_LOWER_THAN, 1.0a1",
+                "1.0a1.dev1, IS_LOWER_THAN, 1.0a1.dev2",
+                // Complex ordering (dev < alpha < beta < rc < release < post)
+                "1.0.dev456, IS_LOWER_THAN, 1.0a1",
+                "1.0a1, IS_LOWER_THAN, 1.0a2.dev456",
+                "1.0a2.dev456, IS_LOWER_THAN, 1.0a12.dev456",
+                "1.0a12.dev456, IS_LOWER_THAN, 1.0a12",
+                "1.0a12, IS_LOWER_THAN, 1.0b2.post345.dev456",
+                "1.0b2.post345.dev456, IS_LOWER_THAN, 1.0b2.post345",
+                "1.0b2.post345, IS_LOWER_THAN, 1.0rc1.dev456",
+                "1.0rc1.dev456, IS_LOWER_THAN, 1.0rc1",
+                "1.0rc1, IS_LOWER_THAN, 1.0",
+                "1.0, IS_LOWER_THAN, 1.0.post456.dev34",
+                "1.0.post456.dev34, IS_LOWER_THAN, 1.0.post456",
+                "1.0.post456, IS_LOWER_THAN, 1.1.dev1",
+                // Local version comparisons
+                "1.0, IS_LOWER_THAN, 1.0+local",
+                "1.0+abc, IS_LOWER_THAN, 1.0+def",
+                "1.0+local1, IS_LOWER_THAN, 1.0+local2",
+                // Normalization equivalence
+                "v1.0, IS_EQUAL_TO, 1.0",
+                "1.0alpha1, IS_EQUAL_TO, 1.0a1",
+                "1.0beta1, IS_EQUAL_TO, 1.0b1",
+                "1.0c1, IS_EQUAL_TO, 1.0rc1",
+                "1.0-post1, IS_EQUAL_TO, 1.0.post1",
+                "1.0-1, IS_EQUAL_TO, 1.0.post1",
+                "1.0.dev1, IS_EQUAL_TO, 1.0-dev1",
+                // Real-world examples
+                "2.0.0, IS_HIGHER_THAN, 2.0.0rc1",
+                "3.0.0a1, IS_LOWER_THAN, 3.0.0",
+                "1.2.3.post1, IS_HIGHER_THAN, 1.2.3",
+                "0.9.0, IS_LOWER_THAN, 1.0.0",
+                "1.0.0, IS_LOWER_THAN, 1.0.1",
+                "1.11.0, IS_HIGHER_THAN, 1.2.0"
+            })
     void testCompareTo(final String versionA, final ComparisonExpectation expectation, final String versionB) {
         expectation.evaluate(new PythonVersion(versionA), new PythonVersion(versionB));
     }
@@ -167,19 +168,10 @@ class PythonVersionTest extends AbstractVersionTest {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {
-                "",
-                "abc",
-                "1.2.3.a.b.c",
-                "1.2-",
-                ".1.2",
-                "1..2"
-        })
+        @ValueSource(strings = {"", "abc", "1.2.3.a.b.c", "1.2-", ".1.2", "1..2"})
         void shouldThrowOnInvalidVersion(final String invalidVersion) {
-            assertThatThrownBy(() -> new PythonVersion(invalidVersion))
-                    .isInstanceOf(InvalidVersionException.class);
+            assertThatThrownBy(() -> new PythonVersion(invalidVersion)).isInstanceOf(InvalidVersionException.class);
         }
-
     }
 
     @Nested
@@ -219,42 +211,26 @@ class PythonVersionTest extends AbstractVersionTest {
             final PythonVersion v2 = new PythonVersion("1.0.post1");
             assertThat(v1).isEqualByComparingTo(v2);
         }
-
     }
 
     @Nested
     class IsStableTest {
 
         @ParameterizedTest
-        @ValueSource(strings = {
-                "1.0",
-                "1.2.3",
-                "1.2.3.4.5",
-                "1.0.post1",
-                "2.1"
-        })
+        @ValueSource(strings = {"1.0", "1.2.3", "1.2.3.4.5", "1.0.post1", "2.1"})
         void shouldReturnTrueForFinalReleases(final String version) {
             assertThat(new PythonVersion(version).isStable()).isTrue();
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {
-                "1.0a1",
-                "1.0b1",
-                "1.0rc1",
-                "1.0.dev1",
-                "1.0+local",
-                "1.0a1.dev1"
-        })
+        @ValueSource(strings = {"1.0a1", "1.0b1", "1.0rc1", "1.0.dev1", "1.0+local", "1.0a1.dev1"})
         void shouldReturnFalseForPreDevAndLocalReleases(final String version) {
             assertThat(new PythonVersion(version).isStable()).isFalse();
         }
-
     }
 
     @Test
     void testToString() {
         assertThat(new PythonVersion("1.2.3").toString()).isEqualTo("1.2.3");
     }
-
 }

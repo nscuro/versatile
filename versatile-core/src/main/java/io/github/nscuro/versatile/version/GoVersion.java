@@ -18,17 +18,16 @@
  */
 package io.github.nscuro.versatile.version;
 
-import io.github.nscuro.versatile.spi.InvalidVersionException;
-import io.github.nscuro.versatile.spi.Version;
-
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-
 import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_GOLANG;
 import static io.github.nscuro.versatile.version.VersionUtils.isAsciiAlphaNumeric;
 import static io.github.nscuro.versatile.version.VersionUtils.isAsciiDigit;
 import static io.github.nscuro.versatile.version.VersionUtils.isAsciiNumeric;
+
+import io.github.nscuro.versatile.spi.InvalidVersionException;
+import io.github.nscuro.versatile.spi.Version;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * @see <a href="https://github.com/golang/mod/blob/v0.12.0/semver/semver.go">Go Modules semantic version implementation</a>
@@ -44,7 +43,6 @@ public class GoVersion extends Version {
         public Provider() {
             super(Set.of(SCHEME_GOLANG), (scheme, versionStr) -> new GoVersion(versionStr));
         }
-
     }
 
     private final String major;
@@ -129,7 +127,8 @@ public class GoVersion extends Version {
         }
 
         if (!partAndRest.getValue().isEmpty()) {
-            throw new InvalidVersionException(versionStr, "Unexpected remainder after parsing: \"%s\"".formatted(partAndRest.getValue()));
+            throw new InvalidVersionException(
+                    versionStr, "Unexpected remainder after parsing: \"%s\"".formatted(partAndRest.getValue()));
         }
 
         this.shortV = null;
@@ -217,7 +216,8 @@ public class GoVersion extends Version {
         }
 
         int i = 1, start = 1;
-        for (/* i */; i < version.length() && version.charAt(i) != '+'; i++) {
+        for (
+        /* i */ ; i < version.length() && version.charAt(i) != '+'; i++) {
             final char currChar = version.charAt(i);
             if (!isIdentChar(currChar) && currChar != '.') {
                 return null;
@@ -246,7 +246,8 @@ public class GoVersion extends Version {
         }
 
         int i = 1, start = 1;
-        for (/* i */; i < version.length() && version.charAt(i) != '+'; i++) {
+        for (
+        /* i */ ; i < version.length() && version.charAt(i) != '+'; i++) {
             final char currChar = version.charAt(i);
             if (!isIdentChar(currChar) && currChar != '.') {
                 return null;
@@ -337,15 +338,18 @@ public class GoVersion extends Version {
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L300-L306
     private static boolean isBadNum(final String version) {
         int i = 0;
-        for (/* i */; i < version.length() && isAsciiDigit(version.charAt(i)); i++) ;
+        for (
+        /* i */ ; i < version.length() && isAsciiDigit(version.charAt(i)); i++)
+            ;
         return i == version.length() && i > 1 && version.startsWith("0");
     }
 
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L395-L401
     private static Map.Entry<String, String> nextIdent(final String x) {
         int i = 0;
-        for (/* i */; i < x.length() && x.charAt(i) != '.'; i++) ;
+        for (
+        /* i */ ; i < x.length() && x.charAt(i) != '.'; i++)
+            ;
         return Map.entry(x.substring(0, i), x.substring(i));
     }
-
 }

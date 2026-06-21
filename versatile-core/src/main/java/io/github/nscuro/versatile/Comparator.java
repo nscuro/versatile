@@ -19,7 +19,6 @@
 package io.github.nscuro.versatile;
 
 public enum Comparator {
-
     LESS_THAN_OR_EQUAL("<="),
 
     LESS_THAN("<"),
@@ -43,5 +42,4 @@ public enum Comparator {
     String operator() {
         return operator;
     }
-
 }

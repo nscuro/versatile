@@ -18,14 +18,13 @@
  */
 package io.github.nscuro.versatile.version;
 
-import io.github.nscuro.versatile.spi.Version;
-import org.apache.maven.artifact.versioning.ArtifactVersion;
-import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_MAVEN;
 
+import io.github.nscuro.versatile.spi.Version;
 import java.util.Set;
 import java.util.regex.Pattern;
-
-import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_MAVEN;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
 public class MavenVersion extends Version {
 
@@ -37,7 +36,6 @@ public class MavenVersion extends Version {
         public Provider() {
             super(Set.of(SCHEME_MAVEN), (scheme, versionStr) -> new MavenVersion(versionStr));
         }
-
     }
 
     private static final Pattern UNSTABLE_QUALIFIER_PATTERN = Pattern.compile(
@@ -87,5 +85,4 @@ public class MavenVersion extends Version {
 
         return this.delegate.equals(otherVersion.delegate);
     }
-
 }

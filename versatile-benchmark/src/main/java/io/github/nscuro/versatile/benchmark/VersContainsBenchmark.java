@@ -19,6 +19,7 @@
 package io.github.nscuro.versatile.benchmark;
 
 import io.github.nscuro.versatile.Vers;
+import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -30,8 +31,6 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
-
-import java.util.concurrent.TimeUnit;
 
 @State(Scope.Thread)
 @BenchmarkMode(Mode.AverageTime)
@@ -45,18 +44,18 @@ public class VersContainsBenchmark {
     private String shape;
 
     @Param({
-            "apk",
-            "cargo",
-            "composer",
-            "deb",
-            "gem",
-            "generic",
-            "golang",
-            "maven",
-            "npm",
-            "nuget",
-            "pypi",
-            "rpm",
+        "apk",
+        "cargo",
+        "composer",
+        "deb",
+        "gem",
+        "generic",
+        "golang",
+        "maven",
+        "npm",
+        "nuget",
+        "pypi",
+        "rpm",
     })
     private String scheme;
 
@@ -69,9 +68,7 @@ public class VersContainsBenchmark {
         final String upper = "2.0.0";
         this.testedVersion = "1.5.0";
 
-        final String constraints = "SINGLE".equals(shape)
-                ? ">=" + lower
-                : ">=" + lower + "|<" + upper;
+        final String constraints = "SINGLE".equals(shape) ? ">=" + lower : ">=" + lower + "|<" + upper;
         this.vers = Vers.parse("vers:" + scheme + "/" + constraints);
     }
 
@@ -79,5 +76,4 @@ public class VersContainsBenchmark {
     public boolean contains() {
         return vers.contains(testedVersion);
     }
-
 }

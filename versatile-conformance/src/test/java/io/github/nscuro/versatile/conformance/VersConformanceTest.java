@@ -18,18 +18,17 @@
  */
 package io.github.nscuro.versatile.conformance;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
+import static org.junit.jupiter.api.DynamicTest.dynamicTest;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.nscuro.versatile.Vers;
 import io.github.nscuro.versatile.VersionFactory;
 import io.github.nscuro.versatile.conformance.schema.VersTest;
 import io.github.nscuro.versatile.conformance.schema.VersTestSchema01;
 import io.github.nscuro.versatile.spi.Version;
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.DynamicNode;
-import org.junit.jupiter.api.TestFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -42,11 +41,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
-import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
-import static org.junit.jupiter.api.DynamicTest.dynamicTest;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.DynamicNode;
+import org.junit.jupiter.api.TestFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class VersConformanceTest {
 
@@ -81,9 +80,7 @@ class VersConformanceTest {
         }
 
         return versTests.stream()
-                .collect(Collectors.groupingBy(
-                        VersTest::getTestGroup,
-                        Collectors.groupingBy(VersTest::getTestType)))
+                .collect(Collectors.groupingBy(VersTest::getTestGroup, Collectors.groupingBy(VersTest::getTestType)))
                 .entrySet()
                 .stream()
                 .map(entry -> {
@@ -97,8 +94,7 @@ class VersConformanceTest {
                                             testByTypeEntry.getKey().value(),
                                             testByTypeEntry.getValue().stream()
                                                     .map(test -> dynamicTest(
-                                                            test.getDescription(),
-                                                            () -> executeTest(test))))));
+                                                            test.getDescription(), () -> executeTest(test))))));
                 });
     }
 
@@ -115,7 +111,8 @@ class VersConformanceTest {
     void testComparison(final VersTest versTest) {
         assertThat(versTest.getAdditionalProperties()).isNotNull();
 
-        final var inputObject = (Map<String, Object>) versTest.getAdditionalProperties().get("input");
+        final var inputObject =
+                (Map<String, Object>) versTest.getAdditionalProperties().get("input");
         assertThat(inputObject).isNotNull();
 
         final String inputScheme = (String) inputObject.get("input_scheme");
@@ -129,19 +126,16 @@ class VersConformanceTest {
         //  what we can do about it, given we already use the official Maven
         //  library to perform comparisons.
         assumeFalse(
-                "maven".equals(inputScheme)
-                        && "2-1".equals(versions.getFirst())
-                        && "2.0.a".equals(versions.getLast()));
-        assumeFalse(
-                "maven".equals(inputScheme)
-                        && "2-1".equals(versions.getFirst())
-                        && "2.0.0.a".equals(versions.getLast()));
-        assumeFalse(
-                "maven".equals(inputScheme)
-                        && "2.0.0.a".equals(versions.getFirst())
-                        && "2.0.a".equals(versions.getLast()));
+                "maven".equals(inputScheme) && "2-1".equals(versions.getFirst()) && "2.0.a".equals(versions.getLast()));
+        assumeFalse("maven".equals(inputScheme)
+                && "2-1".equals(versions.getFirst())
+                && "2.0.0.a".equals(versions.getLast()));
+        assumeFalse("maven".equals(inputScheme)
+                && "2.0.0.a".equals(versions.getFirst())
+                && "2.0.a".equals(versions.getLast()));
 
-        final var expectedOutput = (List<String>) versTest.getAdditionalProperties().get("expected_output");
+        final var expectedOutput =
+                (List<String>) versTest.getAdditionalProperties().get("expected_output");
         assertThat(expectedOutput).isNotNull();
 
         final List<String> sortedVersions = Stream.of(
@@ -151,16 +145,15 @@ class VersConformanceTest {
                 .map(Version::toString)
                 .toList();
 
-        assertThat(sortedVersions)
-                .as(versTest.getDescription())
-                .isEqualTo(expectedOutput);
+        assertThat(sortedVersions).as(versTest.getDescription()).isEqualTo(expectedOutput);
     }
 
     @SuppressWarnings("unchecked")
     void testContainment(final VersTest versTest) {
         assertThat(versTest.getAdditionalProperties()).isNotNull();
 
-        final var inputObject = (Map<String, Object>) versTest.getAdditionalProperties().get("input");
+        final var inputObject =
+                (Map<String, Object>) versTest.getAdditionalProperties().get("input");
         assertThat(inputObject).isNotNull();
 
         final var versStr = (String) inputObject.get("vers");
@@ -173,16 +166,15 @@ class VersConformanceTest {
         assertThat(expectedOutput).isNotNull();
 
         final var vers = Vers.parse(versStr);
-        assertThat(vers.contains(versionStr))
-                .as(versTest.getDescription())
-                .isEqualTo(expectedOutput);
+        assertThat(vers.contains(versionStr)).as(versTest.getDescription()).isEqualTo(expectedOutput);
     }
 
     @SuppressWarnings("unchecked")
     void testEquality(final VersTest versTest) {
         assertThat(versTest.getAdditionalProperties()).isNotNull();
 
-        final var inputObject = (Map<String, Object>) versTest.getAdditionalProperties().get("input");
+        final var inputObject =
+                (Map<String, Object>) versTest.getAdditionalProperties().get("input");
         assertThat(inputObject).isNotNull();
 
         final String inputScheme = (String) inputObject.get("input_scheme");
@@ -199,14 +191,9 @@ class VersConformanceTest {
         final Version versionB = VersionFactory.forScheme(inputScheme, versions.get(1));
 
         if (expectedOutput) {
-            assertThat(versionA)
-                    .as(versTest.getDescription())
-                    .isEqualTo(versionB);
+            assertThat(versionA).as(versTest.getDescription()).isEqualTo(versionB);
         } else {
-            assertThat(versionA)
-                    .as(versTest.getDescription())
-                    .isNotEqualTo(versionB);
+            assertThat(versionA).as(versTest.getDescription()).isNotEqualTo(versionB);
         }
     }
-
 }
