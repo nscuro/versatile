@@ -1,7 +1,7 @@
 # versatile
 
 [![CI](https://github.com/nscuro/versatile/actions/workflows/ci.yml/badge.svg)](https://github.com/nscuro/versatile/actions/workflows/ci.yml)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.nscuro/versatile-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.nscuro/versatile-core)
+![Maven Central Version](https://img.shields.io/maven-central/v/io.github.nscuro/versatile-parent)
 [![javadoc](https://javadoc.io/badge2/io.github.nscuro/versatile-core/javadoc.svg)](https://javadoc.io/doc/io.github.nscuro/versatile-core)
 [![License](http://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
