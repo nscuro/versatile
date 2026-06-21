@@ -13,5 +13,5 @@ format:
 .PHONY: format
 
 test:
-	@$(MVD) -B -q verify
+	@$(MVND) -B -q verify
 .PHONY: test
