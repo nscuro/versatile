@@ -20,7 +20,6 @@ package io.github.nscuro.versatile.version;
 
 import io.github.nscuro.versatile.spi.Version;
 import io.github.nscuro.versatile.spi.VersionProvider;
-
 import java.util.Set;
 import java.util.function.BiFunction;
 
@@ -32,7 +31,8 @@ abstract class AbstractBuiltinVersionProvider implements VersionProvider {
     private final Set<String> supportedSchemes;
     private final BiFunction<String, String, Version> constructor;
 
-    AbstractBuiltinVersionProvider(final Set<String> supportedSchemes, final BiFunction<String, String, Version> constructor) {
+    AbstractBuiltinVersionProvider(
+            final Set<String> supportedSchemes, final BiFunction<String, String, Version> constructor) {
         this.supportedSchemes = supportedSchemes;
         this.constructor = constructor;
     }
@@ -60,5 +60,4 @@ abstract class AbstractBuiltinVersionProvider implements VersionProvider {
     public Version getVersion(final String scheme, final String versionStr) {
         return constructor.apply(scheme, versionStr);
     }
-
 }

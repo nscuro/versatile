@@ -19,6 +19,7 @@
 package io.github.nscuro.versatile.benchmark;
 
 import io.github.nscuro.versatile.Vers;
+import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -31,8 +32,6 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 
-import java.util.concurrent.TimeUnit;
-
 @State(Scope.Thread)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
@@ -42,18 +41,18 @@ import java.util.concurrent.TimeUnit;
 public class VersOperationsBenchmark {
 
     @Param({
-            "apk",
-            "cargo",
-            "composer",
-            "deb",
-            "gem",
-            "generic",
-            "golang",
-            "maven",
-            "npm",
-            "nuget",
-            "pypi",
-            "rpm",
+        "apk",
+        "cargo",
+        "composer",
+        "deb",
+        "gem",
+        "generic",
+        "golang",
+        "maven",
+        "npm",
+        "nuget",
+        "pypi",
+        "rpm",
     })
     private String scheme;
 
@@ -61,8 +60,7 @@ public class VersOperationsBenchmark {
 
     @Setup
     public void setup() {
-        this.vers = Vers.parse(
-                "vers:%s/>=1.0.0|<2.0.0|>=3.0.0|<4.0.0|!=2.5.0".formatted(scheme));
+        this.vers = Vers.parse("vers:%s/>=1.0.0|<2.0.0|>=3.0.0|<4.0.0|!=2.5.0".formatted(scheme));
     }
 
     @Benchmark
@@ -74,5 +72,4 @@ public class VersOperationsBenchmark {
     public Vers validate() {
         return vers.validate();
     }
-
 }

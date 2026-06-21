@@ -27,5 +27,4 @@ public class InvalidVersionException extends IllegalArgumentException {
     public InvalidVersionException(final String version, final String message, final Throwable cause) {
         super("Version %s is invalid: %s".formatted(version, message), cause);
     }
-
 }

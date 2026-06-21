@@ -24,14 +24,14 @@ import org.junit.jupiter.params.provider.CsvSource;
 class DebianVersionTest extends AbstractVersionTest {
 
     @ParameterizedTest
-    @CsvSource(value = {
-            "0, IS_LOWER_THAN, 1",
-            "1, IS_EQUAL_TO, 1",
-            "114.0.5735.106-1~deb11u1, IS_LOWER_THAN, 114.0.5735.133-1~deb12u1",
-            "114.0.5735.133-1, IS_HIGHER_THAN, 114.0.5735.133-1~deb12u1"
-    })
+    @CsvSource(
+            value = {
+                "0, IS_LOWER_THAN, 1",
+                "1, IS_EQUAL_TO, 1",
+                "114.0.5735.106-1~deb11u1, IS_LOWER_THAN, 114.0.5735.133-1~deb12u1",
+                "114.0.5735.133-1, IS_HIGHER_THAN, 114.0.5735.133-1~deb12u1"
+            })
     void testCompareTo(final String versionA, final ComparisonExpectation expectation, final String versionB) {
         expectation.evaluate(new DebianVersion(versionA), new DebianVersion(versionB));
     }
-
 }

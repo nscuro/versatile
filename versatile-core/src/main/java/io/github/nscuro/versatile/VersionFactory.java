@@ -18,16 +18,15 @@
  */
 package io.github.nscuro.versatile;
 
+import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_GENERIC;
+
 import io.github.nscuro.versatile.spi.Version;
 import io.github.nscuro.versatile.spi.VersionProvider;
-
 import java.util.Comparator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_GENERIC;
 
 /**
  * @since 0.8.0
@@ -36,8 +35,7 @@ public class VersionFactory {
 
     private static final Map<String, VersionProvider> PROVIDER_BY_SCHEME = new ConcurrentHashMap<>();
 
-    private VersionFactory() {
-    }
+    private VersionFactory() {}
 
     public static Version forScheme(final String scheme, final String versionStr) {
         VersionProvider provider = PROVIDER_BY_SCHEME.computeIfAbsent(scheme, VersionFactory::findProviderForScheme);
@@ -62,5 +60,4 @@ public class VersionFactory {
                 .max(Comparator.comparingInt(VersionProvider::priority))
                 .orElse(null);
     }
-
 }

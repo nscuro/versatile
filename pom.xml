@@ -53,7 +53,6 @@
 
         <!-- Dependency Versions -->
         <lib.assertj.version>3.27.7</lib.assertj.version>
-        <lib.checkstyle.version>13.5.0</lib.checkstyle.version>
         <lib.jackson.version>2.22.0</lib.jackson.version>
         <lib.jmh.version>1.37</lib.jmh.version>
         <lib.json-path.version>3.0.0</lib.json-path.version>
@@ -161,33 +160,28 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.6.0</version>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>3.7.0</version>
                 <configuration>
-                    <configLocation>${project.parentBaseDir}/.checkstyle/config.xml</configLocation>
-                    <includeResources>false</includeResources>
-                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                    <includeTestResources>false</includeTestResources>
-                    <propertyExpansion>
-                        parentBaseDir=${project.parentBaseDir}
-                    </propertyExpansion>
+                    <java>
+                        <includes>
+                            <include>src/main/java/**/*.java</include>
+                            <include>src/test/java/**/*.java</include>
+                        </includes>
+                        <excludes>
+                            <exclude>**/module-info.java</exclude>
+                            <exclude>**/version/ext/ComponentVersion.java</exclude>
+                        </excludes>
+                        <palantirJavaFormat>
+                            <version>2.93.0</version>
+                        </palantirJavaFormat>
+                        <licenseHeader>
+                            <file>${project.parentBaseDir}/.checkstyle/header</file>
+                        </licenseHeader>
+                    </java>
+                    <lineEndings>UNIX</lineEndings>
                 </configuration>
-                <executions>
-                    <execution>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.puppycrawl.tools</groupId>
-                        <artifactId>checkstyle</artifactId>
-                        <version>${lib.checkstyle.version}</version>
-                    </dependency>
-                </dependencies>
             </plugin>
 
             <plugin>

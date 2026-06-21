@@ -18,16 +18,15 @@
  */
 package io.github.nscuro.versatile.version;
 
+import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_APK;
+
 import io.github.nscuro.versatile.spi.InvalidVersionException;
 import io.github.nscuro.versatile.spi.Version;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_APK;
 
 /**
  * @see <a href="https://github.com/alpinelinux/apk-tools/blob/master/src/version.c">Alpine version comparison implementation</a>
@@ -40,13 +39,11 @@ public class ApkVersion extends Version {
         public Provider() {
             super(Set.of(SCHEME_APK), (scheme, versionStr) -> new ApkVersion(versionStr));
         }
-
     }
 
     private record Token(Type type, String value) {
 
         private enum Type {
-
             COMMIT_HASH,
             DIGIT,
             LETTER,
@@ -77,18 +74,13 @@ public class ApkVersion extends Version {
             }
 
             boolean isPreReleaseSuffix() {
-                return equals(SUFFIX_ALPHA)
-                        || equals(SUFFIX_BETA)
-                        || equals(SUFFIX_PRE)
-                        || equals(SUFFIX_RC);
+                return equals(SUFFIX_ALPHA) || equals(SUFFIX_BETA) || equals(SUFFIX_PRE) || equals(SUFFIX_RC);
             }
-
         }
 
         boolean hasLeadingZero() {
             return value.length() > 1 && value.startsWith("0");
         }
-
     }
 
     private static final Pattern TOKEN_PATTERN = Pattern.compile("""
@@ -145,7 +137,8 @@ public class ApkVersion extends Version {
                 final String suffix = matcher.group("suffix").substring(1); // Remove leading underscore.
                 tokens.add(new Token(Token.Type.ofSuffix(suffix), suffix));
             } else if (matcher.group("commit") != null) {
-                tokens.add(new Token(Token.Type.COMMIT_HASH, matcher.group("commit").substring(1)));
+                tokens.add(new Token(
+                        Token.Type.COMMIT_HASH, matcher.group("commit").substring(1)));
             } else if (matcher.group("revision") != null) {
                 final String revision = matcher.group("revision").substring(2); // Remove "-r" prefix.
                 tokens.add(new Token(Token.Type.REVISION, revision));
@@ -223,13 +216,12 @@ public class ApkVersion extends Version {
                 }
 
                 try {
-                    yield Integer.compare(
-                            Integer.parseInt(tokenA.value()),
-                            Integer.parseInt(tokenB.value()));
+                    yield Integer.compare(Integer.parseInt(tokenA.value()), Integer.parseInt(tokenB.value()));
                 } catch (NumberFormatException e) {
                     // Some digits might be timestamps that don't fit into integers.
                     // Compare by length first, then lexicographically.
-                    final int lengthCompare = Integer.compare(tokenA.value().length(), tokenB.value().length());
+                    final int lengthCompare = Integer.compare(
+                            tokenA.value().length(), tokenB.value().length());
                     if (lengthCompare != 0) {
                         yield lengthCompare;
                     }
@@ -237,20 +229,18 @@ public class ApkVersion extends Version {
                     yield tokenA.value().compareTo(tokenB.value());
                 }
             }
-            case LETTER -> Character.compare(tokenA.value().charAt(0), tokenB.value().charAt(0));
-            case REVISION -> Integer.compare(
-                    Integer.parseInt(tokenA.value()),
-                    Integer.parseInt(tokenB.value()));
+            case LETTER ->
+                Character.compare(tokenA.value().charAt(0), tokenB.value().charAt(0));
+            case REVISION -> Integer.compare(Integer.parseInt(tokenA.value()), Integer.parseInt(tokenB.value()));
             case SUFFIX_ALPHA,
-                 SUFFIX_BETA,
-                 SUFFIX_CVS,
-                 SUFFIX_GIT,
-                 SUFFIX_HG,
-                 SUFFIX_P,
-                 SUFFIX_PRE,
-                 SUFFIX_RC,
-                 SUFFIX_SVN -> 0;
+                    SUFFIX_BETA,
+                    SUFFIX_CVS,
+                    SUFFIX_GIT,
+                    SUFFIX_HG,
+                    SUFFIX_P,
+                    SUFFIX_PRE,
+                    SUFFIX_RC,
+                    SUFFIX_SVN -> 0;
         };
     }
-
 }

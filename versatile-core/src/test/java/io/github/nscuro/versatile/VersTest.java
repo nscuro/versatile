@@ -18,20 +18,19 @@
  */
 package io.github.nscuro.versatile;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
+
 import io.github.nscuro.versatile.version.NpmVersion;
+import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
-
-import java.util.List;
-import java.util.stream.Stream;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNoException;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 class VersTest {
 
@@ -40,26 +39,26 @@ class VersTest {
         final Vers vers = Vers.parse("vers:npm/1.2.3|>=2.0.0|<5.0.0");
         assertThat(vers).isNotNull();
         assertThat(vers.scheme()).isEqualTo("npm");
-        assertThat(vers.constraints()).satisfiesExactly(
-                constraint -> {
-                    assertThat(constraint).isNotNull();
-                    assertThat(constraint.comparator()).isEqualTo(Comparator.EQUAL);
-                    assertThat(constraint.version()).isInstanceOf(NpmVersion.class);
-                    assertThat(constraint.version()).hasToString("1.2.3");
-                },
-                constraint -> {
-                    assertThat(constraint).isNotNull();
-                    assertThat(constraint.comparator()).isEqualTo(Comparator.GREATER_THAN_OR_EQUAL);
-                    assertThat(constraint.version()).isInstanceOf(NpmVersion.class);
-                    assertThat(constraint.version()).hasToString("2.0.0");
-                },
-                constraint -> {
-                    assertThat(constraint).isNotNull();
-                    assertThat(constraint.comparator()).isEqualTo(Comparator.LESS_THAN);
-                    assertThat(constraint.version()).isInstanceOf(NpmVersion.class);
-                    assertThat(constraint.version()).hasToString("5.0.0");
-                }
-        );
+        assertThat(vers.constraints())
+                .satisfiesExactly(
+                        constraint -> {
+                            assertThat(constraint).isNotNull();
+                            assertThat(constraint.comparator()).isEqualTo(Comparator.EQUAL);
+                            assertThat(constraint.version()).isInstanceOf(NpmVersion.class);
+                            assertThat(constraint.version()).hasToString("1.2.3");
+                        },
+                        constraint -> {
+                            assertThat(constraint).isNotNull();
+                            assertThat(constraint.comparator()).isEqualTo(Comparator.GREATER_THAN_OR_EQUAL);
+                            assertThat(constraint.version()).isInstanceOf(NpmVersion.class);
+                            assertThat(constraint.version()).hasToString("2.0.0");
+                        },
+                        constraint -> {
+                            assertThat(constraint).isNotNull();
+                            assertThat(constraint.comparator()).isEqualTo(Comparator.LESS_THAN);
+                            assertThat(constraint.version()).isInstanceOf(NpmVersion.class);
+                            assertThat(constraint.version()).hasToString("5.0.0");
+                        });
     }
 
     @Test
@@ -81,11 +80,12 @@ class VersTest {
     }
 
     @ParameterizedTest
-    @CsvSource(value = {
-            "vers:pypi/>0.0.0|>=0.0.1|0.0.2|<0.0.3|0.0.4|<0.0.5|>=0.0.6,vers:pypi/>0.0.0|<0.0.5|>=0.0.6",
-            "vers:pypi/>0.0.0|>=0.0.1|0.0.2|0.0.3|0.0.4|<0.0.5|>=0.0.6|!=0.8,vers:pypi/>0.0.0|<0.0.5|>=0.0.6|!=0.8",
-            "vers:pypi/>0.0.0|>=0.0.1|>=0.0.1|0.0.2|0.0.3|0.0.4|<0.0.5|<=0.0.6|!=0.7|8.0|>12|<15.3,vers:pypi/>0.0.0|<=0.0.6|!=0.7|8.0|>12|<15.3"
-    })
+    @CsvSource(
+            value = {
+                "vers:pypi/>0.0.0|>=0.0.1|0.0.2|<0.0.3|0.0.4|<0.0.5|>=0.0.6,vers:pypi/>0.0.0|<0.0.5|>=0.0.6",
+                "vers:pypi/>0.0.0|>=0.0.1|0.0.2|0.0.3|0.0.4|<0.0.5|>=0.0.6|!=0.8,vers:pypi/>0.0.0|<0.0.5|>=0.0.6|!=0.8",
+                "vers:pypi/>0.0.0|>=0.0.1|>=0.0.1|0.0.2|0.0.3|0.0.4|<0.0.5|<=0.0.6|!=0.7|8.0|>12|<15.3,vers:pypi/>0.0.0|<=0.0.6|!=0.7|8.0|>12|<15.3"
+            })
     void testSimplify(final String before, final String after) {
         final Vers vers = Vers.parse(before).simplify();
         assertThat(vers).hasToString(after);
@@ -94,35 +94,31 @@ class VersTest {
 
     private static Stream<Arguments> testSplitArguments() {
         return Stream.of(
-                arguments(
-                        "vers:generic/*",
-                        List.of("vers:generic/*")
-                ),
-                arguments(
-                        "vers:generic/!=9.9",
-                        List.of("vers:generic/!=9.9")
-                ),
+                arguments("vers:generic/*", List.of("vers:generic/*")),
+                arguments("vers:generic/!=9.9", List.of("vers:generic/!=9.9")),
                 arguments(
                         "vers:generic/1.2.3|>=2.0.0|<5.0.0",
-                        List.of("vers:generic/1.2.3", "vers:generic/>=2.0.0|<5.0.0")
-                ),
+                        List.of("vers:generic/1.2.3", "vers:generic/>=2.0.0|<5.0.0")),
                 arguments(
                         "vers:maven/<0.5.1|>=1.2.3|!=3.2.1|<6.6.6|*",
-                        List.of("vers:maven/*", "vers:maven/<0.5.1|>=1.2.3", "vers:maven/!=3.2.1", "vers:maven/<6.6.6")
-                ),
+                        List.of(
+                                "vers:maven/*",
+                                "vers:maven/<0.5.1|>=1.2.3",
+                                "vers:maven/!=3.2.1",
+                                "vers:maven/<6.6.6")),
                 arguments(
                         "vers:pypi/>0.0.0|>=0.0.1|0.0.2|<0.0.3|0.0.4|<0.0.5|>=0.0.6",
-                        List.of("vers:pypi/>0.0.0|<0.0.5", "vers:pypi/>=0.0.6")
-                ),
+                        List.of("vers:pypi/>0.0.0|<0.0.5", "vers:pypi/>=0.0.6")),
                 arguments(
                         "vers:pypi/>0.0.0|>=0.0.1|0.0.2|0.0.3|0.0.4|<0.0.5|>=0.0.6|!=0.8",
-                        List.of("vers:pypi/>0.0.0|<0.0.5", "vers:pypi/!=0.8", "vers:pypi/>=0.0.6")
-                ),
+                        List.of("vers:pypi/>0.0.0|<0.0.5", "vers:pypi/!=0.8", "vers:pypi/>=0.0.6")),
                 arguments(
                         "vers:npm/>=1.0.0-beta1|<=1.7.5|>=7.0.0-M1|<=7.0.7|>=7.1.0|<=7.1.2|>=8.0.0-M1|<=8.0.1",
-                        List.of("vers:npm/>=1.0.0-beta1|<=1.7.5", "vers:npm/>=7.0.0-M1|<=7.0.7", "vers:npm/>=7.1.0|<=7.1.2", "vers:npm/>=8.0.0-M1|<=8.0.1")
-                )
-        );
+                        List.of(
+                                "vers:npm/>=1.0.0-beta1|<=1.7.5",
+                                "vers:npm/>=7.0.0-M1|<=7.0.7",
+                                "vers:npm/>=7.1.0|<=7.1.2",
+                                "vers:npm/>=8.0.0-M1|<=8.0.1")));
     }
 
     @ParameterizedTest
@@ -133,38 +129,39 @@ class VersTest {
     }
 
     @ParameterizedTest
-    @CsvSource(value = {
-            "vers:generic/*, CONTAINS, 1.0.0",
-            "vers:generic/>1.0.0, CONTAINS, 1.0.1",
-            "vers:generic/>1.0.0, NOT_CONTAINS, 1.0.0",
-            "vers:generic/>=1.0.0, CONTAINS, 1.0.0",
-            "vers:generic/>=1.0.0, CONTAINS, 1.0.1",
-            "vers:generic/>=1.0.0, NOT_CONTAINS, 0.9.9",
-            "vers:generic/1.0.0, CONTAINS, 1.0.0",
-            "vers:generic/1.0.0, NOT_CONTAINS, 1.0.1",
-            "vers:generic/1.0.0, NOT_CONTAINS, 0.9.9",
-            "vers:generic/<=1.0.0, CONTAINS, 1.0.0",
-            "vers:generic/<=1.0.0, CONTAINS, 0.9.9",
-            "vers:generic/<=1.0.0, NOT_CONTAINS, 1.0.1",
-            "vers:generic/<1.0.0, CONTAINS, 0.9.9",
-            "vers:generic/<1.0.0, NOT_CONTAINS, 1.0.0",
-            "vers:generic/<1.0.0, NOT_CONTAINS, 1.0.1",
-            "vers:generic/>1.0.0|<2.0.0, CONTAINS, 1.0.1",
-            "vers:generic/>1.0.0|<2.0.0, CONTAINS, 1.9.9",
-            "vers:generic/>1.0.0|<2.0.0, NOT_CONTAINS, 1.0.0",
-            "vers:generic/>1.0.0|<2.0.0, NOT_CONTAINS, 2.0.0",
-            "vers:generic/>1.0.0|<2.0.0|>3.0.0|<4.0.0, CONTAINS, 3.1.0",
-            "vers:generic/>1.0.0|<2.0.0|>3.0.0|<4.0.0, NOT_CONTAINS, 2.1.0",
-            "vers:generic/>0|!=6.6.6, CONTAINS, 1.0.0",
-            "vers:generic/>0|!=6.6.6, NOT_CONTAINS, 6.6.6",
-            "vers:generic/>1.0.0|<2.0.0|>3.0.0, NOT_CONTAINS, 0.5.0",
-            "vers:generic/>1.0.0|<2.0.0|>3.0.0, CONTAINS, 1.5.0",
-            "vers:generic/>1.0.0|<2.0.0|>3.0.0, NOT_CONTAINS, 2.5.0",
-            "vers:generic/>1.0.0|<2.0.0|>3.0.0, NOT_CONTAINS, 3.0.0",
-            "vers:generic/>1.0.0|<2.0.0|>3.0.0, CONTAINS, 3.5.0",
-            "vers:generic/>1.0.0|<2.0.0|>=3.0.0, CONTAINS, 3.0.0",
-            "vers:generic/>1.0.0|<2.0.0|>=3.0.0, CONTAINS, 3.5.0"
-    })
+    @CsvSource(
+            value = {
+                "vers:generic/*, CONTAINS, 1.0.0",
+                "vers:generic/>1.0.0, CONTAINS, 1.0.1",
+                "vers:generic/>1.0.0, NOT_CONTAINS, 1.0.0",
+                "vers:generic/>=1.0.0, CONTAINS, 1.0.0",
+                "vers:generic/>=1.0.0, CONTAINS, 1.0.1",
+                "vers:generic/>=1.0.0, NOT_CONTAINS, 0.9.9",
+                "vers:generic/1.0.0, CONTAINS, 1.0.0",
+                "vers:generic/1.0.0, NOT_CONTAINS, 1.0.1",
+                "vers:generic/1.0.0, NOT_CONTAINS, 0.9.9",
+                "vers:generic/<=1.0.0, CONTAINS, 1.0.0",
+                "vers:generic/<=1.0.0, CONTAINS, 0.9.9",
+                "vers:generic/<=1.0.0, NOT_CONTAINS, 1.0.1",
+                "vers:generic/<1.0.0, CONTAINS, 0.9.9",
+                "vers:generic/<1.0.0, NOT_CONTAINS, 1.0.0",
+                "vers:generic/<1.0.0, NOT_CONTAINS, 1.0.1",
+                "vers:generic/>1.0.0|<2.0.0, CONTAINS, 1.0.1",
+                "vers:generic/>1.0.0|<2.0.0, CONTAINS, 1.9.9",
+                "vers:generic/>1.0.0|<2.0.0, NOT_CONTAINS, 1.0.0",
+                "vers:generic/>1.0.0|<2.0.0, NOT_CONTAINS, 2.0.0",
+                "vers:generic/>1.0.0|<2.0.0|>3.0.0|<4.0.0, CONTAINS, 3.1.0",
+                "vers:generic/>1.0.0|<2.0.0|>3.0.0|<4.0.0, NOT_CONTAINS, 2.1.0",
+                "vers:generic/>0|!=6.6.6, CONTAINS, 1.0.0",
+                "vers:generic/>0|!=6.6.6, NOT_CONTAINS, 6.6.6",
+                "vers:generic/>1.0.0|<2.0.0|>3.0.0, NOT_CONTAINS, 0.5.0",
+                "vers:generic/>1.0.0|<2.0.0|>3.0.0, CONTAINS, 1.5.0",
+                "vers:generic/>1.0.0|<2.0.0|>3.0.0, NOT_CONTAINS, 2.5.0",
+                "vers:generic/>1.0.0|<2.0.0|>3.0.0, NOT_CONTAINS, 3.0.0",
+                "vers:generic/>1.0.0|<2.0.0|>3.0.0, CONTAINS, 3.5.0",
+                "vers:generic/>1.0.0|<2.0.0|>=3.0.0, CONTAINS, 3.0.0",
+                "vers:generic/>1.0.0|<2.0.0|>=3.0.0, CONTAINS, 3.5.0"
+            })
     void testContains(final String range, final ContainsExpectation expectation, final String version) {
         if (expectation == ContainsExpectation.CONTAINS) {
             assertThat(Vers.parse(range).contains(version)).isTrue();
@@ -174,11 +171,9 @@ class VersTest {
     }
 
     enum ContainsExpectation {
-
         CONTAINS,
 
         NOT_CONTAINS
-
     }
 
     @ParameterizedTest
@@ -222,7 +217,6 @@ class VersTest {
         assertThat(v1.overlapsWith(v2)).isEqualTo(expected);
         assertThat(v2.overlapsWith(v1)).isEqualTo(expected);
     }
-
 
     @ParameterizedTest
     @CsvSource({
@@ -291,7 +285,6 @@ class VersTest {
     @Test
     void testInvertThrowsErrorOnWildcard() {
         var v = Vers.parse("vers:generic/*");
-        assertThatThrownBy(v::invert)
-            .isInstanceOf(VersException.class);
+        assertThatThrownBy(v::invert).isInstanceOf(VersException.class);
     }
 }

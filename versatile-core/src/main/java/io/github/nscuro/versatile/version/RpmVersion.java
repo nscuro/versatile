@@ -18,18 +18,17 @@
  */
 package io.github.nscuro.versatile.version;
 
+import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_RPM;
+import static io.github.nscuro.versatile.version.VersionUtils.isAsciiNumeric;
+
 import io.github.nscuro.versatile.spi.InvalidVersionException;
 import io.github.nscuro.versatile.spi.Version;
-
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_RPM;
-import static io.github.nscuro.versatile.version.VersionUtils.isAsciiNumeric;
 
 /**
  * A {@link Version} implementation for the {@code rpm} versioning scheme.
@@ -47,7 +46,6 @@ public class RpmVersion extends Version {
         public Provider() {
             super(Set.of(SCHEME_RPM), (scheme, versionStr) -> new RpmVersion(versionStr));
         }
-
     }
 
     private static final Pattern VERSION_PATTERN = Pattern.compile("""
@@ -78,7 +76,9 @@ public class RpmVersion extends Version {
                     """.formatted(versionStr));
         }
 
-        this.epoch = Optional.ofNullable(versionMatcher.group("epoch")).map(Integer::parseInt).orElse(0);
+        this.epoch = Optional.ofNullable(versionMatcher.group("epoch"))
+                .map(Integer::parseInt)
+                .orElse(0);
         this.version = versionMatcher.group("version");
         this.release = Optional.ofNullable(versionMatcher.group("release")).orElse("0");
 
@@ -130,9 +130,8 @@ public class RpmVersion extends Version {
                     : 0;
         }
 
-        throw new IllegalArgumentException(
-                "%s can only be compared with its own type, but got %s".formatted(
-                        this.getClass().getName(), other.getClass().getName()));
+        throw new IllegalArgumentException("%s can only be compared with its own type, but got %s"
+                .formatted(this.getClass().getName(), other.getClass().getName()));
     }
 
     public int epoch() {
@@ -258,5 +257,4 @@ public class RpmVersion extends Version {
 
         return i;
     }
-
 }

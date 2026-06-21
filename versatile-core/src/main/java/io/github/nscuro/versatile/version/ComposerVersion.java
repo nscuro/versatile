@@ -18,15 +18,14 @@
  */
 package io.github.nscuro.versatile.version;
 
+import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_COMPOSER;
+
 import io.github.nscuro.versatile.spi.InvalidVersionException;
 import io.github.nscuro.versatile.spi.Version;
-
 import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_COMPOSER;
 
 /**
  * @see <a href="https://github.com/composer/semver/blob/main/src/VersionParser.php">Composer VersionParser</a>
@@ -39,11 +38,9 @@ public class ComposerVersion extends Version {
         public Provider() {
             super(Set.of(SCHEME_COMPOSER), (scheme, versionStr) -> new ComposerVersion(versionStr));
         }
-
     }
 
     private enum Stability {
-
         DEV("dev"),
         ALPHA("alpha"),
         BETA("beta"),
@@ -67,26 +64,21 @@ public class ComposerVersion extends Version {
                 default -> throw new IllegalArgumentException("Unknown stability: " + value);
             };
         }
-
     }
 
     private static final String MODIFIER_REGEX =
             "[._-]?(?:(stable|beta|b|RC|alpha|a|patch|pl|p)((?:[.-]?\\d+)*+)?)?([.-]?dev)?";
-    private static final Pattern CLASSICAL_PATTERN = Pattern.compile(
-            "^[vV]?(\\d{1,5}(?:\\.\\d+){0,3})" + MODIFIER_REGEX + "$",
-            Pattern.CASE_INSENSITIVE);
+    private static final Pattern CLASSICAL_PATTERN =
+            Pattern.compile("^[vV]?(\\d{1,5}(?:\\.\\d+){0,3})" + MODIFIER_REGEX + "$", Pattern.CASE_INSENSITIVE);
     private static final Pattern DATE_PATTERN = Pattern.compile(
             "^[vV]?(\\d{4}(?:[.:-]?\\d{2}){1,6}(?:[.:-]?\\d{1,3}){0,2})" + MODIFIER_REGEX + "$",
             Pattern.CASE_INSENSITIVE);
-    private static final Pattern BRANCH_NUM_PATTERN = Pattern.compile(
-            "^[vV]?(\\d+(?:\\.\\d+)*\\.[xX])[.-]?dev$");
+    private static final Pattern BRANCH_NUM_PATTERN = Pattern.compile("^[vV]?(\\d+(?:\\.\\d+)*\\.[xX])[.-]?dev$");
 
-    private static final Pattern ALIAS_PATTERN = Pattern.compile(
-            "^([^,\\s]++) +as +[^,\\s]++$");
-    private static final Pattern STABILITY_FLAG_PATTERN = Pattern.compile(
-            "@(?:stable|RC|beta|alpha|dev)$", Pattern.CASE_INSENSITIVE);
-    private static final Pattern METADATA_PATTERN = Pattern.compile(
-            "^([^,\\s+]++)\\+\\S++$");
+    private static final Pattern ALIAS_PATTERN = Pattern.compile("^([^,\\s]++) +as +[^,\\s]++$");
+    private static final Pattern STABILITY_FLAG_PATTERN =
+            Pattern.compile("@(?:stable|RC|beta|alpha|dev)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern METADATA_PATTERN = Pattern.compile("^([^,\\s+]++)\\+\\S++$");
 
     private final String branchName;
     private final String[] originalComponents;
@@ -276,9 +268,7 @@ public class ComposerVersion extends Version {
 
     @Override
     public boolean isStable() {
-        return branchName == null
-                && (stability == Stability.STABLE || stability == Stability.PATCH)
-                && !isDev;
+        return branchName == null && (stability == Stability.STABLE || stability == Stability.PATCH) && !isDev;
     }
 
     @Override
@@ -322,14 +312,12 @@ public class ComposerVersion extends Version {
             return Boolean.compare(o.isDev, this.isDev);
         }
 
-        throw new IllegalArgumentException(
-                "%s can only be compared with its own type, but got %s".formatted(
-                        this.getClass().getName(), other.getClass().getName()));
+        throw new IllegalArgumentException("%s can only be compared with its own type, but got %s"
+                .formatted(this.getClass().getName(), other.getClass().getName()));
     }
 
     @Override
     public String toString() {
         return normalizedString;
     }
-
 }

@@ -18,17 +18,16 @@
  */
 package io.github.nscuro.versatile.version;
 
-import io.github.nscuro.versatile.spi.InvalidVersionException;
-import io.github.nscuro.versatile.spi.Version;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
 import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_CARGO;
 import static io.github.nscuro.versatile.version.VersionUtils.isAsciiAlphaNumeric;
 import static io.github.nscuro.versatile.version.VersionUtils.isAsciiDigit;
 import static io.github.nscuro.versatile.version.VersionUtils.isAsciiNumeric;
+
+import io.github.nscuro.versatile.spi.InvalidVersionException;
+import io.github.nscuro.versatile.spi.Version;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @see <a href="https://github.com/dtolnay/semver/blob/master/src/impls.rs">semver crate ordering implementation</a>
@@ -44,7 +43,6 @@ public class CargoVersion extends Version {
         public Provider() {
             super(Set.of(SCHEME_CARGO), (scheme, versionStr) -> new CargoVersion(versionStr));
         }
-
     }
 
     private static final String[] NO_PRERELEASE = new String[0];
@@ -75,8 +73,7 @@ public class CargoVersion extends Version {
         }
         if (cursor[0] != versionStr.length()) {
             throw new InvalidVersionException(
-                    versionStr,
-                    "Unexpected character at position %d: %s".formatted(cursor[0], versionStr));
+                    versionStr, "Unexpected character at position %d: %s".formatted(cursor[0], versionStr));
         }
 
         this.prerelease = pre;
@@ -112,10 +109,8 @@ public class CargoVersion extends Version {
             return comparePrerelease(this.prerelease, otherVersion.prerelease);
         }
 
-        throw new IllegalArgumentException(
-                "%s can only be compared with its own type, but got %s".formatted(
-                        this.getClass().getName(),
-                        other.getClass().getName()));
+        throw new IllegalArgumentException("%s can only be compared with its own type, but got %s"
+                .formatted(this.getClass().getName(), other.getClass().getName()));
     }
 
     private static long parseNumericField(String versionStr, int[] cursor) {
@@ -125,26 +120,19 @@ public class CargoVersion extends Version {
             i++;
         }
         if (i == start) {
-            throw new InvalidVersionException(
-                    versionStr,
-                    "Expected a number at position " + start);
+            throw new InvalidVersionException(versionStr, "Expected a number at position " + start);
         }
 
         final String number = versionStr.substring(start, i);
         if (number.length() > 1 && number.charAt(0) == '0') {
-            throw new InvalidVersionException(
-                    versionStr,
-                    "Leading zero in numeric component: " + number);
+            throw new InvalidVersionException(versionStr, "Leading zero in numeric component: " + number);
         }
 
         cursor[0] = i;
         try {
             return Long.parseUnsignedLong(number);
         } catch (NumberFormatException e) {
-            throw new InvalidVersionException(
-                    versionStr,
-                    "Numeric component exceeds 64-bit range: " + number,
-                    e);
+            throw new InvalidVersionException(versionStr, "Numeric component exceeds 64-bit range: " + number, e);
         }
     }
 
@@ -158,20 +146,15 @@ public class CargoVersion extends Version {
                 i++;
             }
             if (i == start) {
-                throw new InvalidVersionException(
-                        versionStr,
-                        "Empty identifier at position " + start);
+                throw new InvalidVersionException(versionStr, "Empty identifier at position " + start);
             }
 
             final String identifier = versionStr.substring(start, i);
             cursor[0] = i;
 
-            if (prerelease && isAsciiNumeric(identifier)
-                    && identifier.length() > 1
-                    && identifier.charAt(0) == '0') {
+            if (prerelease && isAsciiNumeric(identifier) && identifier.length() > 1 && identifier.charAt(0) == '0') {
                 throw new InvalidVersionException(
-                        versionStr,
-                        "Leading zero in numeric pre-release identifier: " + identifier);
+                        versionStr, "Leading zero in numeric pre-release identifier: " + identifier);
             }
 
             identifiers.add(identifier);
@@ -226,19 +209,15 @@ public class CargoVersion extends Version {
     }
 
     private static char peek(String versionStr, int[] cursor) {
-        return cursor[0] < versionStr.length()
-                ? versionStr.charAt(cursor[0])
-                : '\0';
+        return cursor[0] < versionStr.length() ? versionStr.charAt(cursor[0]) : '\0';
     }
 
     private static void expect(String versionStr, int[] cursor, char expected) {
         if (peek(versionStr, cursor) != expected) {
             throw new InvalidVersionException(
-                    versionStr,
-                    "Expected '%c' at position %d".formatted(expected, cursor[0]));
+                    versionStr, "Expected '%c' at position %d".formatted(expected, cursor[0]));
         }
 
         cursor[0]++;
     }
-
 }

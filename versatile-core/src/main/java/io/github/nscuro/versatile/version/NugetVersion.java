@@ -18,14 +18,13 @@
  */
 package io.github.nscuro.versatile.version;
 
-import io.github.nscuro.versatile.spi.InvalidVersionException;
-import io.github.nscuro.versatile.spi.Version;
-
-import java.util.Locale;
-import java.util.Set;
-
 import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_NUGET;
 import static io.github.nscuro.versatile.version.VersionUtils.isAsciiNumeric;
+
+import io.github.nscuro.versatile.spi.InvalidVersionException;
+import io.github.nscuro.versatile.spi.Version;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * @see <a href="https://github.com/NuGet/NuGet.Client/blob/dev/src/NuGet.Core/NuGet.Versioning/VersionComparer.cs">NuGet VersionComparer</a>
@@ -38,7 +37,6 @@ public class NugetVersion extends Version {
         public Provider() {
             super(Set.of(SCHEME_NUGET), (scheme, versionStr) -> new NugetVersion(versionStr));
         }
-
     }
 
     private final int major;
@@ -89,15 +87,9 @@ public class NugetVersion extends Version {
         }
 
         this.major = parseComponent(versionStr, parts[0], "major");
-        this.minor = parts.length > 1
-                ? parseComponent(versionStr, parts[1], "minor")
-                : 0;
-        this.patch = parts.length > 2
-                ? parseComponent(versionStr, parts[2], "patch")
-                : 0;
-        this.revision = parts.length > 3
-                ? parseComponent(versionStr, parts[3], "revision")
-                : 0;
+        this.minor = parts.length > 1 ? parseComponent(versionStr, parts[1], "minor") : 0;
+        this.patch = parts.length > 2 ? parseComponent(versionStr, parts[2], "patch") : 0;
+        this.revision = parts.length > 3 ? parseComponent(versionStr, parts[3], "revision") : 0;
 
         if (prerelease != null) {
             this.releaseLabels = prerelease.split("\\.", -1);
@@ -116,8 +108,10 @@ public class NugetVersion extends Version {
     private String normalize(String prerelease) {
         final var sb = new StringBuilder()
                 .append(this.major)
-                .append('.').append(this.minor)
-                .append('.').append(this.patch);
+                .append('.')
+                .append(this.minor)
+                .append('.')
+                .append(this.patch);
         if (this.revision != 0) {
             sb.append('.').append(this.revision);
         }
@@ -183,9 +177,8 @@ public class NugetVersion extends Version {
             return compareReleaseLabels(this.releaseLabels, o.releaseLabels);
         }
 
-        throw new IllegalArgumentException(
-                "%s can only be compared with its own type, but got %s".formatted(
-                        this.getClass().getName(), other.getClass().getName()));
+        throw new IllegalArgumentException("%s can only be compared with its own type, but got %s"
+                .formatted(this.getClass().getName(), other.getClass().getName()));
     }
 
     private static int compareReleaseLabels(final String[] a, final String[] b) {
@@ -229,5 +222,4 @@ public class NugetVersion extends Version {
     public String toString() {
         return normalizedString;
     }
-
 }

@@ -50,13 +50,11 @@ public abstract class Version implements Comparable<Version> {
             return false;
         }
 
-        return Objects.equals(scheme, version.scheme)
-                && this.compareTo(version) == 0;
+        return Objects.equals(scheme, version.scheme) && this.compareTo(version) == 0;
     }
 
     @Override
     public String toString() {
         return versionStr;
     }
-
 }

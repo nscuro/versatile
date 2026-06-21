@@ -18,16 +18,14 @@
  */
 package io.github.nscuro.versatile.version;
 
-import io.github.nscuro.versatile.spi.Version;
-
-import java.util.function.BiConsumer;
-
 import static org.assertj.core.api.Assertions.assertThat;
+
+import io.github.nscuro.versatile.spi.Version;
+import java.util.function.BiConsumer;
 
 abstract class AbstractVersionTest {
 
     enum ComparisonExpectation {
-
         IS_LOWER_THAN((x, y) -> assertThat(x).isLessThan(y)),
         IS_EQUAL_TO((x, y) -> assertThat(x).isEqualByComparingTo(y)),
         IS_HIGHER_THAN((x, y) -> assertThat(x).isGreaterThan(y));
@@ -41,7 +39,5 @@ abstract class AbstractVersionTest {
         void evaluate(final Version x, final Version y) {
             evaluator.accept(x, y);
         }
-
     }
-
 }

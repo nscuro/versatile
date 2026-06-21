@@ -18,18 +18,17 @@
  */
 package io.github.nscuro.versatile.version;
 
+import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_PYPI;
+import static io.github.nscuro.versatile.version.VersionUtils.isAsciiNumeric;
+
 import io.github.nscuro.versatile.spi.InvalidVersionException;
 import io.github.nscuro.versatile.spi.Version;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_PYPI;
-import static io.github.nscuro.versatile.version.VersionUtils.isAsciiNumeric;
 
 /**
  * @see <a href="https://peps.python.org/pep-0440/">PEP 440 – Version Identification and Dependency Specification</a>
@@ -43,7 +42,6 @@ public class PythonVersion extends Version {
         public Provider() {
             super(Set.of(SCHEME_PYPI), (scheme, versionStr) -> new PythonVersion(versionStr));
         }
-
     }
 
     public record PreRelease(Type type, int number) {
@@ -53,7 +51,6 @@ public class PythonVersion extends Version {
             BETA,
             RC
         }
-
     }
 
     // https://peps.python.org/pep-0440/#appendix-b-parsing-version-strings-with-regular-expressions
@@ -66,8 +63,7 @@ public class PythonVersion extends Version {
                     (?<post>-(?<postNum1>[0-9]+)|[-_.]?(?<postType>post|rev|r)[-_.]?(?<postNum2>[0-9]+))?\
                     (?<dev>[-_.]?dev[-_.]?(?<devNum>[0-9]+)?)?\
                     (?:\\+(?<local>[a-zA-Z0-9]+(?:[-_.][a-zA-Z0-9]+)*))?\
-                    $""",
-            Pattern.CASE_INSENSITIVE);
+                    $""", Pattern.CASE_INSENSITIVE);
     private static final Pattern NORM_PATTERN_LEADING_V = Pattern.compile("^[vV]");
     private static final Pattern NORM_PATTERN_EPOCH = Pattern.compile("^([0-9]+)!");
     private static final Pattern NORM_PATTERN_ALPHA = Pattern.compile("[-_.]?(alpha)");
@@ -103,17 +99,10 @@ public class PythonVersion extends Version {
 
         this.epoch = parseEpoch(matcher.group("epoch"));
         this.release = parseRelease(matcher.group("release"));
-        this.preRelease = parsePreRelease(
-                matcher.group("pre"),
-                matcher.group("preType"),
-                matcher.group("preNum"));
-        this.postRelease = parsePostRelease(
-                matcher.group("post"),
-                matcher.group("postNum1"),
-                matcher.group("postNum2"));
-        this.devRelease = parseDevRelease(
-                matcher.group("dev"),
-                matcher.group("devNum"));
+        this.preRelease = parsePreRelease(matcher.group("pre"), matcher.group("preType"), matcher.group("preNum"));
+        this.postRelease =
+                parsePostRelease(matcher.group("post"), matcher.group("postNum1"), matcher.group("postNum2"));
+        this.devRelease = parseDevRelease(matcher.group("dev"), matcher.group("devNum"));
         this.local = parseLocal(matcher.group("local"));
     }
 
@@ -280,21 +269,19 @@ public class PythonVersion extends Version {
             return null;
         }
 
-        final PreRelease.Type type = switch (preType.toLowerCase(Locale.ROOT)) {
-            case "a", "alpha" -> PreRelease.Type.ALPHA;
-            case "b", "beta" -> PreRelease.Type.BETA;
-            case "c", "rc", "pre", "preview" -> PreRelease.Type.RC;
-            default -> throw new InvalidVersionException(preType, "Unknown pre-release type: " + preType);
-        };
+        final PreRelease.Type type =
+                switch (preType.toLowerCase(Locale.ROOT)) {
+                    case "a", "alpha" -> PreRelease.Type.ALPHA;
+                    case "b", "beta" -> PreRelease.Type.BETA;
+                    case "c", "rc", "pre", "preview" -> PreRelease.Type.RC;
+                    default -> throw new InvalidVersionException(preType, "Unknown pre-release type: " + preType);
+                };
 
         final int num = (preNum == null || preNum.isBlank()) ? 0 : Integer.parseInt(preNum);
         return new PreRelease(type, num);
     }
 
-    private static Integer parsePostRelease(
-            final String postStr,
-            final String postNum1,
-            final String postNum2) {
+    private static Integer parsePostRelease(final String postStr, final String postNum1, final String postNum2) {
         if (postStr == null) {
             return null;
         }
@@ -323,7 +310,9 @@ public class PythonVersion extends Version {
             return null;
         }
 
-        return LOCAL_NORMALIZE_PATTERN.matcher(localStr.toLowerCase(Locale.ROOT)).replaceAll(".");
+        return LOCAL_NORMALIZE_PATTERN
+                .matcher(localStr.toLowerCase(Locale.ROOT))
+                .replaceAll(".");
     }
 
     private static int compareRelease(final List<Integer> release1, final List<Integer> release2) {
@@ -447,5 +436,4 @@ public class PythonVersion extends Version {
 
         return 0;
     }
-
 }

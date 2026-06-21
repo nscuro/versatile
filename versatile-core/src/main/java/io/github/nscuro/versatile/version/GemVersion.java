@@ -18,18 +18,17 @@
  */
 package io.github.nscuro.versatile.version;
 
+import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_GEM;
+import static io.github.nscuro.versatile.version.VersionUtils.isAsciiDigit;
+
 import io.github.nscuro.versatile.spi.InvalidVersionException;
 import io.github.nscuro.versatile.spi.Version;
-
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_GEM;
-import static io.github.nscuro.versatile.version.VersionUtils.isAsciiDigit;
 
 /**
  * @see <a href="https://github.com/rubygems/rubygems/blob/master/lib/rubygems/version.rb">Gem::Version implementation</a>
@@ -44,12 +43,11 @@ public class GemVersion extends Version {
         public Provider() {
             super(Set.of(SCHEME_GEM), (scheme, versionStr) -> new GemVersion(versionStr));
         }
-
     }
 
     // Gem::Version::ANCHORED_VERSION_PATTERN. An empty (or blank) version is valid and equal to "0".
-    private static final Pattern ANCHORED_VERSION_PATTERN = Pattern.compile(
-            "\\A\\s*([0-9]+(?:\\.[0-9a-zA-Z]+)*(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?)?\\s*\\z");
+    private static final Pattern ANCHORED_VERSION_PATTERN =
+            Pattern.compile("\\A\\s*([0-9]+(?:\\.[0-9a-zA-Z]+)*(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?)?\\s*\\z");
 
     // Gem::Version#partition_segments: runs of digits or runs of letters.
     private static final Pattern SEGMENT_PATTERN = Pattern.compile("\\d+|[a-zA-Z]+");
@@ -92,10 +90,8 @@ public class GemVersion extends Version {
             return compareSegments(this.canonicalSegments, otherVersion.canonicalSegments);
         }
 
-        throw new IllegalArgumentException(
-                "%s can only be compared with its own type, but got %s".formatted(
-                        this.getClass().getName(),
-                        other.getClass().getName()));
+        throw new IllegalArgumentException("%s can only be compared with its own type, but got %s"
+                .formatted(this.getClass().getName(), other.getClass().getName()));
     }
 
     // Gem::Version#canonical_segments.
@@ -177,5 +173,4 @@ public class GemVersion extends Version {
 
         return false;
     }
-
 }

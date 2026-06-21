@@ -18,15 +18,15 @@
  */
 package io.github.nscuro.versatile.version;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import io.github.nscuro.versatile.spi.InvalidVersionException;
 import io.github.nscuro.versatile.version.AbstractVersionTest.ComparisonExpectation;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class NugetVersionTest {
 
@@ -116,58 +116,57 @@ class NugetVersionTest {
     @ParameterizedTest
     @ValueSource(strings = {"", "a.b.c", "1.2.3.4.5", "1.0.0-", "1.0.0-beta.", "1.0.0-beta..1"})
     void testParseInvalid(final String versionStr) {
-        assertThatThrownBy(() -> new NugetVersion(versionStr))
-                .isInstanceOf(InvalidVersionException.class);
+        assertThatThrownBy(() -> new NugetVersion(versionStr)).isInstanceOf(InvalidVersionException.class);
     }
 
     @ParameterizedTest
-    @CsvSource(value = {
-            // Basic numeric ordering
-            "0.0.0, IS_LOWER_THAN, 1.0.0",
-            "1.0.0, IS_LOWER_THAN, 1.1.0",
-            "1.0.0, IS_LOWER_THAN, 1.0.1",
-            "1.999.9999, IS_LOWER_THAN, 2.1.1",
+    @CsvSource(
+            value = {
+                // Basic numeric ordering
+                "0.0.0, IS_LOWER_THAN, 1.0.0",
+                "1.0.0, IS_LOWER_THAN, 1.1.0",
+                "1.0.0, IS_LOWER_THAN, 1.0.1",
+                "1.999.9999, IS_LOWER_THAN, 2.1.1",
 
-            // Revision
-            "1.0.0, IS_LOWER_THAN, 1.0.0.1",
-            "1.0.0.0, IS_EQUAL_TO, 1.0.0",
-            "0.9.9.1, IS_LOWER_THAN, 1.0.0",
+                // Revision
+                "1.0.0, IS_LOWER_THAN, 1.0.0.1",
+                "1.0.0.0, IS_EQUAL_TO, 1.0.0",
+                "0.9.9.1, IS_LOWER_THAN, 1.0.0",
 
-            // Prerelease sorts lower than release
-            "1.0.0-alpha, IS_LOWER_THAN, 1.0.0",
-            "1.0.0-beta+AA, IS_LOWER_THAN, 1.0.0+aa",
+                // Prerelease sorts lower than release
+                "1.0.0-alpha, IS_LOWER_THAN, 1.0.0",
+                "1.0.0-beta+AA, IS_LOWER_THAN, 1.0.0+aa",
 
-            // Prerelease ordering
-            "1.0.0-alpha, IS_LOWER_THAN, 1.0.0-beta",
-            "1.0.0-BETA, IS_LOWER_THAN, 1.0.0-beta2",
-            "1.0.0-beta, IS_LOWER_THAN, 1.0.0-beta.1",
-            "1.0.0-beta.1, IS_LOWER_THAN, 1.0.0-beta.2",
-            "1.0.0-1, IS_LOWER_THAN, 1.0.0-alpha",
+                // Prerelease ordering
+                "1.0.0-alpha, IS_LOWER_THAN, 1.0.0-beta",
+                "1.0.0-BETA, IS_LOWER_THAN, 1.0.0-beta2",
+                "1.0.0-beta, IS_LOWER_THAN, 1.0.0-beta.1",
+                "1.0.0-beta.1, IS_LOWER_THAN, 1.0.0-beta.2",
+                "1.0.0-1, IS_LOWER_THAN, 1.0.0-alpha",
 
-            // Case-insensitive prerelease
-            "1.0.0-BETA, IS_EQUAL_TO, 1.0.0-beta",
-            "1.0.0-BETA.X.y.5.77.0+AA, IS_EQUAL_TO, 1.0.0-beta.x.y.5.77.0+aa",
+                // Case-insensitive prerelease
+                "1.0.0-BETA, IS_EQUAL_TO, 1.0.0-beta",
+                "1.0.0-BETA.X.y.5.77.0+AA, IS_EQUAL_TO, 1.0.0-beta.x.y.5.77.0+aa",
 
-            // Metadata ignored for comparison
-            "1.0.0, IS_EQUAL_TO, 1.0.0+beta",
-            "1.0.0+aa, IS_EQUAL_TO, 1.0.0+bb",
+                // Metadata ignored for comparison
+                "1.0.0, IS_EQUAL_TO, 1.0.0+beta",
+                "1.0.0+aa, IS_EQUAL_TO, 1.0.0+bb",
 
-            // Defaults / leading zeros
-            "1.0, IS_EQUAL_TO, 1.0.0.0",
-            "1.0.01, IS_EQUAL_TO, 1.0.1.0",
+                // Defaults / leading zeros
+                "1.0, IS_EQUAL_TO, 1.0.0.0",
+                "1.0.01, IS_EQUAL_TO, 1.0.1.0",
 
-            // Revision + prerelease interaction
-            "1.0.0-pre, IS_LOWER_THAN, 1.0.0.1-alpha",
-            "1.0.0, IS_LOWER_THAN, 1.0.0.1-alpha",
-            "1.0.0.1-alpha, IS_LOWER_THAN, 1.0.0.1-pre",
+                // Revision + prerelease interaction
+                "1.0.0-pre, IS_LOWER_THAN, 1.0.0.1-alpha",
+                "1.0.0, IS_LOWER_THAN, 1.0.0.1-alpha",
+                "1.0.0.1-alpha, IS_LOWER_THAN, 1.0.0.1-pre",
 
-            // Numeric labels sort before alphanumeric
-            "1.0.0-5, IS_LOWER_THAN, 1.0.0-alpha",
-            "1.0.0-beta.5.77.0, IS_LOWER_THAN, 1.0.0-beta.5.79.0",
-            "1.0.0-beta.5.79.0, IS_LOWER_THAN, 1.0.0-beta.5.790.0",
-    })
+                // Numeric labels sort before alphanumeric
+                "1.0.0-5, IS_LOWER_THAN, 1.0.0-alpha",
+                "1.0.0-beta.5.77.0, IS_LOWER_THAN, 1.0.0-beta.5.79.0",
+                "1.0.0-beta.5.79.0, IS_LOWER_THAN, 1.0.0-beta.5.790.0",
+            })
     void testCompareTo(String versionA, ComparisonExpectation expectation, String versionB) {
         expectation.evaluate(new NugetVersion(versionA), new NugetVersion(versionB));
     }
-
 }

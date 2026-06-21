@@ -18,17 +18,16 @@
  */
 package io.github.nscuro.versatile.version;
 
+import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_DEBIAN;
+import static io.github.nscuro.versatile.version.VersionUtils.isAsciiNumeric;
+
 import io.github.nscuro.versatile.spi.InvalidVersionException;
 import io.github.nscuro.versatile.spi.Version;
-
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_DEBIAN;
-import static io.github.nscuro.versatile.version.VersionUtils.isAsciiNumeric;
 
 /**
  * @see <a href="https://manpages.debian.org/stretch/dpkg-dev/deb-version.5.en.html">Debian version format and sorting algorithm</a>
@@ -44,7 +43,6 @@ public class DebianVersion extends Version {
         public Provider() {
             super(Set.of(SCHEME_DEBIAN), (scheme, versionStr) -> new DebianVersion(versionStr));
         }
-
     }
 
     private static final Pattern VERSION_PATTERN = Pattern.compile("""
@@ -69,9 +67,12 @@ public class DebianVersion extends Version {
                     """.formatted(versionStr));
         }
 
-        this.epoch = Optional.ofNullable(versionMatcher.group("epoch")).map(Integer::parseInt).orElse(0);
+        this.epoch = Optional.ofNullable(versionMatcher.group("epoch"))
+                .map(Integer::parseInt)
+                .orElse(0);
         this.upstreamVersion = versionMatcher.group("upstreamVersion");
-        this.debianRevision = Optional.ofNullable(versionMatcher.group("debianRevision")).orElse("0");
+        this.debianRevision =
+                Optional.ofNullable(versionMatcher.group("debianRevision")).orElse("0");
 
         if (this.upstreamVersion == null) {
             throw new InvalidVersionException(versionStr, """
@@ -105,16 +106,12 @@ public class DebianVersion extends Version {
                 return comparisonResult;
             }
 
-            comparisonResult = compareVersionPart(
-                    this.upstreamVersionSegments,
-                    otherVersion.upstreamVersionSegments);
+            comparisonResult = compareVersionPart(this.upstreamVersionSegments, otherVersion.upstreamVersionSegments);
             if (comparisonResult != 0) {
                 return comparisonResult;
             }
 
-            return compareVersionPart(
-                    this.debianRevisionSegments,
-                    otherVersion.debianRevisionSegments);
+            return compareVersionPart(this.debianRevisionSegments, otherVersion.debianRevisionSegments);
         }
 
         throw new IllegalArgumentException("%s can only be compared with its own type, but got %s"
@@ -169,12 +166,8 @@ public class DebianVersion extends Version {
         final int max = Math.max(versionPartA.length(), versionPartB.length());
 
         for (int i = 0; i < max; i++) {
-            final int a = i < versionPartA.length()
-                    ? charOrder(versionPartA.charAt(i))
-                    : 0;
-            final int b = i < versionPartB.length()
-                    ? charOrder(versionPartB.charAt(i))
-                    : 0;
+            final int a = i < versionPartA.length() ? charOrder(versionPartA.charAt(i)) : 0;
+            final int b = i < versionPartB.length() ? charOrder(versionPartB.charAt(i)) : 0;
 
             final int comparisonResult = Integer.compare(a, b);
             if (comparisonResult != 0) {
@@ -196,5 +189,4 @@ public class DebianVersion extends Version {
 
         return ((int) x) + 255;
     }
-
 }

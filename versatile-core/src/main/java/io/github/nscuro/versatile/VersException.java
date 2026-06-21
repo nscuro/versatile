@@ -27,5 +27,4 @@ public class VersException extends RuntimeException {
     protected VersException(final String message, final Throwable cause) {
         super(message, cause);
     }
-
 }

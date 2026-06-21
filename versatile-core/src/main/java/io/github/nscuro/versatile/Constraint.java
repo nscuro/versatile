@@ -19,7 +19,6 @@
 package io.github.nscuro.versatile;
 
 import io.github.nscuro.versatile.spi.Version;
-
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -65,7 +64,9 @@ public class Constraint implements Comparable<Constraint> {
             comparator = Comparator.EQUAL;
         }
 
-        final String versionStr = constraintStr.replaceFirst("^" + Pattern.quote(comparator.operator()), "").trim();
+        final String versionStr = constraintStr
+                .replaceFirst("^" + Pattern.quote(comparator.operator()), "")
+                .trim();
         if (versionStr.isBlank()) {
             throw new VersException("comparator %s is not allowed without version".formatted(comparator));
         }
@@ -95,11 +96,11 @@ public class Constraint implements Comparable<Constraint> {
         };
     }
 
-  /**
-   * Inverts the comparator of the constraint e.g. {@code < 1.3} becomes {@code >= 1.3}
-   * @return a new inverted constraint and null if current comparator is a wildcard: *
-   */
-  Constraint invert(){
+    /**
+     * Inverts the comparator of the constraint e.g. {@code < 1.3} becomes {@code >= 1.3}
+     * @return a new inverted constraint and null if current comparator is a wildcard: *
+     */
+    Constraint invert() {
         return switch (comparator) {
             case LESS_THAN -> new Constraint(scheme, Comparator.GREATER_THAN_OR_EQUAL, version);
             case LESS_THAN_OR_EQUAL -> new Constraint(scheme, Comparator.GREATER_THAN, version);
@@ -150,5 +151,4 @@ public class Constraint implements Comparable<Constraint> {
 
         return comparator.operator() + URLEncoder.encode(version.toString(), StandardCharsets.UTF_8);
     }
-
 }

@@ -20,7 +20,6 @@ package io.github.nscuro.versatile;
 
 import io.github.nscuro.versatile.spi.InvalidVersionException;
 import io.github.nscuro.versatile.version.KnownVersioningSchemes;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,8 +27,7 @@ import java.util.Set;
 
 public final class VersUtils {
 
-    private VersUtils() {
-    }
+    private VersUtils() {}
 
     /**
      * Convert an ecosystem and version range as used by GitHub Security Advisories to a {@link Vers} range.
@@ -54,17 +52,27 @@ public final class VersUtils {
             final String constraintExpr = constraintExprs[i].trim();
 
             if (constraintExpr.startsWith("<=")) {
-                versBuilder.withConstraint(Comparator.LESS_THAN_OR_EQUAL, constraintExpr.replaceFirst("<=", "").trim());
+                versBuilder.withConstraint(
+                        Comparator.LESS_THAN_OR_EQUAL,
+                        constraintExpr.replaceFirst("<=", "").trim());
             } else if (constraintExpr.startsWith("<")) {
-                versBuilder.withConstraint(Comparator.LESS_THAN, constraintExpr.replaceFirst("<", "").trim());
+                versBuilder.withConstraint(
+                        Comparator.LESS_THAN,
+                        constraintExpr.replaceFirst("<", "").trim());
             } else if (constraintExpr.startsWith(">=")) {
-                versBuilder.withConstraint(Comparator.GREATER_THAN_OR_EQUAL, constraintExpr.replaceFirst(">=", "").trim());
+                versBuilder.withConstraint(
+                        Comparator.GREATER_THAN_OR_EQUAL,
+                        constraintExpr.replaceFirst(">=", "").trim());
             } else if (constraintExpr.startsWith(">")) {
-                versBuilder.withConstraint(Comparator.GREATER_THAN, constraintExpr.replaceFirst(">", "").trim());
+                versBuilder.withConstraint(
+                        Comparator.GREATER_THAN,
+                        constraintExpr.replaceFirst(">", "").trim());
             } else if (constraintExpr.startsWith("=")) {
-                versBuilder.withConstraint(Comparator.EQUAL, constraintExpr.replaceFirst("=", "").trim());
+                versBuilder.withConstraint(
+                        Comparator.EQUAL, constraintExpr.replaceFirst("=", "").trim());
             } else {
-                throw new IllegalArgumentException("Invalid constraint \"%s\" at position %d".formatted(constraintExpr, i));
+                throw new IllegalArgumentException(
+                        "Invalid constraint \"%s\" at position %d".formatted(constraintExpr, i));
             }
         }
 
@@ -84,10 +92,10 @@ public final class VersUtils {
      * @throws InvalidVersionException  When any version in the range is invalid according to the inferred scheme
      */
     public static Vers versFromOsvRange(
-            final String type, final String ecosystem,
+            final String type,
+            final String ecosystem,
             final List<Map.Entry<String, String>> events,
-            final Map<String, Object> databaseSpecific
-    ) {
+            final Map<String, Object> databaseSpecific) {
         if (!"ecosystem".equalsIgnoreCase(type) && !"semver".equalsIgnoreCase(type)) {
             throw new IllegalArgumentException("Range type \"%s\" is not supported".formatted(type));
         }
@@ -98,13 +106,15 @@ public final class VersUtils {
         for (int i = 0; i < events.size(); i++) {
             final Map.Entry<String, String> event = events.get(i);
 
-            final Comparator comparator = switch (event.getKey()) {
-                case "introduced" -> Comparator.GREATER_THAN_OR_EQUAL;
-                case "fixed", "limit" -> Comparator.LESS_THAN;
-                case "last_affected" -> Comparator.LESS_THAN_OR_EQUAL;
-                default -> throw new IllegalArgumentException("Invalid event \"%s\" at position %d"
-                        .formatted(event.getKey(), i));
-            };
+            final Comparator comparator =
+                    switch (event.getKey()) {
+                        case "introduced" -> Comparator.GREATER_THAN_OR_EQUAL;
+                        case "fixed", "limit" -> Comparator.LESS_THAN;
+                        case "last_affected" -> Comparator.LESS_THAN_OR_EQUAL;
+                        default ->
+                            throw new IllegalArgumentException(
+                                    "Invalid event \"%s\" at position %d".formatted(event.getKey(), i));
+                    };
 
             if ("deb".equals(scheme)
                     && (comparator == Comparator.LESS_THAN || comparator == Comparator.LESS_THAN_OR_EQUAL)
@@ -122,9 +132,13 @@ public final class VersUtils {
         if (databaseSpecific != null && databaseSpecific.get("last_known_affected_version_range") instanceof String) {
             String lastKnownAffectedRange = (String) databaseSpecific.get("last_known_affected_version_range");
             if (lastKnownAffectedRange.startsWith("<=")) {
-                versBuilder.withConstraint(Comparator.LESS_THAN_OR_EQUAL, lastKnownAffectedRange.replaceFirst("<=", "").trim());
+                versBuilder.withConstraint(
+                        Comparator.LESS_THAN_OR_EQUAL,
+                        lastKnownAffectedRange.replaceFirst("<=", "").trim());
             } else if (lastKnownAffectedRange.startsWith("<")) {
-                versBuilder.withConstraint(Comparator.LESS_THAN, lastKnownAffectedRange.replaceFirst("<", "").trim());
+                versBuilder.withConstraint(
+                        Comparator.LESS_THAN,
+                        lastKnownAffectedRange.replaceFirst("<", "").trim());
             }
         }
 
@@ -132,8 +146,8 @@ public final class VersUtils {
 
         // >=0 is equivalent to *
         if (vers.constraints().size() == 1
-            && Comparator.GREATER_THAN_OR_EQUAL == vers.constraints().get(0).comparator()
-            && "0".equals(vers.constraints().get(0).version().toString())) {
+                && Comparator.GREATER_THAN_OR_EQUAL == vers.constraints().get(0).comparator()
+                && "0".equals(vers.constraints().get(0).version().toString())) {
             return Vers.builder(vers.scheme())
                     .withConstraint(Comparator.WILDCARD, null)
                     .build();
@@ -142,9 +156,10 @@ public final class VersUtils {
         // >=0|<X is equivalent to <X
         // >=0|<=X is equivalent to <=X
         if (vers.constraints().size() == 2
-            && Comparator.GREATER_THAN_OR_EQUAL == vers.constraints().get(0).comparator()
-            && "0".equals(vers.constraints().get(0).version().toString())
-            && Set.of(Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL).contains(vers.constraints().get(1).comparator())) {
+                && Comparator.GREATER_THAN_OR_EQUAL == vers.constraints().get(0).comparator()
+                && "0".equals(vers.constraints().get(0).version().toString())
+                && Set.of(Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL)
+                        .contains(vers.constraints().get(1).comparator())) {
             return Vers.builder(vers.scheme())
                     .withConstraint(vers.constraints().get(1))
                     .build();
@@ -173,8 +188,7 @@ public final class VersUtils {
             final String versionStartIncluding,
             final String versionEndExcluding,
             final String versionEndIncluding,
-            final String exactVersion
-    ) {
+            final String exactVersion) {
 
         // Using 'generic' as versioning scheme for NVD due to lack of package data.
         final var versBuilder = Vers.builder("generic");
@@ -259,5 +273,4 @@ public final class VersUtils {
             default -> Optional.empty();
         };
     }
-
 }
