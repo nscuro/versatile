@@ -39,13 +39,4 @@ jobs:
         distribution: "temurin"
         cache: "maven"
     - name: Test
-      run: mvn -B clean install
-    - name: Integration Test
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
-      run: mvn -B failsafe:integration-test
-    - name: Upload Integration Test Results
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # tag=v7.0.1
-      with:
-        name: test-results-${{ matrix.java-version }}
-        path: versatile-core/target/results/*.json
+      run: mvn -B verify

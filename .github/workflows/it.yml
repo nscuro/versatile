@@ -1,0 +1,42 @@
+name: Integration Test
+
+on:
+  schedule:
+  - cron: "0 4 * * *"
+  workflow_dispatch: { }
+
+permissions: { }
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  integration-test:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # tag=v6.0.3
+      with:
+        persist-credentials: false
+        submodules: 'true'
+    - name: Set up Java
+      uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # tag=v5.2.0
+      with:
+        java-version: 21
+        distribution: "temurin"
+        cache: "maven"
+    - name: Integration Test
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: mvn -B test-compile failsafe:integration-test
+    - name: Upload Integration Test Results
+      if: always()
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # tag=v7.0.1
+      with:
+        name: test-results
+        path: versatile-core/target/results/*.json
