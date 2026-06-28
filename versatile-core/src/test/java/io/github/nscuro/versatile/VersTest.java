@@ -61,6 +61,62 @@ class VersTest {
                         });
     }
 
+    @ParameterizedTest
+    @CsvSource({
+        "vers:npm/>=1.0.0| <2.0.0", // whitespace
+        "nonsense", // missing URI scheme separator
+        "foo:npm/>=1.0.0", // wrong URI scheme
+        "vers:npmnoslash", // missing versioning scheme separator
+        "vers:/>=1.0.0", // blank scheme
+        "vers:npm/|>=1.0.0|<2.0.0", // leading pipe
+        "vers:npm/>=1.0.0|<2.0.0|", // trailing pipe
+        "vers:npm/>=1.0.0||<2.0.0", // consecutive pipes
+        "vers:npm/>=2.0.0|<1.0.0", // unsorted
+        "vers:npm/>=1.0.0|<=1.0.0", // duplicate version
+        "vers:npm/<1.0.0|<2.0.0", // invalid comparator sequence
+    })
+    void testParseRejectsNonCanonicalWithContext(String input) {
+        assertThatThrownBy(() -> Vers.parse(input))
+                .isInstanceOf(VersException.class)
+                .hasMessageContaining(input);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "vers:npm/>=2.0.0|<1.0.0,vers:npm/<1.0.0|>=2.0.0", // unsorted -> sorted
+        "vers:npm/|>=1.0.0|<2.0.0,vers:npm/>=1.0.0|<2.0.0", // leading pipe stripped
+        "vers:npm/>=1.0.0|<2.0.0|,vers:npm/>=1.0.0|<2.0.0", // trailing pipe stripped
+    })
+    void testParseLenientNormalizesNonCanonical(String input, String expected) {
+        final Vers vers = Vers.parseLenient(input);
+
+        final String normalized = vers.toString();
+        assertThat(normalized).hasToString(expected);
+
+        // Sanity check: must survive strict parsing.
+        assertThatNoException().isThrownBy(() -> Vers.parse(normalized));
+    }
+
+    @Test
+    void testParseUnsortedNamesOffendingConstraints() {
+        assertThatThrownBy(() -> Vers.parse("vers:npm/>=2.0.0|<1.0.0"))
+                .isInstanceOf(VersException.class)
+                .hasMessage("""
+                        constraints must be sorted by version, but ">=2.0.0" \
+                        precedes "<1.0.0" in "vers:npm/>=2.0.0|<1.0.0"\
+                        """);
+    }
+
+    @Test
+    void testParseDuplicateNamesOffendingConstraints() {
+        assertThatThrownBy(() -> Vers.parse("vers:npm/>=1.0.0|<=1.0.0"))
+                .isInstanceOf(VersException.class)
+                .hasMessage("""
+                        version "1.0.0" must occur only once, but is used by \
+                        both ">=1.0.0" and "<=1.0.0" in "vers:npm/>=1.0.0|<=1.0.0"\
+                        """);
+    }
+
     @Test
     void testBuild() {
         final Vers vers = Vers.builder("maven")
@@ -87,7 +143,7 @@ class VersTest {
                 "vers:pypi/>0.0.0|>=0.0.1|>=0.0.1|0.0.2|0.0.3|0.0.4|<0.0.5|<=0.0.6|!=0.7|8.0|>12|<15.3,vers:pypi/>0.0.0|<=0.0.6|!=0.7|8.0|>12|<15.3"
             })
     void testSimplify(final String before, final String after) {
-        final Vers vers = Vers.parse(before).simplify();
+        final Vers vers = Vers.parseLenient(before).simplify();
         assertThat(vers).hasToString(after);
         assertThatNoException().isThrownBy(vers::validate);
     }
@@ -120,7 +176,7 @@ class VersTest {
     @ParameterizedTest
     @MethodSource("testSplitArguments")
     void testSplit(final String inputVers, final List<String> versList) {
-        final var parsedVers = Vers.parse(inputVers);
+        final var parsedVers = Vers.parseLenient(inputVers);
         assertThat(parsedVers.split().stream().map(Vers::toString)).containsAll(versList);
     }
 
@@ -160,9 +216,9 @@ class VersTest {
             })
     void testContains(final String range, final ContainsExpectation expectation, final String version) {
         if (expectation == ContainsExpectation.CONTAINS) {
-            assertThat(Vers.parse(range).contains(version)).isTrue();
+            assertThat(Vers.parseLenient(range).contains(version)).isTrue();
         } else {
-            assertThat(Vers.parse(range).contains(version)).isFalse();
+            assertThat(Vers.parseLenient(range).contains(version)).isFalse();
         }
     }
 
@@ -208,8 +264,8 @@ class VersTest {
         "'vers:generic/>1.2.3|<1.3.1|>1.7', 'vers:generic/>1.3.2|<1.3.4|<1.8', true"
     })
     void testHasOverlap(String version1, String version2, boolean expected) {
-        var v1 = Vers.parse(version1);
-        var v2 = Vers.parse(version2);
+        var v1 = Vers.parseLenient(version1);
+        var v2 = Vers.parseLenient(version2);
         assertThat(v1.overlapsWith(v2)).isEqualTo(expected);
         assertThat(v2.overlapsWith(v1)).isEqualTo(expected);
     }
@@ -241,7 +297,7 @@ class VersTest {
         "'vers:generic/>=1.1.0|<2.2.0|!=2.1.0|>=3.0.0|<4.0.0', 'vers:generic/<1.1.0|2.1.0|>=2.2.0|<3.0.0|>=4.0.0'"
     })
     void testInvert(String version, String expectedInverted) {
-        var v = Vers.parse(version);
+        var v = Vers.parseLenient(version);
         var inverted = v.invert();
         assertThat(inverted.toString()).isEqualTo(expectedInverted);
     }
@@ -273,7 +329,7 @@ class VersTest {
         "'vers:generic/>=1.1.0|<2.2.0|!=2.1.0|>=3.0.0|<4.0.0'"
     })
     void testInvertedDoesNotOverlap(String version) {
-        var v = Vers.parse(version);
+        var v = Vers.parseLenient(version);
         var inverted = v.invert();
         assertThat(v.overlapsWith(inverted)).isEqualTo(false);
     }

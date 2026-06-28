@@ -19,12 +19,14 @@
 package io.github.nscuro.versatile.conformance;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.nscuro.versatile.Vers;
+import io.github.nscuro.versatile.VersException;
 import io.github.nscuro.versatile.VersionFactory;
 import io.github.nscuro.versatile.conformance.schema.VersTest;
 import io.github.nscuro.versatile.conformance.schema.VersTestSchema01;
@@ -60,7 +62,7 @@ class VersConformanceTest {
             public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) {
                 if (!attrs.isDirectory()
                         && file.getFileName().toString().endsWith("_test.json")
-                        && file.getFileName().toString().matches("^(?:alpine|maven|nuget|pypi)_.+\\.json$")) {
+                        && file.getFileName().toString().matches("^(?:alpine|maven|nuget|pypi|vers)_.+\\.json$")) {
                     testFilePaths.add(file);
                 }
                 return FileVisitResult.CONTINUE;
@@ -103,6 +105,7 @@ class VersConformanceTest {
             case COMPARISON -> testComparison(versTest);
             case CONTAINMENT -> testContainment(versTest);
             case EQUALITY -> testEquality(versTest);
+            case PARSE -> testParse(versTest);
             case ROUNDTRIP -> testRoundtrip(versTest);
             default -> Assumptions.assumeTrue(false, "Test type not supported yet");
         }
@@ -166,8 +169,38 @@ class VersConformanceTest {
         final var expectedOutput = (Boolean) versTest.getAdditionalProperties().get("expected_output");
         assertThat(expectedOutput).isNotNull();
 
-        final var vers = Vers.parse(versStr);
+        // NB: Containment fixtures include non-canonical (e.g. unsorted) ranges, so parse leniently.
+        final var vers = Vers.parseLenient(versStr);
         assertThat(vers.contains(versionStr)).as(versTest.getDescription()).isEqualTo(expectedOutput);
+    }
+
+    @SuppressWarnings("unchecked")
+    void testParse(final VersTest versTest) {
+        assertThat(versTest.getAdditionalProperties()).isNotNull();
+
+        final var input = (String) versTest.getAdditionalProperties().get("input");
+        assertThat(input).isNotNull();
+
+        if (Boolean.TRUE.equals(versTest.getExpectedFailure())) {
+            assertThatExceptionOfType(VersException.class)
+                    .as(versTest.getDescription())
+                    .isThrownBy(() -> Vers.parse(input));
+            return;
+        }
+
+        final var expectedOutput =
+                (Map<String, Object>) versTest.getAdditionalProperties().get("expected_output");
+        assertThat(expectedOutput).isNotNull();
+
+        final var vers = Vers.parse(input);
+        assertThat(vers.scheme()).as(versTest.getDescription()).isEqualTo(expectedOutput.get("scheme"));
+
+        final var expectedConstraints = (List<List<String>>) expectedOutput.get("version_constraints");
+        final List<List<String>> actualConstraints = vers.constraints().stream()
+                .map(constraint -> List.of(
+                        constraint.comparator().operator(), constraint.version().toString()))
+                .toList();
+        assertThat(actualConstraints).as(versTest.getDescription()).isEqualTo(expectedConstraints);
     }
 
     @SuppressWarnings("unchecked")
@@ -212,6 +245,9 @@ class VersConformanceTest {
         final var expectedOutput = (String) versTest.getAdditionalProperties().get("expected_output");
         assertThat(expectedOutput).isNotNull();
 
-        assertThat(Vers.parse(versStr).toString()).as(versTest.getDescription()).isEqualTo(expectedOutput);
+        // NB: Roundtrip is an "advanced" capability that normalizes non-canonical input.
+        assertThat(Vers.parseLenient(versStr).toString())
+                .as(versTest.getDescription())
+                .isEqualTo(expectedOutput);
     }
 }
