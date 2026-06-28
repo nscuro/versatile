@@ -103,6 +103,7 @@ class VersConformanceTest {
             case COMPARISON -> testComparison(versTest);
             case CONTAINMENT -> testContainment(versTest);
             case EQUALITY -> testEquality(versTest);
+            case ROUNDTRIP -> testRoundtrip(versTest);
             default -> Assumptions.assumeTrue(false, "Test type not supported yet");
         }
     }
@@ -195,5 +196,22 @@ class VersConformanceTest {
         } else {
             assertThat(versionA).as(versTest.getDescription()).isNotEqualTo(versionB);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    void testRoundtrip(final VersTest versTest) {
+        assertThat(versTest.getAdditionalProperties()).isNotNull();
+
+        final var inputObject =
+                (Map<String, Object>) versTest.getAdditionalProperties().get("input");
+        assertThat(inputObject).isNotNull();
+
+        final var versStr = (String) inputObject.get("vers");
+        assertThat(versStr).isNotNull();
+
+        final var expectedOutput = (String) versTest.getAdditionalProperties().get("expected_output");
+        assertThat(expectedOutput).isNotNull();
+
+        assertThat(Vers.parse(versStr).toString()).as(versTest.getDescription()).isEqualTo(expectedOutput);
     }
 }

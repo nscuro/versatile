@@ -80,8 +80,10 @@ public record Vers(String scheme, List<Constraint> constraints) {
             throw new VersException("vers string contains no constraints");
         }
 
-        final List<Constraint> constraints =
-                Arrays.stream(parts).map(part -> Constraint.parse(scheme, part)).toList();
+        final List<Constraint> constraints = Arrays.stream(parts)
+                .map(part -> Constraint.parse(scheme, part))
+                .sorted()
+                .toList();
 
         return new Vers(scheme, constraints);
     }
