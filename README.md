@@ -80,7 +80,13 @@ class ConstructVers {
 
 `vers` ranges may
 be [parsed](https://github.com/package-url/vers-spec/blob/main/docs/how-to-parse.md)
-using the `Vers#parse` method. If the range turns out to be invalid, a `VersException` is thrown.
+using the `Vers#parse` method. Per the specification, the input must already be in canonical
+form. Non-canonical input (whitespace, leading, trailing or consecutive pipes, unsorted or
+duplicate constraints, or invalid comparator sequences) is rejected with a `VersException`.
+
+To accept possibly non-canonical input, use `Vers#parseLenient`, which normalizes the range
+(sorting constraints by version, stripping leading and trailing pipes, and trimming whitespace)
+instead of rejecting it.
 
 ```java
 import io.github.nscuro.versatile.Vers;
@@ -111,7 +117,7 @@ import io.github.nscuro.versatile.Vers;
 class SimplifyVers {
 
     void shouldSimplify() {
-        Vers vers = Vers.parse("vers:golang/>v0.0.0|>=v0.0.1|v0.0.2|<v0.0.3|v0.0.4|<v0.0.5|>=v0.0.6");
+        Vers vers = Vers.parseLenient("vers:golang/>v0.0.0|>=v0.0.1|v0.0.2|<v0.0.3|v0.0.4|<v0.0.5|>=v0.0.6");
 
         assert "vers:golang/>v0.0.0|<v0.0.5|>=v0.0.6".equals(vers.simplify().toString());
     }

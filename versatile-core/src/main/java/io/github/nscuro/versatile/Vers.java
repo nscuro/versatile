@@ -46,46 +46,125 @@ public record Vers(String scheme, List<Constraint> constraints) {
         }
     }
 
-    public static Vers parse(final String versString) {
+    /**
+     * Parses a canonical {@code vers} string.
+     * <p>
+     * Per the vers specification, a {@code vers} string shall already be in canonical form.
+     * {@code versString} values with the following properties are rejected:
+     * <ul>
+     *   <li>whitespace</li>
+     *   <li>leading, trailing, or consecutive pipes</li>
+     *   <li>unsorted constraints</li>
+     *   <li>duplicate constraints</li>
+     *   <li>invalid comparator sequences</li>
+     * </ul>
+     * <p>
+     * Use {@link #parseLenient(String)} if inputs may be non-canonical.
+     *
+     * @throws VersException if the provided value is not a valid {@code vers} range.
+     * @see #parseLenient(String)
+     * @since 0.20.0
+     */
+    public static Vers parse(String versString) {
+        return parse(versString, /* strict */ true);
+    }
+
+    /**
+     * Parses a possibly non-canonical {@code vers} string, normalizing it instead of rejecting it
+     * by sorting constraints, stripping leading and trailing pipes, and trimming whitespace.
+     * <p>
+     * Unlike {@link #parse(String)}, this does not enforce the spec's canonical-form rules.
+     * It is meant for flexible parsing of externally-sourced ranges that may not be normalized.
+     *
+     * @throws VersException if the provided value is not a valid {@code vers} range.
+     * @see <a href="https://github.com/package-url/vers-spec/issues/69">vers-spec#69</a>
+     * @since 0.20.0
+     */
+    public static Vers parseLenient(String versString) {
+        return parse(versString, /* strict */ false);
+    }
+
+    private static Vers parse(final String versString, final boolean strict) {
         if (versString == null || versString.isBlank()) {
             throw new VersException("vers string must not be null or blank");
+        }
+        if (strict && containsWhitespace(versString)) {
+            throw new VersException("vers string must not contain whitespace: \"%s\"".formatted(versString));
         }
 
         String[] parts = versString.split(":", 2);
         if (parts.length != 2) {
-            throw new VersException("vers string does not contain a URI scheme separator");
+            throw new VersException(
+                    "vers string does not contain a URI scheme separator: \"%s\"".formatted(versString));
         }
 
         if (!"vers".equals(parts[0])) {
-            throw new VersException("URI scheme must be \"vers\", but is \"%s\"".formatted(parts[0]));
+            throw new VersException(
+                    "URI scheme must be \"vers\", but is \"%s\" in \"%s\"".formatted(parts[0], versString));
         }
 
         parts = parts[1].split("/", 2);
         if (parts.length != 2) {
-            throw new VersException("vers string does not contain a versioning scheme separator");
+            throw new VersException(
+                    "vers string does not contain a versioning scheme separator: \"%s\"".formatted(versString));
         }
 
         final String scheme = parts[0];
         if (scheme.isBlank()) {
-            throw new VersException("scheme must not be blank");
+            throw new VersException("scheme must not be blank in \"%s\"".formatted(versString));
         }
 
-        final String constraintsString = parts[1].replaceAll("^\\|+", "").replaceAll("\\|+$", "");
+        String constraintsString = parts[1];
         if ("*".equals(constraintsString)) {
             return new Vers(scheme, List.of(new Constraint(scheme, Comparator.WILDCARD, null)));
         }
 
-        parts = constraintsString.split("\\|");
-        if (parts.length == 0) {
-            throw new VersException("vers string contains no constraints");
+        if (strict) {
+            if (constraintsString.startsWith("|")) {
+                throw new VersException("constraints must not start with a pipe in \"%s\"".formatted(versString));
+            }
+            if (constraintsString.endsWith("|")) {
+                throw new VersException("constraints must not end with a pipe in \"%s\"".formatted(versString));
+            }
+            if (constraintsString.contains("||")) {
+                throw new VersException(
+                        "constraints must not contain consecutive pipes in \"%s\"".formatted(versString));
+            }
+        } else {
+            constraintsString = constraintsString.replaceAll("^\\|+", "").replaceAll("\\|+$", "");
         }
 
-        final List<Constraint> constraints = Arrays.stream(parts)
-                .map(part -> Constraint.parse(scheme, part))
-                .sorted()
-                .toList();
+        parts = constraintsString.split("\\|");
+        if (parts.length == 0) {
+            throw new VersException("vers string contains no constraints: \"%s\"".formatted(versString));
+        }
 
-        return new Vers(scheme, constraints);
+        Stream<Constraint> constraintStream = Arrays.stream(parts).map(part -> Constraint.parse(scheme, part));
+        if (!strict) {
+            constraintStream = constraintStream.sorted();
+        }
+        final List<Constraint> constraints = constraintStream.toList();
+
+        if (!strict) {
+            return new Vers(scheme, constraints);
+        }
+
+        for (int i = 0; i + 1 < constraints.size(); i++) {
+            final Constraint curr = constraints.get(i);
+            final Constraint next = constraints.get(i + 1);
+            final int cmp = curr.compareTo(next);
+            if (cmp > 0) {
+                throw new VersException("constraints must be sorted by version, but \"%s\" precedes \"%s\" in \"%s\""
+                        .formatted(curr, next, versString));
+            }
+            if (cmp == 0) {
+                throw new VersException(
+                        "version \"%s\" must occur only once, but is used by both \"%s\" and \"%s\" in \"%s\""
+                                .formatted(curr.version(), curr, next, versString));
+            }
+        }
+
+        return new Vers(scheme, constraints).validate();
     }
 
     public List<Vers> split() {
@@ -340,6 +419,15 @@ public record Vers(String scheme, List<Constraint> constraints) {
         return new Vers(scheme, simplifiedConstraints);
     }
 
+    /**
+     * Validates itself against the {@code vers} spec's rules.
+     * <p>
+     * <strong>Note:</strong> since version 0.20.0, validation is performed implicitly
+     * by {@link #parse(String)}, {@link #parseLenient(String)}, and {@link Builder#build()}.
+     * Calling it separately is not necessary.
+     *
+     * @return the validated {@link Vers}.
+     */
     public Vers validate() {
         // The special star "*" comparator matches any version.
         // It must be used alone exclusive of any other constraint and must not be followed by a version.
@@ -613,6 +701,16 @@ public record Vers(String scheme, List<Constraint> constraints) {
             constraints = constraints.stream().filter(c -> !c.equals(last)).toList();
         }
         return constraints;
+    }
+
+    private static boolean containsWhitespace(String value) {
+        for (int i = 0; i < value.length(); i++) {
+            if (Character.isWhitespace(value.charAt(i))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static class Builder {

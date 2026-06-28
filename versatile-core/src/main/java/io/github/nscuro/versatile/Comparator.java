@@ -39,7 +39,7 @@ public enum Comparator {
         this.operator = operator;
     }
 
-    String operator() {
+    public String operator() {
         return operator;
     }
 }

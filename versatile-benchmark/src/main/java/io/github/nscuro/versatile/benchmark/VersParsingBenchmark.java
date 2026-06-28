@@ -38,7 +38,7 @@ import org.openjdk.jmh.annotations.Warmup;
 @Warmup(iterations = 3, time = 1)
 @Measurement(iterations = 5, time = 1)
 @Fork(2)
-public class VersOperationsBenchmark {
+public class VersParsingBenchmark {
 
     @Param({
         "apk",
@@ -56,15 +56,27 @@ public class VersOperationsBenchmark {
     })
     private String scheme;
 
-    private Vers vers;
+    private String canonicalRange;
+    private String nonCanonicalRange;
 
     @Setup
     public void setup() {
-        this.vers = Vers.parseLenient("vers:%s/>=1.0.0|<2.0.0|>=3.0.0|<4.0.0|!=2.5.0".formatted(scheme));
+        this.canonicalRange = "vers:%s/>=1.0.0|<2.0.0|!=2.5.0|>=3.0.0|<4.0.0".formatted(scheme);
+        this.nonCanonicalRange = "vers:%s/<4.0.0|>=3.0.0|!=2.5.0|<2.0.0|>=1.0.0".formatted(scheme);
     }
 
     @Benchmark
-    public Vers simplify() {
-        return vers.simplify();
+    public Vers parseStrict() {
+        return Vers.parse(canonicalRange);
+    }
+
+    @Benchmark
+    public Vers parseLenientCanonical() {
+        return Vers.parseLenient(canonicalRange);
+    }
+
+    @Benchmark
+    public Vers parseLenientNonCanonical() {
+        return Vers.parseLenient(nonCanonicalRange);
     }
 }
