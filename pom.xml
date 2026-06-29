@@ -63,6 +63,7 @@
         <lib.nullaway.version>0.13.7</lib.nullaway.version>
         <lib.open-vulnerability-clients.version>9.0.5</lib.open-vulnerability-clients.version>
         <lib.packageurl-java.version>1.5.0</lib.packageurl-java.version>
+        <lib.palantir-java-format.version>2.93.0</lib.palantir-java-format.version>
         <lib.semver4j.version>3.1.0</lib.semver4j.version>
         <lib.slf4j.version>2.0.18</lib.slf4j.version>
 
@@ -206,10 +207,10 @@
                             <exclude>**/version/ext/ComponentVersion.java</exclude>
                         </excludes>
                         <palantirJavaFormat>
-                            <version>2.93.0</version>
+                            <version>${lib.palantir-java-format.version}</version>
                         </palantirJavaFormat>
                         <licenseHeader>
-                            <file>${project.parentBaseDir}/.checkstyle/header</file>
+                            <file>${project.parentBaseDir}/.mvn/spotless/license-header.txt</file>
                         </licenseHeader>
                     </java>
                     <lineEndings>UNIX</lineEndings>
