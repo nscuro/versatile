@@ -40,7 +40,7 @@ public class NpmVersion extends Version {
 
     private final Semver delegate;
 
-    NpmVersion(final String versionStr) {
+    NpmVersion(String versionStr) {
         super(SCHEME_NPM, versionStr);
         try {
             this.delegate = new Semver(versionStr, Semver.SemverType.NPM);

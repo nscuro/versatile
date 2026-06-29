@@ -14,4 +14,11 @@
         <project.parentBaseDir>../</project.parentBaseDir>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+        </dependency>
+    </dependencies>
+
 </project>

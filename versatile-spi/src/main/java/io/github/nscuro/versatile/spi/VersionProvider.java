@@ -36,7 +36,7 @@ public interface VersionProvider {
      * @param scheme The versioning scheme to check
      * @return {@code true} when {@code scheme} is supported, otherwise {@code false}
      */
-    boolean supportsScheme(final String scheme);
+    boolean supportsScheme(String scheme);
 
     /**
      * @param scheme     The versioning scheme to create a {@link Version} for
@@ -44,5 +44,5 @@ public interface VersionProvider {
      * @return A {@link Version} instance
      * @throws InvalidVersionException When {@code versionStr} could not be used to construct a {@link Version}
      */
-    Version getVersion(final String scheme, final String versionStr);
+    Version getVersion(String scheme, String versionStr);
 }

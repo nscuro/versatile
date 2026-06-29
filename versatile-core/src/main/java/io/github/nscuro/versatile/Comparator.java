@@ -35,7 +35,7 @@ public enum Comparator {
 
     private final String operator;
 
-    Comparator(final String operator) {
+    Comparator(String operator) {
         this.operator = operator;
     }
 

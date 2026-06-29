@@ -1,3 +1,5 @@
+import org.jspecify.annotations.NullMarked;
+
 /*
  * This file is part of versatile.
  *
@@ -16,6 +18,9 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright (c) Niklas Düster. All Rights Reserved.
  */
+@NullMarked
 module io.github.nscuro.versatile.spi {
     exports io.github.nscuro.versatile.spi;
+
+    requires transitive org.jspecify;
 }

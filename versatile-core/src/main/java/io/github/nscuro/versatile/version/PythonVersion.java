@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 
 /**
  * @see <a href="https://peps.python.org/pep-0440/">PEP 440 – Version Identification and Dependency Specification</a>
@@ -55,15 +56,15 @@ public class PythonVersion extends Version {
 
     // https://peps.python.org/pep-0440/#appendix-b-parsing-version-strings-with-regular-expressions
     private static final Pattern VERSION_PATTERN = Pattern.compile("""
-                    ^\
-                    v?\
-                    (?:(?<epoch>[0-9]+)!)?\
-                    (?<release>[0-9]+(?:\\.[0-9]+)*)\
-                    (?<pre>[-_.]?(?<preType>a|alpha|b|beta|c|rc|pre|preview)[-_.]?(?<preNum>[0-9]+)?)?\
-                    (?<post>-(?<postNum1>[0-9]+)|[-_.]?(?<postType>post|rev|r)[-_.]?(?<postNum2>[0-9]+))?\
-                    (?<dev>[-_.]?dev[-_.]?(?<devNum>[0-9]+)?)?\
-                    (?:\\+(?<local>[a-zA-Z0-9]+(?:[-_.][a-zA-Z0-9]+)*))?\
-                    $""", Pattern.CASE_INSENSITIVE);
+            ^\
+            v?\
+            (?:(?<epoch>[0-9]+)!)?\
+            (?<release>[0-9]+(?:\\.[0-9]+)*)\
+            (?<pre>[-_.]?(?<preType>a|alpha|b|beta|c|rc|pre|preview)[-_.]?(?<preNum>[0-9]+)?)?\
+            (?<post>-(?<postNum1>[0-9]+)|[-_.]?(?<postType>post|rev|r)[-_.]?(?<postNum2>[0-9]+))?\
+            (?<dev>[-_.]?dev[-_.]?(?<devNum>[0-9]+)?)?\
+            (?:\\+(?<local>[a-zA-Z0-9]+(?:[-_.][a-zA-Z0-9]+)*))?\
+            $""", Pattern.CASE_INSENSITIVE);
     private static final Pattern NORM_PATTERN_LEADING_V = Pattern.compile("^[vV]");
     private static final Pattern NORM_PATTERN_EPOCH = Pattern.compile("^([0-9]+)!");
     private static final Pattern NORM_PATTERN_ALPHA = Pattern.compile("[-_.]?(alpha)");
@@ -81,10 +82,10 @@ public class PythonVersion extends Version {
 
     private final int epoch;
     private final List<Integer> release;
-    private final PreRelease preRelease;
-    private final Integer postRelease;
-    private final Integer devRelease;
-    private final String local;
+    private final @Nullable PreRelease preRelease;
+    private final @Nullable Integer postRelease;
+    private final @Nullable Integer devRelease;
+    private final @Nullable String local;
 
     PythonVersion(final String versionStr) {
         super(SCHEME_PYPI, normalize(versionStr));
@@ -168,19 +169,19 @@ public class PythonVersion extends Version {
         return List.copyOf(release);
     }
 
-    public PreRelease preRelease() {
+    public @Nullable PreRelease preRelease() {
         return preRelease;
     }
 
-    public Integer postRelease() {
+    public @Nullable Integer postRelease() {
         return postRelease;
     }
 
-    public Integer devRelease() {
+    public @Nullable Integer devRelease() {
         return devRelease;
     }
 
-    public String local() {
+    public @Nullable String local() {
         return local;
     }
 
@@ -241,7 +242,7 @@ public class PythonVersion extends Version {
         return true;
     }
 
-    private static int parseEpoch(final String epochStr) {
+    private static int parseEpoch(@Nullable String epochStr) {
         if (epochStr == null || epochStr.isBlank()) {
             return 0;
         }
@@ -249,9 +250,9 @@ public class PythonVersion extends Version {
         return Integer.parseInt(epochStr);
     }
 
-    private static List<Integer> parseRelease(final String releaseStr) {
+    private List<Integer> parseRelease(@Nullable String releaseStr) {
         if (releaseStr == null || releaseStr.isBlank()) {
-            throw new InvalidVersionException(releaseStr, "Release segment is required");
+            throw new InvalidVersionException(this.versionStr, "Release segment is required");
         }
 
         final String[] parts = releaseStr.split("\\.");
@@ -264,7 +265,8 @@ public class PythonVersion extends Version {
         return release;
     }
 
-    private static PreRelease parsePreRelease(final String preStr, final String preType, final String preNum) {
+    private @Nullable PreRelease parsePreRelease(
+            @Nullable String preStr, @Nullable String preType, @Nullable String preNum) {
         if (preStr == null || preType == null) {
             return null;
         }
@@ -274,14 +276,16 @@ public class PythonVersion extends Version {
                     case "a", "alpha" -> PreRelease.Type.ALPHA;
                     case "b", "beta" -> PreRelease.Type.BETA;
                     case "c", "rc", "pre", "preview" -> PreRelease.Type.RC;
-                    default -> throw new InvalidVersionException(preType, "Unknown pre-release type: " + preType);
+                    default ->
+                        throw new InvalidVersionException(this.versionStr, "Unknown pre-release type: " + preType);
                 };
 
         final int num = (preNum == null || preNum.isBlank()) ? 0 : Integer.parseInt(preNum);
         return new PreRelease(type, num);
     }
 
-    private static Integer parsePostRelease(final String postStr, final String postNum1, final String postNum2) {
+    private static @Nullable Integer parsePostRelease(
+            @Nullable String postStr, @Nullable String postNum1, @Nullable String postNum2) {
         if (postStr == null) {
             return null;
         }
@@ -297,7 +301,7 @@ public class PythonVersion extends Version {
         return 0;
     }
 
-    private static Integer parseDevRelease(final String devStr, final String devNum) {
+    private static @Nullable Integer parseDevRelease(@Nullable String devStr, @Nullable String devNum) {
         if (devStr == null) {
             return null;
         }
@@ -305,7 +309,7 @@ public class PythonVersion extends Version {
         return (devNum == null || devNum.isBlank()) ? 0 : Integer.parseInt(devNum);
     }
 
-    private static String parseLocal(final String localStr) {
+    private static @Nullable String parseLocal(@Nullable String localStr) {
         if (localStr == null || localStr.isBlank()) {
             return null;
         }
@@ -332,12 +336,12 @@ public class PythonVersion extends Version {
     }
 
     private static int comparePreReleaseWithDev(
-            final PreRelease pre1,
-            final Integer dev1,
-            final PreRelease pre2,
-            final Integer dev2,
-            final Integer post1,
-            final Integer post2) {
+            @Nullable PreRelease pre1,
+            @Nullable Integer dev1,
+            @Nullable PreRelease pre2,
+            @Nullable Integer dev2,
+            @Nullable Integer post1,
+            @Nullable Integer post2) {
         final boolean isDev1OfFinal = pre1 == null && post1 == null && dev1 != null;
         final boolean isDev2OfFinal = pre2 == null && post2 == null && dev2 != null;
 
@@ -354,7 +358,7 @@ public class PythonVersion extends Version {
         return comparePreRelease(pre1, pre2);
     }
 
-    private static int comparePreRelease(final PreRelease pre1, final PreRelease pre2) {
+    private static int comparePreRelease(@Nullable PreRelease pre1, @Nullable PreRelease pre2) {
         if (pre1 == null && pre2 == null) {
             return 0;
         }
@@ -373,7 +377,7 @@ public class PythonVersion extends Version {
         return Integer.compare(pre1.number, pre2.number);
     }
 
-    private static int compareOptionalInt(final Integer int1, final Integer int2) {
+    private static int compareOptionalInt(@Nullable Integer int1, @Nullable Integer int2) {
         // null is treated as less than any value (for post-releases).
         if (int1 == null && int2 == null) {
             return 0;
@@ -389,7 +393,7 @@ public class PythonVersion extends Version {
         return Integer.compare(int1, int2);
     }
 
-    private static int compareDevRelease(final Integer dev1, final Integer dev2) {
+    private static int compareDevRelease(@Nullable Integer dev1, @Nullable Integer dev2) {
         if (dev1 == null && dev2 == null) {
             return 0;
         }
@@ -403,7 +407,7 @@ public class PythonVersion extends Version {
         return Integer.compare(dev1, dev2);
     }
 
-    private static int compareLocal(final String local1, final String local2) {
+    private static int compareLocal(@Nullable String local1, @Nullable String local2) {
         if (local1 == null && local2 == null) {
             return 0;
         }

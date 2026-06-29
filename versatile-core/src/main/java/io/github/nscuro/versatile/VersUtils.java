@@ -18,12 +18,15 @@
  */
 package io.github.nscuro.versatile;
 
+import static java.util.Objects.requireNonNull;
+
 import io.github.nscuro.versatile.spi.InvalidVersionException;
 import io.github.nscuro.versatile.version.KnownVersioningSchemes;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class VersUtils {
 
@@ -43,7 +46,7 @@ public final class VersUtils {
      * @throws InvalidVersionException  When any version in the range is invalid according to the inferred scheme
      * @see <a href="https://docs.github.com/en/rest/security-advisories/global-advisories?apiVersion=2022-11-28#get-a-global-security-advisory">GitHub Security Advisories API documentation</a>
      */
-    public static Vers versFromGhsaRange(final String ecosystem, final String rangeExpr) {
+    public static Vers versFromGhsaRange(String ecosystem, String rangeExpr) {
         final var versBuilder = Vers.builder(schemeFromGhsaEcosystem(ecosystem).orElse(ecosystem));
 
         final String[] constraintExprs = rangeExpr.split(",");
@@ -92,10 +95,10 @@ public final class VersUtils {
      * @throws InvalidVersionException  When any version in the range is invalid according to the inferred scheme
      */
     public static Vers versFromOsvRange(
-            final String type,
-            final String ecosystem,
-            final List<Map.Entry<String, String>> events,
-            final Map<String, Object> databaseSpecific) {
+            String type,
+            String ecosystem,
+            List<Map.Entry<String, String>> events,
+            @Nullable Map<String, Object> databaseSpecific) {
         if (!"ecosystem".equalsIgnoreCase(type) && !"semver".equalsIgnoreCase(type)) {
             throw new IllegalArgumentException("Range type \"%s\" is not supported".formatted(type));
         }
@@ -129,8 +132,9 @@ public final class VersUtils {
             versBuilder.withConstraint(comparator, event.getValue());
         }
 
-        if (databaseSpecific != null && databaseSpecific.get("last_known_affected_version_range") instanceof String) {
-            String lastKnownAffectedRange = (String) databaseSpecific.get("last_known_affected_version_range");
+        if (databaseSpecific != null
+                && databaseSpecific.get("last_known_affected_version_range")
+                        instanceof final String lastKnownAffectedRange) {
             if (lastKnownAffectedRange.startsWith("<=")) {
                 versBuilder.withConstraint(
                         Comparator.LESS_THAN_OR_EQUAL,
@@ -147,7 +151,9 @@ public final class VersUtils {
         // >=0 is equivalent to *
         if (vers.constraints().size() == 1
                 && Comparator.GREATER_THAN_OR_EQUAL == vers.constraints().get(0).comparator()
-                && "0".equals(vers.constraints().get(0).version().toString())) {
+                && "0"
+                        .equals(requireNonNull(vers.constraints().get(0).version())
+                                .toString())) {
             return Vers.builder(vers.scheme())
                     .withConstraint(Comparator.WILDCARD, null)
                     .build();
@@ -157,7 +163,9 @@ public final class VersUtils {
         // >=0|<=X is equivalent to <=X
         if (vers.constraints().size() == 2
                 && Comparator.GREATER_THAN_OR_EQUAL == vers.constraints().get(0).comparator()
-                && "0".equals(vers.constraints().get(0).version().toString())
+                && "0"
+                        .equals(requireNonNull(vers.constraints().get(0).version())
+                                .toString())
                 && Set.of(Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL)
                         .contains(vers.constraints().get(1).comparator())) {
             return Vers.builder(vers.scheme())
@@ -184,11 +192,11 @@ public final class VersUtils {
      * @throws InvalidVersionException  When any version in the range is invalid according to the inferred scheme
      */
     public static Optional<Vers> versFromNvdRange(
-            final String versionStartExcluding,
-            final String versionStartIncluding,
-            final String versionEndExcluding,
-            final String versionEndIncluding,
-            final String exactVersion) {
+            @Nullable String versionStartExcluding,
+            @Nullable String versionStartIncluding,
+            @Nullable String versionEndExcluding,
+            @Nullable String versionEndIncluding,
+            @Nullable String exactVersion) {
 
         // Using 'generic' as versioning scheme for NVD due to lack of package data.
         final var versBuilder = Vers.builder("generic");
@@ -230,7 +238,7 @@ public final class VersUtils {
         return Optional.of(versBuilder.build());
     }
 
-    public static Optional<String> schemeFromGhsaEcosystem(final String ecosystem) {
+    public static Optional<String> schemeFromGhsaEcosystem(String ecosystem) {
         // Can be one of: actions, composer, erlang, go, maven, npm, nuget, other, pip, pub, rubygems, rust.
         return switch (ecosystem.toLowerCase()) {
             case "go" -> Optional.of(KnownVersioningSchemes.SCHEME_GOLANG);
@@ -243,7 +251,7 @@ public final class VersUtils {
         };
     }
 
-    public static Optional<String> schemeFromOsvEcosystem(final String ecosystem) {
+    public static Optional<String> schemeFromOsvEcosystem(String ecosystem) {
         // https://github.com/ossf/osv-schema/blob/main/docs/schema.md#affectedpackage-field
 
         // NB: Linux distros can have an optional ":<RELEASE>" suffix.

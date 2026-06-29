@@ -18,13 +18,15 @@
  */
 package io.github.nscuro.versatile.spi;
 
+import org.jspecify.annotations.Nullable;
+
 public class InvalidVersionException extends IllegalArgumentException {
 
-    public InvalidVersionException(final String version, final String message) {
+    public InvalidVersionException(String version, String message) {
         this(version, message, null);
     }
 
-    public InvalidVersionException(final String version, final String message, final Throwable cause) {
+    public InvalidVersionException(String version, String message, @Nullable Throwable cause) {
         super("Version %s is invalid: %s".formatted(version, message), cause);
     }
 }

@@ -27,7 +27,9 @@ import io.github.nscuro.versatile.version.MavenVersion;
 import io.github.nscuro.versatile.version.NpmVersion;
 import io.github.nscuro.versatile.version.PythonVersion;
 import io.github.nscuro.versatile.version.RpmVersion;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 module io.github.nscuro.versatile.core {
     exports io.github.nscuro.versatile.version;
     exports io.github.nscuro.versatile;
@@ -36,6 +38,7 @@ module io.github.nscuro.versatile.core {
     requires maven.artifact;
     requires packageurl.java;
     requires semver4j;
+    requires transitive org.jspecify;
 
     provides io.github.nscuro.versatile.spi.VersionProvider with
             ApkVersion.Provider,

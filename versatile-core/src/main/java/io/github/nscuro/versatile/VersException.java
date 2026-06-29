@@ -18,13 +18,15 @@
  */
 package io.github.nscuro.versatile;
 
+import org.jspecify.annotations.Nullable;
+
 public class VersException extends RuntimeException {
 
-    protected VersException(final String message) {
+    protected VersException(@Nullable String message) {
         this(message, null);
     }
 
-    protected VersException(final String message, final Throwable cause) {
+    protected VersException(@Nullable String message, @Nullable Throwable cause) {
         super(message, cause);
     }
 }

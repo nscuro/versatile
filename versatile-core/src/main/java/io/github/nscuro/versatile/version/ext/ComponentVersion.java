@@ -18,6 +18,8 @@
  */
 package io.github.nscuro.versatile.version.ext;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -51,7 +53,7 @@ public class ComponentVersion implements Iterable<String>, Comparable<ComponentV
     /**
      * A list of the version parts.
      */
-    private List<String> versionParts;
+    private List<String> versionParts = List.of();
 
     /**
      * Constructor for a empty DependencyVersion.
@@ -78,7 +80,7 @@ public class ComponentVersion implements Iterable<String>, Comparable<ComponentV
      *
      * @param version the version string to parse
      */
-    public final void parseVersion(String version) {
+    public final void parseVersion(@Nullable String version) {
         versionParts = new ArrayList<>();
         if (version != null) {
             // https://github.com/DependencyTrack/dependency-track/issues/1374
@@ -138,7 +140,7 @@ public class ComponentVersion implements Iterable<String>, Comparable<ComponentV
     }
 
     @Override
-    public int compareTo(ComponentVersion version) {
+    public int compareTo(@Nullable ComponentVersion version) {
         if (version == null) {
             return 1;
         }

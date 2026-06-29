@@ -53,11 +53,14 @@
 
         <!-- Dependency Versions -->
         <lib.assertj.version>3.27.7</lib.assertj.version>
+        <lib.error-prone.version>2.50.0</lib.error-prone.version>
         <lib.jackson.version>2.22.0</lib.jackson.version>
         <lib.jmh.version>1.37</lib.jmh.version>
         <lib.json-path.version>3.0.0</lib.json-path.version>
+        <lib.jspecify.version>1.0.0</lib.jspecify.version>
         <lib.junit-jupiter.version>6.1.0</lib.junit-jupiter.version>
         <lib.maven-artifact.version>3.9.16</lib.maven-artifact.version>
+        <lib.nullaway.version>0.13.7</lib.nullaway.version>
         <lib.open-vulnerability-clients.version>9.0.5</lib.open-vulnerability-clients.version>
         <lib.packageurl-java.version>1.5.0</lib.packageurl-java.version>
         <lib.semver4j.version>3.1.0</lib.semver4j.version>
@@ -123,6 +126,12 @@
             </dependency>
 
             <dependency>
+                <groupId>org.jspecify</groupId>
+                <artifactId>jspecify</artifactId>
+                <version>${lib.jspecify.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>io.github.jeremylong</groupId>
                 <artifactId>open-vulnerability-clients</artifactId>
                 <version>${lib.open-vulnerability-clients.version}</version>
@@ -147,7 +156,30 @@
                     <release>21</release>
                     <compilerArgs>
                         <arg>-parameters</arg>
+                        <arg>-XDcompilePolicy=simple</arg>
+                        <arg>--should-stop=ifError=FLOW</arg>
+                        <arg>
+                            -Xplugin:ErrorProne
+                            -XepDisableAllChecks
+                            -Xep:NullAway:ERROR
+                            -XepOpt:NullAway:OnlyNullMarked=true
+                            -XepOpt:NullAway:TreatGeneratedAsUnannotated=true
+                        </arg>
+                        <!-- Required for building with JDK 21. Remove when discontinuing Java 21 support. -->
+                        <arg>-XDaddTypeAnnotationsToSymbol=true</arg>
                     </compilerArgs>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>com.google.errorprone</groupId>
+                            <artifactId>error_prone_core</artifactId>
+                            <version>${lib.error-prone.version}</version>
+                        </path>
+                        <path>
+                            <groupId>com.uber.nullaway</groupId>
+                            <artifactId>nullaway</artifactId>
+                            <version>${lib.nullaway.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
                 <executions>
                     <execution>

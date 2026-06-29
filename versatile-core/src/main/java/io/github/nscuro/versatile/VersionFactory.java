@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
+import org.jspecify.annotations.Nullable;
 
 /**
  * @since 0.8.0
@@ -37,7 +38,7 @@ public class VersionFactory {
 
     private VersionFactory() {}
 
-    public static Version forScheme(final String scheme, final String versionStr) {
+    public static Version forScheme(String scheme, String versionStr) {
         VersionProvider provider = PROVIDER_BY_SCHEME.computeIfAbsent(scheme, VersionFactory::findProviderForScheme);
         if (provider != null) {
             return provider.getVersion(scheme, versionStr);
@@ -53,7 +54,7 @@ public class VersionFactory {
         throw new NoSuchElementException("No provider found for scheme: %s".formatted(scheme));
     }
 
-    private static VersionProvider findProviderForScheme(final String scheme) {
+    private static @Nullable VersionProvider findProviderForScheme(String scheme) {
         return ServiceLoader.load(VersionProvider.class).stream()
                 .map(ServiceLoader.Provider::get)
                 .filter(provider -> provider.supportsScheme(scheme))
