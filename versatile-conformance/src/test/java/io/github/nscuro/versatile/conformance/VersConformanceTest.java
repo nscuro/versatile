@@ -100,7 +100,7 @@ class VersConformanceTest {
                 });
     }
 
-    void executeTest(final VersTest versTest) {
+    void executeTest(VersTest versTest) {
         switch (versTest.getTestType()) {
             case COMPARISON -> testComparison(versTest);
             case CONTAINMENT -> testContainment(versTest);
@@ -112,7 +112,7 @@ class VersConformanceTest {
     }
 
     @SuppressWarnings("unchecked")
-    void testComparison(final VersTest versTest) {
+    void testComparison(VersTest versTest) {
         assertThat(versTest.getAdditionalProperties()).isNotNull();
 
         final var inputObject =
@@ -153,7 +153,7 @@ class VersConformanceTest {
     }
 
     @SuppressWarnings("unchecked")
-    void testContainment(final VersTest versTest) {
+    void testContainment(VersTest versTest) {
         assertThat(versTest.getAdditionalProperties()).isNotNull();
 
         final var inputObject =
@@ -175,7 +175,7 @@ class VersConformanceTest {
     }
 
     @SuppressWarnings("unchecked")
-    void testParse(final VersTest versTest) {
+    void testParse(VersTest versTest) {
         assertThat(versTest.getAdditionalProperties()).isNotNull();
 
         final var input = (String) versTest.getAdditionalProperties().get("input");
@@ -204,7 +204,7 @@ class VersConformanceTest {
     }
 
     @SuppressWarnings("unchecked")
-    void testEquality(final VersTest versTest) {
+    void testEquality(VersTest versTest) {
         assertThat(versTest.getAdditionalProperties()).isNotNull();
 
         final var inputObject =
@@ -232,7 +232,7 @@ class VersConformanceTest {
     }
 
     @SuppressWarnings("unchecked")
-    void testRoundtrip(final VersTest versTest) {
+    void testRoundtrip(VersTest versTest) {
         assertThat(versTest.getAdditionalProperties()).isNotNull();
 
         final var inputObject =

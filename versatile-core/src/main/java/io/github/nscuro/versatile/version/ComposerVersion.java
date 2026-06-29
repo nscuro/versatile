@@ -26,6 +26,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 
 /**
  * @see <a href="https://github.com/composer/semver/blob/main/src/VersionParser.php">Composer VersionParser</a>
@@ -80,24 +81,19 @@ public class ComposerVersion extends Version {
             Pattern.compile("@(?:stable|RC|beta|alpha|dev)$", Pattern.CASE_INSENSITIVE);
     private static final Pattern METADATA_PATTERN = Pattern.compile("^([^,\\s+]++)\\+\\S++$");
 
-    private final String branchName;
+    private final @Nullable String branchName;
     private final String[] originalComponents;
     private final long[] numericComponents;
     private final Stability stability;
-    private final String stabilityNumDisplay;
+    private final @Nullable String stabilityNumDisplay;
     private final int[] stabilityNumbers;
     private final boolean isDev;
     private final String normalizedString;
 
-    ComposerVersion(final String versionStr) {
+    ComposerVersion(String versionStr) {
         super(SCHEME_COMPOSER, versionStr);
 
-        if (versionStr == null || versionStr.isEmpty()) {
-            throw new InvalidVersionException(versionStr, "Version must not be empty");
-        }
-
         String version = versionStr.trim();
-
         if (version.isEmpty()) {
             throw new InvalidVersionException(versionStr, "Version must not be empty");
         }

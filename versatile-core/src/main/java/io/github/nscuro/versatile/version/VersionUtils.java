@@ -18,6 +18,8 @@
  */
 package io.github.nscuro.versatile.version;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * @since 0.9.0
  */
@@ -33,7 +35,7 @@ final class VersionUtils {
         return isAsciiDigit(c) || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '-';
     }
 
-    static boolean isAsciiAlphaNumeric(String str) {
+    static boolean isAsciiAlphaNumeric(@Nullable String str) {
         if (str == null || str.isEmpty()) {
             return false;
         }
@@ -47,7 +49,7 @@ final class VersionUtils {
         return true;
     }
 
-    static boolean isAsciiNumeric(String str) {
+    static boolean isAsciiNumeric(@Nullable String str) {
         if (str == null || str.isEmpty()) {
             return false;
         }

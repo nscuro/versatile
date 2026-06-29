@@ -28,6 +28,7 @@ import io.github.nscuro.versatile.spi.Version;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 /**
  * @see <a href="https://github.com/golang/mod/blob/v0.12.0/semver/semver.go">Go Modules semantic version implementation</a>
@@ -48,9 +49,9 @@ public class GoVersion extends Version {
     private final String major;
     private final String minor;
     private final String patch;
-    private final String shortV;
-    private final String prerelease;
-    private final String build;
+    private final @Nullable String shortV;
+    private final @Nullable String prerelease;
+    private final @Nullable String build;
 
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L172-L225
     GoVersion(final String versionStr) {
@@ -183,16 +184,16 @@ public class GoVersion extends Version {
         return patch;
     }
 
-    public String prerelease() {
+    public @Nullable String prerelease() {
         return prerelease;
     }
 
-    public String build() {
+    public @Nullable String build() {
         return build;
     }
 
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L227-L242
-    private static Map.Entry<String, String> parseInt(final String version) {
+    private static Map.@Nullable Entry<String, String> parseInt(String version) {
         if (!isAsciiDigit(version.charAt(0))) {
             return null;
         }
@@ -210,7 +211,7 @@ public class GoVersion extends Version {
     }
 
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L244-L270
-    private static Map.Entry<String, String> parsePrerelease(final String version) {
+    private static Map.@Nullable Entry<String, String> parsePrerelease(String version) {
         if (!version.startsWith("-")) {
             return null;
         }
@@ -240,7 +241,7 @@ public class GoVersion extends Version {
     }
 
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L272-L294
-    private static Map.Entry<String, String> parseBuild(final String version) {
+    private static Map.@Nullable Entry<String, String> parseBuild(String version) {
         if (!version.startsWith("+")) {
             return null;
         }
@@ -270,7 +271,7 @@ public class GoVersion extends Version {
     }
 
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L333-L393
-    private int comparePrerelease(String x, String y) {
+    private int comparePrerelease(@Nullable String x, @Nullable String y) {
         if (Objects.equals(x, y)) {
             return 0;
         }
@@ -326,17 +327,17 @@ public class GoVersion extends Version {
     }
 
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L296-L298
-    private static boolean isIdentChar(final char versionChar) {
+    private static boolean isIdentChar(char versionChar) {
         return isAsciiAlphaNumeric(String.valueOf(versionChar));
     }
 
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L308-L314
-    private static boolean isNum(final String v) {
+    private static boolean isNum(String v) {
         return isAsciiNumeric(v);
     }
 
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L300-L306
-    private static boolean isBadNum(final String version) {
+    private static boolean isBadNum(String version) {
         int i = 0;
         for (
         /* i */ ; i < version.length() && isAsciiDigit(version.charAt(i)); i++)

@@ -18,26 +18,26 @@
  */
 package io.github.nscuro.versatile;
 
+import static java.util.Objects.requireNonNull;
+
 import io.github.nscuro.versatile.spi.Version;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 
 public class Constraint implements Comparable<Constraint> {
 
     private final String scheme;
     private final Comparator comparator;
-    private final Version version;
+    private final @Nullable Version version;
 
-    Constraint(final String scheme, final Comparator comparator, final Version version) {
-        if (scheme == null) {
-            throw new VersException("scheme must not be null");
-        }
-        if (comparator == null) {
-            throw new VersException("comparator must not be null");
-        }
+    Constraint(String scheme, Comparator comparator, @Nullable Version version) {
+        requireNonNull(scheme, "scheme must not be null");
+        requireNonNull(comparator, "comparator must not be null");
+
         if (comparator == Comparator.WILDCARD && version != null) {
             throw new VersException("comparator %s is not allowed with version".formatted(comparator));
         } else if (comparator != Comparator.WILDCARD && version == null) {
@@ -48,7 +48,7 @@ public class Constraint implements Comparable<Constraint> {
         this.version = version;
     }
 
-    static Constraint parse(final String scheme, final String constraintStr) {
+    static Constraint parse(String scheme, String constraintStr) {
         final Comparator comparator;
         if (constraintStr.startsWith("<=")) {
             comparator = Comparator.LESS_THAN_OR_EQUAL;
@@ -76,30 +76,31 @@ public class Constraint implements Comparable<Constraint> {
         return new Constraint(scheme, comparator, version);
     }
 
-    boolean matches(final Version version) {
-        if (version == null) {
-            throw new VersException("version must not be null");
-        }
+    boolean matches(Version version) {
+        requireNonNull(version, "version must not be null");
+
         if (!Objects.equals(this.scheme, version.scheme())) {
             throw new VersException("cannot evaluate constraint of scheme %s against version of scheme %s"
                     .formatted(this.scheme, version.scheme()));
         }
 
         return switch (comparator) {
-            case LESS_THAN -> this.version.compareTo(version) > 0;
-            case LESS_THAN_OR_EQUAL -> this.version.compareTo(version) >= 0;
-            case GREATER_THAN_OR_EQUAL -> this.version.compareTo(version) <= 0;
-            case GREATER_THAN -> this.version.compareTo(version) < 0;
-            case EQUAL -> this.version.compareTo(version) == 0;
-            case NOT_EQUAL -> this.version.compareTo(version) != 0;
+            case LESS_THAN -> requireNonNull(this.version).compareTo(version) > 0;
+            case LESS_THAN_OR_EQUAL -> requireNonNull(this.version).compareTo(version) >= 0;
+            case GREATER_THAN_OR_EQUAL -> requireNonNull(this.version).compareTo(version) <= 0;
+            case GREATER_THAN -> requireNonNull(this.version).compareTo(version) < 0;
+            case EQUAL -> requireNonNull(this.version).compareTo(version) == 0;
+            case NOT_EQUAL -> requireNonNull(this.version).compareTo(version) != 0;
             case WILDCARD -> true;
         };
     }
 
     /**
      * Inverts the comparator of the constraint e.g. {@code < 1.3} becomes {@code >= 1.3}
+     *
      * @return a new inverted constraint and null if current comparator is a wildcard: *
      */
+    @Nullable
     Constraint invert() {
         return switch (comparator) {
             case LESS_THAN -> new Constraint(scheme, Comparator.GREATER_THAN_OR_EQUAL, version);
@@ -112,7 +113,7 @@ public class Constraint implements Comparable<Constraint> {
         };
     }
 
-    private static String maybeUrlDecode(final String version) {
+    private static String maybeUrlDecode(String version) {
         if (version.contains("%")) {
             return URLDecoder.decode(version, StandardCharsets.UTF_8);
         }
@@ -121,7 +122,14 @@ public class Constraint implements Comparable<Constraint> {
     }
 
     @Override
-    public int compareTo(final Constraint other) {
+    public int compareTo(Constraint other) {
+        // NB: Only a wildcard constraint has no version.
+        // A wildcard is valid only as the sole constraint of a vers range,
+        // so this branch is never reached for a valid vers.
+        if (this.version == null || other.version == null) {
+            return Boolean.compare(this.version != null, other.version != null);
+        }
+
         return this.version.compareTo(other.version);
     }
 
@@ -133,7 +141,7 @@ public class Constraint implements Comparable<Constraint> {
         return comparator;
     }
 
-    public Version version() {
+    public @Nullable Version version() {
         return version;
     }
 
@@ -146,9 +154,9 @@ public class Constraint implements Comparable<Constraint> {
 
         if (comparator == Comparator.EQUAL) {
             // Operator is omitted for equality.
-            return URLEncoder.encode(version().toString(), StandardCharsets.UTF_8);
+            return URLEncoder.encode(requireNonNull(version).toString(), StandardCharsets.UTF_8);
         }
 
-        return comparator.operator() + URLEncoder.encode(version.toString(), StandardCharsets.UTF_8);
+        return comparator.operator() + URLEncoder.encode(requireNonNull(version).toString(), StandardCharsets.UTF_8);
     }
 }

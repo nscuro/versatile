@@ -20,11 +20,13 @@ package io.github.nscuro.versatile.version;
 
 import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_NUGET;
 import static io.github.nscuro.versatile.version.VersionUtils.isAsciiNumeric;
+import static java.util.Objects.requireNonNull;
 
 import io.github.nscuro.versatile.spi.InvalidVersionException;
 import io.github.nscuro.versatile.spi.Version;
 import java.util.Locale;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 /**
  * @see <a href="https://github.com/NuGet/NuGet.Client/blob/dev/src/NuGet.Core/NuGet.Versioning/VersionComparer.cs">NuGet VersionComparer</a>
@@ -43,14 +45,14 @@ public class NugetVersion extends Version {
     private final int minor;
     private final int patch;
     private final int revision;
-    private final String[] releaseLabels;
-    private final String metadata;
+    private final String @Nullable [] releaseLabels;
+    private final @Nullable String metadata;
     private final String normalizedString;
 
     NugetVersion(final String versionStr) {
         super(SCHEME_NUGET, versionStr);
 
-        if (versionStr == null || versionStr.isEmpty()) {
+        if (versionStr.isEmpty()) {
             throw new InvalidVersionException(versionStr, "Version must not be empty");
         }
 
@@ -105,7 +107,7 @@ public class NugetVersion extends Version {
         this.normalizedString = normalize(prerelease);
     }
 
-    private String normalize(String prerelease) {
+    private String normalize(@Nullable String prerelease) {
         final var sb = new StringBuilder()
                 .append(this.major)
                 .append('.')
@@ -174,14 +176,17 @@ public class NugetVersion extends Version {
                 return 0;
             }
 
-            return compareReleaseLabels(this.releaseLabels, o.releaseLabels);
+            return compareReleaseLabels(this.releaseLabels, requireNonNull(o.releaseLabels));
         }
 
         throw new IllegalArgumentException("%s can only be compared with its own type, but got %s"
                 .formatted(this.getClass().getName(), other.getClass().getName()));
     }
 
-    private static int compareReleaseLabels(final String[] a, final String[] b) {
+    private static int compareReleaseLabels(String[] a, String[] b) {
+        requireNonNull(a, "a must not be null");
+        requireNonNull(b, "b must not be null");
+
         final int len = Math.max(a.length, b.length);
         for (int i = 0; i < len; i++) {
             if (i >= a.length) {

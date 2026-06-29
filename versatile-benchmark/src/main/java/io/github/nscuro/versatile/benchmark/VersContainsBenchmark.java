@@ -20,6 +20,7 @@ package io.github.nscuro.versatile.benchmark;
 
 import io.github.nscuro.versatile.Vers;
 import java.util.concurrent.TimeUnit;
+import org.jspecify.annotations.Nullable;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -41,7 +42,7 @@ import org.openjdk.jmh.annotations.Warmup;
 public class VersContainsBenchmark {
 
     @Param({"SINGLE", "RANGE"})
-    private String shape;
+    private @Nullable String shape;
 
     @Param({
         "apk",

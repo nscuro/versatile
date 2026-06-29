@@ -18,15 +18,18 @@
  */
 package io.github.nscuro.versatile;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
 
 import io.github.nscuro.versatile.spi.Version;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A version range as defined in the vers specification.
@@ -38,11 +41,10 @@ import java.util.stream.Stream;
 public record Vers(String scheme, List<Constraint> constraints) {
 
     public Vers {
-        if (scheme == null) {
-            throw new VersException("versioning scheme must not be null");
-        }
-        if (constraints == null || constraints.isEmpty()) {
-            throw new VersException("constraints must not be null or empty");
+        requireNonNull(scheme, "scheme must not be null");
+        requireNonNull(constraints, "constraints must not be null");
+        if (constraints.isEmpty()) {
+            throw new VersException("constraints must not be empty");
         }
     }
 
@@ -84,8 +86,9 @@ public record Vers(String scheme, List<Constraint> constraints) {
         return parse(versString, /* strict */ false);
     }
 
-    private static Vers parse(final String versString, final boolean strict) {
-        if (versString == null || versString.isBlank()) {
+    private static Vers parse(String versString, boolean strict) {
+        requireNonNull(versString, "versString must not be null");
+        if (versString.isBlank()) {
             throw new VersException("vers string must not be null or blank");
         }
         if (strict && containsWhitespace(versString)) {
@@ -189,7 +192,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
         return versList;
     }
 
-    public static Builder builder(final String versioningScheme) {
+    public static Builder builder(String versioningScheme) {
         return new Builder(versioningScheme);
     }
 
@@ -202,7 +205,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
     }
 
     public boolean isWildcard() {
-        return constraints.size() == 1 && constraints.get(0).comparator() == Comparator.WILDCARD;
+        return constraints.size() == 1 && constraints.getFirst().comparator() == Comparator.WILDCARD;
     }
 
     public boolean contains(final String versionStr) {
@@ -233,14 +236,14 @@ public record Vers(String scheme, List<Constraint> constraints) {
             if (comparator == Comparator.EQUAL
                     || comparator == Comparator.LESS_THAN_OR_EQUAL
                     || comparator == Comparator.GREATER_THAN_OR_EQUAL) {
-                if (testedVersion.equals(constraint.version())) {
+                if (testedVersion.equals(requireNonNull(constraint.version()))) {
                     equalityMatches = true;
                 }
             }
             // If the "tested version" is equal to any of the constraint version where
             // the constraint comparator is "!=" then the "tested version" is NOT in the range.
             // Check is finished.
-            else if (comparator == Comparator.NOT_EQUAL && testedVersion.equals(constraint.version())) {
+            else if (comparator == Comparator.NOT_EQUAL && testedVersion.equals(requireNonNull(constraint.version()))) {
                 invertedEqualityMatches = true;
             }
 
@@ -292,7 +295,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
             // is IN the range. Check is finished.
             if (i == 0
                     && isUpperBoundConstraint(currConstraint)
-                    && testedVersion.compareTo(currConstraint.version()) < 0) {
+                    && testedVersion.compareTo(requireNonNull(currConstraint.version())) < 0) {
                 return true;
             }
 
@@ -300,8 +303,8 @@ public record Vers(String scheme, List<Constraint> constraints) {
             // is greater than the current version and the "tested version" is less than the next version then
             // the "tested version" is IN the range. Check is finished.
             if (isLowerBoundConstraint(currConstraint) && isUpperBoundConstraint(nextConstraint)) {
-                if (testedVersion.compareTo(currConstraint.version()) > 0
-                        && testedVersion.compareTo(nextConstraint.version()) < 0) {
+                if (testedVersion.compareTo(requireNonNull(currConstraint.version())) > 0
+                        && testedVersion.compareTo(requireNonNull(nextConstraint.version())) < 0) {
                     return true;
                 }
             }
@@ -323,7 +326,8 @@ public record Vers(String scheme, List<Constraint> constraints) {
         // If the last constraint's comparator is ">" or >=" and the "tested version"
         // is greater than its version then the "tested version" is IN the range.
         final Constraint lastConstraint = remainingConstraints.getLast();
-        if (isLowerBoundConstraint(lastConstraint) && testedVersion.compareTo(lastConstraint.version()) > 0) {
+        if (isLowerBoundConstraint(lastConstraint)
+                && testedVersion.compareTo(requireNonNull(lastConstraint.version())) > 0) {
             return true;
         }
 
@@ -580,10 +584,10 @@ public record Vers(String scheme, List<Constraint> constraints) {
             for (var j = 0; j < vers2.constraints().size(); j = j + 2) {
 
                 if (boundsOverlap(
-                        vers1.constraints().get(i).version(),
-                        vers1.constraints().get(i + 1).version(),
-                        vers2.constraints().get(j).version(),
-                        vers2.constraints().get(j + 1).version())) {
+                        requireNonNull(vers1.constraints().get(i).version()),
+                        requireNonNull(vers1.constraints().get(i + 1).version()),
+                        requireNonNull(vers2.constraints().get(j).version()),
+                        requireNonNull(vers2.constraints().get(j + 1).version()))) {
                     return true;
                 }
             }
@@ -600,7 +604,10 @@ public record Vers(String scheme, List<Constraint> constraints) {
         if (isWildcard()) {
             throw new VersException("Can not invert wildcard vers");
         }
-        var inverted = constraints.stream().map(Constraint::invert).toList();
+        final List<Constraint> inverted = constraints.stream()
+                .map(Constraint::invert)
+                .filter(Objects::nonNull)
+                .toList();
         return new Vers(this.scheme(), inverted).simplify();
     }
 
@@ -612,19 +619,19 @@ public record Vers(String scheme, List<Constraint> constraints) {
         return "vers:%s/%s".formatted(schemeStr, constraintsStr);
     }
 
-    private static boolean isLowerBoundConstraint(final Constraint constraint) {
+    private static boolean isLowerBoundConstraint(@Nullable Constraint constraint) {
         return constraint != null && isLowerBoundComparator(constraint.comparator());
     }
 
-    private static boolean isUpperBoundConstraint(final Constraint constraint) {
+    private static boolean isUpperBoundConstraint(@Nullable Constraint constraint) {
         return constraint != null && isUpperBoundComparator(constraint.comparator());
     }
 
-    private static boolean isLowerBoundComparator(final Comparator comparator) {
+    private static boolean isLowerBoundComparator(Comparator comparator) {
         return comparator == Comparator.GREATER_THAN || comparator == Comparator.GREATER_THAN_OR_EQUAL;
     }
 
-    private static boolean isUpperBoundComparator(final Comparator comparator) {
+    private static boolean isUpperBoundComparator(Comparator comparator) {
         return comparator == Comparator.LESS_THAN || comparator == Comparator.LESS_THAN_OR_EQUAL;
     }
 
@@ -637,7 +644,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
                 .toList();
 
         for (var constraint : equalityConstraints) {
-            if (vers2.contains(constraint.version().toString())) {
+            if (vers2.contains(requireNonNull(constraint.version()).toString())) {
                 return true;
             }
         }
@@ -652,7 +659,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
             // "vers:generic/<1.2.1|>1.3.0"
             // if the version is larger than any of the versions of vers2, than we have an overlap
             for (var constraint2 : vers2.constraints()) {
-                if (first.version().compareTo(constraint2.version()) > 0) {
+                if (requireNonNull(first.version()).compareTo(requireNonNull(constraint2.version())) > 0) {
                     return true;
                 }
             }
@@ -664,7 +671,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
             // "vers:generic/>1.2.9|<1.3.0", "vers:generic/<1.3.0"
             // if the version is smaller than any of the versions of vers2, than we have an overlap
             for (var constraint2 : vers2.constraints()) {
-                if (last.version().compareTo(constraint2.version()) < 0) {
+                if (requireNonNull(last.version()).compareTo(requireNonNull(constraint2.version())) < 0) {
                     return true;
                 }
             }
@@ -687,7 +694,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
             return constraints;
         }
 
-        var first = constraints.get(0);
+        var first = constraints.getFirst();
         if (isUpperBoundConstraint(first)) {
             constraints = constraints.stream().filter(c -> !c.equals(first)).toList();
         }
@@ -696,7 +703,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
             return constraints;
         }
 
-        var last = constraints.get(constraints.size() - 1);
+        var last = constraints.getLast();
         if (isLowerBoundConstraint(last)) {
             constraints = constraints.stream().filter(c -> !c.equals(last)).toList();
         }
@@ -718,27 +725,24 @@ public record Vers(String scheme, List<Constraint> constraints) {
         private final String scheme;
         private final List<Constraint> constraints = new ArrayList<>();
 
-        private Builder(final String scheme) {
+        private Builder(String scheme) {
             this.scheme = scheme;
         }
 
-        public Constraint createConstraint(final Comparator comparator, final String version) {
+        public Constraint createConstraint(Comparator comparator, String version) {
             return new Constraint(scheme, comparator, VersionFactory.forScheme(scheme, version));
         }
 
-        public Constraint parseConstraint(final String constraintStr) {
+        public Constraint parseConstraint(String constraintStr) {
             return Constraint.parse(scheme, constraintStr);
         }
 
-        public Builder withConstraint(final Constraint constraint) {
-            if (constraint == null) {
-                throw new VersException("constraint must not be null");
-            }
-            constraints.add(constraint);
+        public Builder withConstraint(Constraint constraint) {
+            constraints.add(requireNonNull(constraint, "constraint cannot be null"));
             return this;
         }
 
-        public Builder withConstraint(final Comparator comparator, final String versionStr) {
+        public Builder withConstraint(Comparator comparator, @Nullable String versionStr) {
             if (versionStr == null) {
                 constraints.add(new Constraint(scheme, comparator, null));
             } else {
@@ -748,7 +752,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
             return this;
         }
 
-        public Builder withConstraint(final String constraintStr) {
+        public Builder withConstraint(String constraintStr) {
             constraints.add(parseConstraint(constraintStr));
             return this;
         }
@@ -758,9 +762,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
         }
 
         public Vers build() {
-            if (scheme == null) {
-                throw new VersException("scheme must not be null");
-            }
+            requireNonNull(scheme, "scheme must not be null");
             if (constraints.isEmpty()) {
                 throw new VersException("constraints must not be empty");
             }

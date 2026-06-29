@@ -135,6 +135,15 @@ class VersTest {
         assertThat(vers.contains("6.6.6")).isFalse();
     }
 
+    @Test
+    void testBuildWildcardWithOtherConstraintFails() {
+        assertThatThrownBy(() -> Vers.builder("maven")
+                        .withConstraint(Comparator.WILDCARD, null)
+                        .withConstraint(Comparator.GREATER_THAN_OR_EQUAL, "1.2.3")
+                        .build())
+                .isInstanceOf(VersException.class);
+    }
+
     @ParameterizedTest
     @CsvSource(
             value = {

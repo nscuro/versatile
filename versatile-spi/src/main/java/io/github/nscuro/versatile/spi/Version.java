@@ -18,6 +18,8 @@
  */
 package io.github.nscuro.versatile.spi;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.Objects;
 
 public abstract class Version implements Comparable<Version> {
@@ -25,9 +27,9 @@ public abstract class Version implements Comparable<Version> {
     protected final String scheme;
     protected final String versionStr;
 
-    protected Version(final String scheme, final String versionStr) {
-        this.scheme = scheme;
-        this.versionStr = versionStr;
+    protected Version(String scheme, String versionStr) {
+        this.scheme = requireNonNull(scheme, "scheme must not be null");
+        this.versionStr = requireNonNull(versionStr, "versionStr must not be null");
     }
 
     public abstract boolean isStable();
@@ -42,7 +44,7 @@ public abstract class Version implements Comparable<Version> {
     }
 
     @Override
-    public boolean equals(final Object o) {
+    public boolean equals(Object o) {
         if (this == o) {
             return true;
         }

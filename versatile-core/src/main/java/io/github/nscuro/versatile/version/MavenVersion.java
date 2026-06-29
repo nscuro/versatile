@@ -44,7 +44,7 @@ public class MavenVersion extends Version {
 
     private final ArtifactVersion delegate;
 
-    MavenVersion(final String versionStr) {
+    MavenVersion(String versionStr) {
         super(SCHEME_MAVEN, versionStr);
         this.delegate = new DefaultArtifactVersion(versionStr);
     }
@@ -65,7 +65,7 @@ public class MavenVersion extends Version {
      * {@inheritDoc}
      */
     @Override
-    public int compareTo(final Version other) {
+    public int compareTo(Version other) {
         if (other instanceof final MavenVersion otherVersion) {
             return this.delegate.compareTo(otherVersion.delegate);
         }
@@ -75,7 +75,7 @@ public class MavenVersion extends Version {
     }
 
     @Override
-    public boolean equals(final Object other) {
+    public boolean equals(Object other) {
         if (this == other) {
             return true;
         }
