@@ -18,8 +18,6 @@
  */
 package io.github.nscuro.versatile;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.nscuro.versatile.spi.InvalidVersionException;
 import io.github.nscuro.versatile.version.KnownVersioningSchemes;
 import java.util.List;
@@ -105,6 +103,7 @@ public final class VersUtils {
 
         final var scheme = schemeFromOsvEcosystem(ecosystem).orElse(ecosystem);
         final var versBuilder = Vers.builder(scheme);
+        int constraintCount = 0;
 
         for (int i = 0; i < events.size(); i++) {
             final Map.Entry<String, String> event = events.get(i);
@@ -119,17 +118,24 @@ public final class VersUtils {
                                     "Invalid event \"%s\" at position %d".formatted(event.getKey(), i));
                     };
 
+            if (comparator == Comparator.GREATER_THAN_OR_EQUAL && "0".equals(event.getValue())) {
+                // introduced=0 is OSV's special value for "before all versions",
+                // see https://ossf.github.io/osv-schema/#special-values
+                continue;
+            }
+
             if ("deb".equals(scheme)
                     && (comparator == Comparator.LESS_THAN || comparator == Comparator.LESS_THAN_OR_EQUAL)
                     && Set.of("<end-of-life>", "<unfixed>").contains(event.getValue())) {
                 // Some ranges in the Debian ecosystem use these special values for their upper bound,
                 // to signal that all versions are affected. As they are not valid versions, we skip them.
                 //
-                // introduced=0, fixed=<unfixed> is equivalent to >=0.
+                // introduced=0, fixed=<unfixed> is equivalent to *.
                 continue;
             }
 
             versBuilder.withConstraint(comparator, event.getValue());
+            constraintCount++;
         }
 
         if (databaseSpecific != null
@@ -139,41 +145,22 @@ public final class VersUtils {
                 versBuilder.withConstraint(
                         Comparator.LESS_THAN_OR_EQUAL,
                         lastKnownAffectedRange.replaceFirst("<=", "").trim());
+                constraintCount++;
             } else if (lastKnownAffectedRange.startsWith("<")) {
                 versBuilder.withConstraint(
                         Comparator.LESS_THAN,
                         lastKnownAffectedRange.replaceFirst("<", "").trim());
+                constraintCount++;
             }
         }
 
-        final Vers vers = versBuilder.build();
-
-        // >=0 is equivalent to *
-        if (vers.constraints().size() == 1
-                && Comparator.GREATER_THAN_OR_EQUAL == vers.constraints().get(0).comparator()
-                && "0"
-                        .equals(requireNonNull(vers.constraints().get(0).version())
-                                .toString())) {
-            return Vers.builder(vers.scheme())
+        if (constraintCount == 0) {
+            return Vers.builder(scheme)
                     .withConstraint(Comparator.WILDCARD, null)
                     .build();
         }
 
-        // >=0|<X is equivalent to <X
-        // >=0|<=X is equivalent to <=X
-        if (vers.constraints().size() == 2
-                && Comparator.GREATER_THAN_OR_EQUAL == vers.constraints().get(0).comparator()
-                && "0"
-                        .equals(requireNonNull(vers.constraints().get(0).version())
-                                .toString())
-                && Set.of(Comparator.LESS_THAN, Comparator.LESS_THAN_OR_EQUAL)
-                        .contains(vers.constraints().get(1).comparator())) {
-            return Vers.builder(vers.scheme())
-                    .withConstraint(vers.constraints().get(1))
-                    .build();
-        }
-
-        return vers;
+        return versBuilder.build();
     }
 
     /**

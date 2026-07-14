@@ -77,7 +77,18 @@ class VersUtilsTest {
                 arguments(
                         List.of(Map.entry("introduced", "4.5.6")),
                         Map.of("last_known_affected_version_range", "<7.8.9"),
-                        "vers:other/>=4.5.6|<7.8.9"));
+                        "vers:other/>=4.5.6|<7.8.9"),
+                arguments(List.of(Map.entry("introduced", "0")), null, "vers:other/*"),
+                arguments(
+                        List.of(Map.entry("introduced", "0"), Map.entry("fixed", "3.2.1")), null, "vers:other/<3.2.1"),
+                arguments(
+                        List.of(Map.entry("introduced", "0"), Map.entry("last_affected", "3.2.1")),
+                        null,
+                        "vers:other/<=3.2.1"),
+                arguments(
+                        List.of(Map.entry("introduced", "0")),
+                        Map.of("last_known_affected_version_range", "<7.8.9"),
+                        "vers:other/<7.8.9"));
     }
 
     @ParameterizedTest
@@ -88,6 +99,19 @@ class VersUtilsTest {
             final String expectedVers) {
         assertThat(versFromOsvRange("ecosystem", "other", events, databaseSpecific))
                 .hasToString(expectedVers);
+    }
+
+    @Test
+    void testVersFromOsvRangeWithGoPseudoVersion() {
+        final Vers vers = versFromOsvRange(
+                "SEMVER",
+                "Go",
+                List.of(Map.entry("introduced", "0"), Map.entry("fixed", "0.0.0-20220412211240-33da011f77ad")),
+                null);
+
+        assertThat(vers).hasToString("vers:golang/<0.0.0-20220412211240-33da011f77ad");
+        assertThat(vers.contains("v0.47.0")).isFalse();
+        assertThat(vers.contains("v0.0.0-20220227234510-4e6760a101f9")).isTrue();
     }
 
     @Test
