@@ -54,7 +54,7 @@
         <!-- Dependency Versions -->
         <lib.assertj.version>3.27.7</lib.assertj.version>
         <lib.error-prone.version>2.50.0</lib.error-prone.version>
-        <lib.jackson.version>2.22.0</lib.jackson.version>
+        <lib.jackson.version>2.22.1</lib.jackson.version>
         <lib.jmh.version>1.37</lib.jmh.version>
         <lib.json-path.version>3.0.0</lib.json-path.version>
         <lib.jspecify.version>1.0.0</lib.jspecify.version>
