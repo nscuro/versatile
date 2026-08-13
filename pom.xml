@@ -62,7 +62,6 @@
         <lib.maven-artifact.version>3.9.16</lib.maven-artifact.version>
         <lib.nullaway.version>0.13.8</lib.nullaway.version>
         <lib.open-vulnerability-clients.version>9.0.6</lib.open-vulnerability-clients.version>
-        <lib.packageurl-java.version>1.5.0</lib.packageurl-java.version>
         <lib.palantir-java-format.version>2.93.0</lib.palantir-java-format.version>
         <lib.semver4j.version>3.1.0</lib.semver4j.version>
         <lib.slf4j.version>2.0.18</lib.slf4j.version>
@@ -78,12 +77,6 @@
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-artifact</artifactId>
                 <version>${lib.maven-artifact.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.github.package-url</groupId>
-                <artifactId>packageurl-java</artifactId>
-                <version>${lib.packageurl-java.version}</version>
             </dependency>
 
             <dependency>

@@ -18,10 +18,6 @@
  */
 package io.github.nscuro.versatile.version;
 
-import static java.util.Objects.requireNonNull;
-
-import com.github.packageurl.MalformedPackageURLException;
-import com.github.packageurl.PackageURL;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
@@ -47,40 +43,6 @@ public final class KnownVersioningSchemes {
     public static final String SCHEME_RPM = "rpm";
 
     private KnownVersioningSchemes() {}
-
-    /**
-     * Attempt to match a given Package URL with any of the versioning schemes known to versatile.
-     *
-     * @param purl The Package URL to match
-     * @return An {@link Optional} containing the matched scheme, otherwise an empty {@link Optional}
-     * @throws IllegalArgumentException When the provided {@code purl} is invalid
-     * @see #fromPurl(PackageURL)
-     * @since 0.9.0
-     */
-    public static Optional<String> fromPurl(String purl) {
-        try {
-            return fromPurl(new PackageURL(purl));
-        } catch (MalformedPackageURLException e) {
-            throw new IllegalArgumentException("The provided purl is invalid: " + purl, e);
-        }
-    }
-
-    /**
-     * Attempt to match a given {@link PackageURL} with any of the versioning schemes known to versatile.
-     *
-     * @param purl The {@link PackageURL} to match
-     * @return An {@link Optional} containing the matched scheme, otherwise an empty {@link Optional}
-     * @see #fromPurlType(String)
-     * @since 0.9.0
-     */
-    public static Optional<String> fromPurl(PackageURL purl) {
-        requireNonNull(purl, "purl must not be null");
-
-        // NB: It may be necessary to inspect more than just the type to
-        // determine the versioning scheme.
-
-        return fromPurlType(purl.getType());
-    }
 
     /**
      * Attempt to match a given PURL type with any of the versioning schemes known to versatile.
