@@ -36,7 +36,6 @@ module io.github.nscuro.versatile.core {
 
     requires io.github.nscuro.versatile.spi;
     requires maven.artifact;
-    requires packageurl.java;
     requires semver4j;
     requires transitive org.jspecify;
 
