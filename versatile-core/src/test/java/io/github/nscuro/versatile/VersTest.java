@@ -149,7 +149,20 @@ class VersTest {
             value = {
                 "vers:pypi/>0.0.0|>=0.0.1|0.0.2|<0.0.3|0.0.4|<0.0.5|>=0.0.6,vers:pypi/>0.0.0|<0.0.5|>=0.0.6",
                 "vers:pypi/>0.0.0|>=0.0.1|0.0.2|0.0.3|0.0.4|<0.0.5|>=0.0.6|!=0.8,vers:pypi/>0.0.0|<0.0.5|>=0.0.6|!=0.8",
-                "vers:pypi/>0.0.0|>=0.0.1|>=0.0.1|0.0.2|0.0.3|0.0.4|<0.0.5|<=0.0.6|!=0.7|8.0|>12|<15.3,vers:pypi/>0.0.0|<=0.0.6|!=0.7|8.0|>12|<15.3"
+                "vers:pypi/>0.0.0|>=0.0.1|>=0.0.1|0.0.2|0.0.3|0.0.4|<0.0.5|<=0.0.6|!=0.7|8.0|>12|<15.3,vers:pypi/>0.0.0|<=0.0.6|!=0.7|8.0|>12|<15.3",
+                // Runs of same-direction bounds must collapse entirely, no matter their length.
+                "vers:generic/>=1|>=2,vers:generic/>=1",
+                "vers:generic/>=1|>=2|>=3,vers:generic/>=1",
+                "vers:generic/>=1|>=2|>=3|>=4,vers:generic/>=1",
+                "vers:generic/>=1|>=2|>=3|>=4|>=5,vers:generic/>=1",
+                "vers:generic/<1|<2,vers:generic/<2",
+                "vers:generic/<1|<2|<3,vers:generic/<3",
+                "vers:generic/<1|<2|<3|<4,vers:generic/<4",
+                "vers:generic/<1|<2|<3|<4|<5,vers:generic/<5",
+                // Runs surrounded by bounds of the opposite direction must not swallow those.
+                "vers:generic/<1|>=2|>=3|<4,vers:generic/<1|>=2|<4",
+                "vers:generic/>=1|2|>=3|<4,vers:generic/>=1|<4",
+                "vers:generic/<1|<2|>=3|<4|<5|>=6,vers:generic/<2|>=3|<5|>=6"
             })
     void testSimplify(final String before, final String after) {
         final Vers vers = Vers.parseLenient(before).simplify();
