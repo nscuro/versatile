@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.github.nscuro.versatile.version.NpmVersion;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -136,6 +137,28 @@ class VersTest {
     }
 
     @Test
+    void testConstraintsAreNotAliased() {
+        final var constraints = new ArrayList<Constraint>();
+        constraints.add(Constraint.parse("generic", ">=1.0.0", /* strict */ false));
+        final Vers vers = new Vers("generic", constraints);
+
+        constraints.add(Constraint.parse("generic", "<2.0.0", /* strict */ false));
+
+        assertThat(vers).hasToString("vers:generic/>=1.0.0");
+        assertThat(vers.constraints()).hasSize(1);
+    }
+
+    @Test
+    void testBuilderReuseDoesNotModifyBuiltVers() {
+        final Vers.Builder builder = Vers.builder("generic").withConstraint(Comparator.GREATER_THAN_OR_EQUAL, "1.0.0");
+        final Vers vers = builder.build();
+
+        builder.withConstraint(Comparator.LESS_THAN, "2.0.0").build();
+
+        assertThat(vers).hasToString("vers:generic/>=1.0.0");
+    }
+
+    @Test
     void testBuildWildcardWithOtherConstraintFails() {
         assertThatThrownBy(() -> Vers.builder("maven")
                         .withConstraint(Comparator.WILDCARD, null)
@@ -162,7 +185,8 @@ class VersTest {
                 // Runs surrounded by bounds of the opposite direction must not swallow those.
                 "vers:generic/<1|>=2|>=3|<4,vers:generic/<1|>=2|<4",
                 "vers:generic/>=1|2|>=3|<4,vers:generic/>=1|<4",
-                "vers:generic/<1|<2|>=3|<4|<5|>=6,vers:generic/<2|>=3|<5|>=6"
+                "vers:generic/<1|<2|>=3|<4|<5|>=6,vers:generic/<2|>=3|<5|>=6",
+                "vers:generic/>=1|<2|>=3|<4,vers:generic/>=1|<2|>=3|<4"
             })
     void testSimplify(final String before, final String after) {
         final Vers vers = Vers.parseLenient(before).simplify();
@@ -179,7 +203,22 @@ class VersTest {
                         List.of("vers:generic/1.2.3", "vers:generic/>=2.0.0|<5.0.0")),
                 arguments(
                         "vers:maven/<0.5.1|>=1.2.3|!=3.2.1|<6.6.6",
-                        List.of("vers:maven/<0.5.1|>=1.2.3", "vers:maven/!=3.2.1", "vers:maven/<6.6.6")),
+                        List.of("vers:maven/<0.5.1", "vers:maven/>=1.2.3|<6.6.6", "vers:maven/!=3.2.1")),
+                arguments("vers:pypi/<1.11.27|>=2.2|<2.2.9", List.of("vers:pypi/<1.11.27", "vers:pypi/>=2.2|<2.2.9")),
+                arguments("vers:npm/<1.0.0|>=2.0.0", List.of("vers:npm/<1.0.0", "vers:npm/>=2.0.0")),
+                arguments(
+                        "vers:npm/<1.0.0|>=2.0.0|<3.0.0|>=4.0.0",
+                        List.of("vers:npm/<1.0.0", "vers:npm/>=2.0.0|<3.0.0", "vers:npm/>=4.0.0")),
+                arguments("vers:generic/<=1.0.0|>2.0.0", List.of("vers:generic/<=1.0.0", "vers:generic/>2.0.0")),
+                arguments("vers:generic/<1|<2|<3", List.of("vers:generic/<3")),
+                arguments("vers:generic/<1|<2|<3|<4", List.of("vers:generic/<4")),
+                arguments("vers:generic/>=1|>=2|>=3", List.of("vers:generic/>=1")),
+                arguments(
+                        "vers:generic/>1.0.0|<2.0.0|>3.0.0",
+                        List.of("vers:generic/>1.0.0|<2.0.0", "vers:generic/>3.0.0")),
+                arguments(
+                        "vers:generic/<1.0.0|2.0.0|>=3.0.0|<4.0.0",
+                        List.of("vers:generic/<1.0.0", "vers:generic/2.0.0", "vers:generic/>=3.0.0|<4.0.0")),
                 arguments(
                         "vers:pypi/>0.0.0|>=0.0.1|0.0.2|<0.0.3|0.0.4|<0.0.5|>=0.0.6",
                         List.of("vers:pypi/>0.0.0|<0.0.5", "vers:pypi/>=0.0.6")),
@@ -199,7 +238,53 @@ class VersTest {
     @MethodSource("testSplitArguments")
     void testSplit(final String inputVers, final List<String> versList) {
         final var parsedVers = Vers.parseLenient(inputVers);
-        assertThat(parsedVers.split().stream().map(Vers::toString)).containsAll(versList);
+        final List<Vers> parts = parsedVers.split();
+        assertThat(parts.stream().map(Vers::toString)).containsExactlyInAnyOrderElementsOf(versList);
+
+        // Verify each part is canonical vers.
+        for (final Vers part : parts) {
+            assertThatNoException().isThrownBy(() -> Vers.parse(part.toString()));
+        }
+    }
+
+    @Test
+    void testSplitRejectsInvalidConstraintSequence() {
+        final Vers vers = new Vers(
+                "generic",
+                List.of(
+                        new Constraint("generic", Comparator.WILDCARD, null),
+                        Constraint.parse("generic", ">=1", /* strict */ false)));
+
+        assertThatThrownBy(vers::split).isInstanceOf(VersException.class);
+    }
+
+    @Test
+    void testSplitIsLossyForInvertedEquality() {
+        final Vers vers = Vers.parseLenient("vers:maven/<0.5.1|>=1.2.3|!=3.2.1|<6.6.6");
+
+        assertThat(vers.contains("3.2.1")).isFalse();
+        assertThat(vers.split().stream().anyMatch(part -> part.contains("3.2.1")))
+                .isTrue();
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+            value = {
+                "vers:pypi/<1.11.27|>=2.2|<2.2.9, 6.0.4",
+                "vers:pypi/<1.11.27|>=2.2|<2.2.9, 2.2.9",
+                "vers:pypi/<1.11.27|>=2.2|<2.2.9, 1.11.27",
+                "vers:pypi/<1.11.27|>=2.2|<2.2.9, 2.2",
+                "vers:pypi/<1.11.27|>=2.2|<2.2.9, 1.0.0",
+                "vers:npm/<1.0.0|>=2.0.0|<3.0.0|>=4.0.0, 3.5.0",
+                "vers:npm/<1.0.0|>=2.0.0|<3.0.0|>=4.0.0, 2.5.0",
+                "vers:npm/<1.0.0|>=2.0.0|<3.0.0|>=4.0.0, 5.0.0",
+                "vers:generic/1.2.3|>=2.0.0|<5.0.0, 9.9.9",
+                "vers:generic/1.2.3|>=2.0.0|<5.0.0, 3.0.0"
+            })
+    void testSplitPreservesContainment(String versStr, String version) {
+        final Vers vers = Vers.parseLenient(versStr);
+        assertThat(vers.split().stream().anyMatch(part -> part.contains(version)))
+                .isEqualTo(vers.contains(version));
     }
 
     @ParameterizedTest

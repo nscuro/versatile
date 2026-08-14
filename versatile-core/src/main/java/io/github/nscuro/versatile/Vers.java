@@ -46,6 +46,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
         if (constraints.isEmpty()) {
             throw new VersException("constraints must not be empty");
         }
+        constraints = List.copyOf(constraints);
     }
 
     /**
@@ -170,25 +171,62 @@ public record Vers(String scheme, List<Constraint> constraints) {
         return new Vers(scheme, constraints).validate();
     }
 
+    /**
+     * Splits this range into sub-ranges of up to 2 constraints each, one per interval.
+     * <p>
+     * Each sub-range covers a distinct interval, is no wider than this range,
+     * and is unbounded only where this range is. Together they cover the same
+     * versions as this range. Splitting is not defined in the vers spec.
+     * <p>
+     * <strong>Note:</strong> {@code !=} constraints become standalone sub-ranges
+     * and thus lose their exclusionary effect.
+     *
+     * @return A {@link List} of sub-ranges.
+     * @throws VersException When the (simplified) range is invalid.
+     */
     public List<Vers> split() {
-        var versSimplified = this.simplify();
-        List<Vers> versList = new ArrayList<>();
-        ArrayList<Constraint> constraintPair = new ArrayList<>();
-        for (var constraint : versSimplified.constraints) {
-            if (constraint.comparator().equals(Comparator.EQUAL)
-                    || constraint.comparator().equals(Comparator.NOT_EQUAL)) {
-                versList.add(Vers.builder(scheme).withConstraint(constraint).build());
+        // Pairing bounds requires no redundant constraints , and validate() ensures
+        // what's left really is an alternating sequence.
+        //
+        // Vers instances constructed via parseLenient or record constructor will not
+        // be validated yet, hence we do it here.
+        final Vers simplified = this.simplify().validate();
+        final var versList = new ArrayList<Vers>();
+        Constraint pendingLowerBound = null;
+
+        for (final Constraint constraint : simplified.constraints) {
+            final Comparator comparator = constraint.comparator();
+
+            // Equality, inverted equality and wildcards are intervals of their own.
+            if (comparator == Comparator.EQUAL
+                    || comparator == Comparator.NOT_EQUAL
+                    || comparator == Comparator.WILDCARD) {
+                versList.add(new Vers(scheme, List.of(constraint)));
+                continue;
+            }
+
+            if (isLowerBoundComparator(comparator)) {
+                // Two consecutive lower bounds mean the preceding interval has no upper bound.
+                if (pendingLowerBound != null) {
+                    versList.add(new Vers(scheme, List.of(pendingLowerBound)));
+                }
+                pendingLowerBound = constraint;
+                continue;
+            }
+
+            // Upper bound: closes the pending interval, or is an interval unbounded at the bottom.
+            if (pendingLowerBound != null) {
+                versList.add(new Vers(scheme, List.of(pendingLowerBound, constraint)));
+                pendingLowerBound = null;
             } else {
-                constraintPair.add(constraint);
-            }
-            if (constraintPair.size() == 2) {
-                versList.add(new Vers(scheme, List.copyOf(constraintPair)));
-                constraintPair.clear();
+                versList.add(new Vers(scheme, List.of(constraint)));
             }
         }
-        if (!constraintPair.isEmpty()) {
-            versList.add(new Vers(scheme, constraintPair));
+
+        if (pendingLowerBound != null) {
+            versList.add(new Vers(scheme, List.of(pendingLowerBound)));
         }
+
         return versList;
     }
 
@@ -198,10 +236,6 @@ public record Vers(String scheme, List<Constraint> constraints) {
 
     public String scheme() {
         return scheme;
-    }
-
-    public List<Constraint> constraints() {
-        return List.copyOf(constraints);
     }
 
     public boolean isWildcard() {
@@ -336,6 +370,12 @@ public record Vers(String scheme, List<Constraint> constraints) {
         return false;
     }
 
+    /**
+     * Simplifies this range by pruning redundant constraints.
+     *
+     * @return A simplified {@link Vers} instance.
+     * @see <a href="https://github.com/package-url/vers-spec/blob/8a5ccc758922b7b3e49cb587f631b31f5ecb3096/docs/specification/how-to-parse.md#constraints-simplification">Constraint simplification specification</a>
+     */
     public Vers simplify() {
         // Start from a list of constraints of comparator and version, sorted by
         // version and where each version occurs only once in any constraint.
@@ -450,6 +490,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
      * Calling it separately is not necessary.
      *
      * @return the validated {@link Vers}.
+     * @throws VersException When this range is invalid.
      */
     public Vers validate() {
         // The special star "*" comparator matches any version.
