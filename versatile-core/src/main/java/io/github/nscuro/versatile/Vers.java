@@ -373,16 +373,24 @@ public record Vers(String scheme, List<Constraint> constraints) {
             final Comparator currComparator = currConstraint.comparator();
             final Comparator nextComparator = nextConstraint.comparator();
 
+            // NB: The spec does not say what happens to the cursor when a constraint is discarded.
+            // Advancing unconditionally leaves runs of same-direction bounds behind
+            // (e.g. ">=1|>=2|>=3" would simplify to the invalid ">=1|>=3"), so the current
+            // and next constraints are re-considered until no more of them can be discarded.
+            boolean discarded = false;
+
             // If current comparator is ">" or ">=" and next comparator is "=", ">" or ">=", discard next constraint.
             if (isLowerBoundComparator(currComparator)
                     && (nextComparator == Comparator.EQUAL || isLowerBoundComparator(nextComparator))) {
                 remainderConstraints.remove(nextIndex);
+                discarded = true;
             }
 
             // If current comparator is "=", "<" or "<=" and next comparator is <" or <=", discard current constraint.
             if ((currComparator == Comparator.EQUAL || isUpperBoundComparator(currComparator))
                     && isUpperBoundComparator(nextComparator)) {
                 remainderConstraints.remove(currIndex);
+                discarded = true;
 
                 // Previous constraint becomes current if it exists.
                 if (currIndex > 0) {
@@ -392,25 +400,36 @@ public record Vers(String scheme, List<Constraint> constraints) {
 
             // If there is a previous constraint:
             if (currIndex > 0) {
-                final Constraint prevConstraint = remainderConstraints.get(currIndex - 1);
-                final Comparator prevComparator = prevConstraint.comparator();
+                final Comparator prevComparator =
+                        remainderConstraints.get(currIndex - 1).comparator();
+
+                // NB: The rules above may have discarded the current constraint, in which case
+                // currIndex now points to a different one. Look up its comparator again instead of
+                // reusing currComparator, which may be stale.
+                final Comparator comparator =
+                        remainderConstraints.get(currIndex).comparator();
 
                 // If previous comparator is ">" or ">=" and current comparator is "=", ">" or ">=",
                 // discard current constraint.
                 if (isLowerBoundComparator(prevComparator)
-                        && (currComparator == Comparator.EQUAL || isLowerBoundComparator(currComparator))) {
+                        && (comparator == Comparator.EQUAL || isLowerBoundComparator(comparator))) {
                     remainderConstraints.remove(currIndex);
+                    discarded = true;
                 }
 
                 // If previous comparator is "=", "<" or "<=" and current comparator is <" or <=",
                 // discard previous constraint.
-                if ((prevComparator == Comparator.EQUAL || isUpperBoundComparator(prevComparator))
-                        && isUpperBoundComparator(currComparator)) {
-                    remainderConstraints.remove(prevConstraint);
+                else if ((prevComparator == Comparator.EQUAL || isUpperBoundComparator(prevComparator))
+                        && isUpperBoundComparator(comparator)) {
+                    remainderConstraints.remove(currIndex - 1);
+                    discarded = true;
+                    currIndex -= 1;
                 }
             }
 
-            currIndex++;
+            if (!discarded) {
+                currIndex++;
+            }
         }
 
         // Concatenate the "unequal constraints" list and the filtered "constraints" list.
