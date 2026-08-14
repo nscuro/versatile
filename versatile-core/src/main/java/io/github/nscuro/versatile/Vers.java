@@ -142,7 +142,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
             throw new VersException("vers string contains no constraints: \"%s\"".formatted(versString));
         }
 
-        Stream<Constraint> constraintStream = Arrays.stream(parts).map(part -> Constraint.parse(scheme, part));
+        Stream<Constraint> constraintStream = Arrays.stream(parts).map(part -> Constraint.parse(scheme, part, strict));
         if (!strict) {
             constraintStream = constraintStream.sorted();
         }
@@ -734,7 +734,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
         }
 
         public Constraint parseConstraint(String constraintStr) {
-            return Constraint.parse(scheme, constraintStr);
+            return Constraint.parse(scheme, constraintStr, /* strict */ false);
         }
 
         public Builder withConstraint(Constraint constraint) {

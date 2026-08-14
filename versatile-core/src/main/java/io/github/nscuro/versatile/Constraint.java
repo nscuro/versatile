@@ -21,9 +21,6 @@ package io.github.nscuro.versatile;
 import static java.util.Objects.requireNonNull;
 
 import io.github.nscuro.versatile.spi.Version;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
@@ -48,7 +45,7 @@ public class Constraint implements Comparable<Constraint> {
         this.version = version;
     }
 
-    static Constraint parse(String scheme, String constraintStr) {
+    static Constraint parse(String scheme, String constraintStr, boolean strict) {
         final Comparator comparator;
         if (constraintStr.startsWith("<=")) {
             comparator = Comparator.LESS_THAN_OR_EQUAL;
@@ -71,7 +68,7 @@ public class Constraint implements Comparable<Constraint> {
             throw new VersException("comparator %s is not allowed without version".formatted(comparator));
         }
 
-        final Version version = VersionFactory.forScheme(scheme, maybeUrlDecode(versionStr));
+        final Version version = VersionFactory.forScheme(scheme, PercentEncoding.decode(versionStr, strict));
 
         return new Constraint(scheme, comparator, version);
     }
@@ -113,14 +110,6 @@ public class Constraint implements Comparable<Constraint> {
         };
     }
 
-    private static String maybeUrlDecode(String version) {
-        if (version.contains("%")) {
-            return URLDecoder.decode(version, StandardCharsets.UTF_8);
-        }
-
-        return version;
-    }
-
     @Override
     public int compareTo(Constraint other) {
         // NB: Only a wildcard constraint has no version.
@@ -152,11 +141,9 @@ public class Constraint implements Comparable<Constraint> {
             return Comparator.WILDCARD.operator();
         }
 
-        if (comparator == Comparator.EQUAL) {
-            // Operator is omitted for equality.
-            return URLEncoder.encode(requireNonNull(version).toString(), StandardCharsets.UTF_8);
-        }
+        final String versionStr = PercentEncoding.encode(
+                requireNonNull(version, "version must not be null").toString());
 
-        return comparator.operator() + URLEncoder.encode(requireNonNull(version).toString(), StandardCharsets.UTF_8);
+        return comparator != Comparator.EQUAL ? comparator.operator() + versionStr : versionStr;
     }
 }
