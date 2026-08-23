@@ -115,6 +115,19 @@ class VersUtilsTest {
     }
 
     @Test
+    void testVersFromOsvRangeWithSuffixedEcosystem() {
+        final List<Map.Entry<String, String>> events =
+                List.of(Map.entry("introduced", "0"), Map.entry("fixed", "1.35.0"));
+
+        assertThat(versFromOsvRange("ecosystem", "Packagist:https://packages.drupal.org/8", events, null))
+                .hasToString("vers:composer/<1.35.0.0");
+        assertThat(versFromOsvRange("ecosystem", "VSCode:https://open-vsx.org", events, null))
+                .hasToString("vers:vscode/<1.35.0");
+        assertThat(versFromOsvRange("ecosystem", "TuxCare:Ubuntu:16.04", events, null))
+                .hasToString("vers:deb/<1.35.0");
+    }
+
+    @Test
     void testVersFromOsvRangeWithInvalidRangeType() {
         final List<Map.Entry<String, String>> events = List.of(Map.entry("introduced", "0"));
         assertThatExceptionOfType(IllegalArgumentException.class)
@@ -152,17 +165,31 @@ class VersUtilsTest {
         }
     }
 
+    @Test
+    void testSchemeFromOsvEcosystemDoesNotInferSchemeFromSuffix() {
+        assertThat(schemeFromOsvEcosystem("Alpine:npm")).contains("apk");
+    }
+
     @ParameterizedTest
     @CsvSource(
             value = {
                 "AlmaLinux, rpm",
+                "Alpaquita:23, apk",
                 "Alpine, apk",
                 "Android, ",
+                "Azure Linux:2, rpm",
+                "BellSoft Hardened Containers:stream, apk",
                 "Bioconductor, ",
                 "Bitnami, ",
                 "CRAN, ",
+                "Chainguard, apk",
+                "CleanStart, apk",
                 "ConanCenter, ",
                 "Debian, deb",
+                "Debian:12, deb",
+                "Echo, deb",
+                "Echo:Maven, maven",
+                "Echo:PyPi, pypi",
                 "GHC, ",
                 "GitHub Actions, ",
                 "Go, golang",
@@ -171,16 +198,40 @@ class VersUtilsTest {
                 "Linux, ",
                 "Mageia, rpm",
                 "Maven, maven",
+                "Maven:https://maven.google.com, maven",
+                "MinimOS, apk",
                 "OSS-Fuzz, ",
                 "Packagist, composer",
+                "Packagist:https://packages.drupal.org/8, composer",
                 "Photon OS, rpm",
                 "Pub, ",
                 "PyPI, pypi",
+                "Red Hat:enterprise_linux:7::server, rpm",
                 "Rocky Linux, rpm",
+                "Root:Alpine:3.18, apk",
+                "Root:Composer, composer",
+                "Root:Go, golang",
+                "Root:Ruby, gem",
+                "Root:Ubuntu:22.04, deb",
+                "Root:npm, npm",
                 "RubyGems, gem",
+                "SUSE:Linux Enterprise Module for Public Cloud 15 SP4, rpm",
                 "SwiftURL, ",
+                "TuxCare:CentOS-Stream:8, rpm",
+                "TuxCare:CentOS:8.4, rpm",
+                "TuxCare:Maven, maven",
+                "TuxCare:OracleLinux:6, rpm",
+                "TuxCare:Packagist, composer",
+                "TuxCare:RHEL:7, rpm",
+                "TuxCare:Ubuntu:16.04, deb",
+                "Ubuntu, deb",
+                "Ubuntu:Pro:18.04:LTS, deb",
+                "VSCode:https://open-vsx.org, ",
+                "Wolfi, apk",
                 "crates.io, cargo",
                 "npm, npm",
+                "openEuler:20.03-LTS-SP1, rpm",
+                "openSUSE:Leap 15.3, rpm",
             })
     void testSchemeFromOsvEcosystem(final String ecosystem, final String expectedScheme) {
         if (expectedScheme == null) {

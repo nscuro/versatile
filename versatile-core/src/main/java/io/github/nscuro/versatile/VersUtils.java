@@ -21,12 +21,15 @@ package io.github.nscuro.versatile;
 import io.github.nscuro.versatile.spi.InvalidVersionException;
 import io.github.nscuro.versatile.version.KnownVersioningSchemes;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 public final class VersUtils {
+
+    private static final Set<String> NESTING_OSV_ECOSYSTEMS = Set.of("echo", "root", "tuxcare");
 
     private VersUtils() {}
 
@@ -101,7 +104,8 @@ public final class VersUtils {
             throw new IllegalArgumentException("Range type \"%s\" is not supported".formatted(type));
         }
 
-        final var scheme = schemeFromOsvEcosystem(ecosystem).orElse(ecosystem);
+        // The suffix is not part of the ecosystem name, and thus must not end up in the scheme.
+        final var scheme = schemeFromOsvEcosystem(ecosystem).orElseGet(() -> osvEcosystemNameOf(ecosystem));
         final var versBuilder = Vers.builder(scheme);
         int constraintCount = 0;
 
@@ -240,34 +244,55 @@ public final class VersUtils {
 
     public static Optional<String> schemeFromOsvEcosystem(String ecosystem) {
         // https://github.com/ossf/osv-schema/blob/main/docs/schema.md#affectedpackage-field
+        final String[] segments = ecosystem.split(":", 3);
 
-        // NB: Linux distros can have an optional ":<RELEASE>" suffix.
-        if (ecosystem.startsWith("AlmaLinux")) {
-            return Optional.of(KnownVersioningSchemes.SCHEME_RPM);
-        } else if (ecosystem.startsWith("Alpine")) {
-            return Optional.of(KnownVersioningSchemes.SCHEME_APK);
-        } else if (ecosystem.startsWith("Debian")) {
-            return Optional.of(KnownVersioningSchemes.SCHEME_DEBIAN);
-        } else if (ecosystem.startsWith("Mageia")) {
-            return Optional.of(KnownVersioningSchemes.SCHEME_RPM);
-        } else if (ecosystem.startsWith("Photon OS")) {
-            return Optional.of(KnownVersioningSchemes.SCHEME_RPM);
-        } else if (ecosystem.startsWith("Rocky Linux")) {
-            return Optional.of(KnownVersioningSchemes.SCHEME_RPM);
-        } else if (ecosystem.startsWith("Ubuntu")) {
-            return Optional.of(KnownVersioningSchemes.SCHEME_DEBIAN);
+        // For nesting ecosystems the second segment names the re-packaged ecosystem,
+        // e.g. "TuxCare:Ubuntu:16.04". For all others it is a release, repository URL,
+        // or CPE, which must not be interpreted as an ecosystem.
+        if (segments.length > 1 && NESTING_OSV_ECOSYSTEMS.contains(segments[0].toLowerCase())) {
+            return schemeFromOsvEcosystemName(segments[1]).or(() -> schemeFromOsvEcosystemName(segments[0]));
         }
 
-        return switch (ecosystem.toLowerCase()) {
+        return schemeFromOsvEcosystemName(segments[0]);
+    }
+
+    private static Optional<String> schemeFromOsvEcosystemName(String name) {
+        return switch (name.toLowerCase(Locale.ROOT)) {
+            case "almalinux",
+                    "azure linux",
+                    "centos",
+                    "centos-stream",
+                    "mageia",
+                    "openeuler",
+                    "opensuse",
+                    "oraclelinux",
+                    "photon os",
+                    "red hat",
+                    "rhel",
+                    "rocky linux",
+                    "suse" -> Optional.of(KnownVersioningSchemes.SCHEME_RPM);
+            case "alpaquita",
+                    "alpine",
+                    "bellsoft hardened containers",
+                    "chainguard",
+                    "cleanstart",
+                    "minimos",
+                    "wolfi" -> Optional.of(KnownVersioningSchemes.SCHEME_APK);
+            case "composer", "packagist" -> Optional.of(KnownVersioningSchemes.SCHEME_COMPOSER);
             case "crates.io" -> Optional.of(KnownVersioningSchemes.SCHEME_CARGO);
+            case "debian", "echo", "ubuntu" -> Optional.of(KnownVersioningSchemes.SCHEME_DEBIAN);
             case "go" -> Optional.of(KnownVersioningSchemes.SCHEME_GOLANG);
             case "maven" -> Optional.of(KnownVersioningSchemes.SCHEME_MAVEN);
             case "npm" -> Optional.of(KnownVersioningSchemes.SCHEME_NPM);
             case "nuget" -> Optional.of(KnownVersioningSchemes.SCHEME_NUGET);
-            case "packagist" -> Optional.of(KnownVersioningSchemes.SCHEME_COMPOSER);
             case "pypi" -> Optional.of(KnownVersioningSchemes.SCHEME_PYPI);
-            case "rubygems" -> Optional.of(KnownVersioningSchemes.SCHEME_GEM);
+            case "ruby", "rubygems" -> Optional.of(KnownVersioningSchemes.SCHEME_GEM);
             default -> Optional.empty();
         };
+    }
+
+    private static String osvEcosystemNameOf(String ecosystem) {
+        final int suffixIndex = ecosystem.indexOf(':');
+        return suffixIndex != -1 ? ecosystem.substring(0, suffixIndex) : ecosystem;
     }
 }
