@@ -97,7 +97,7 @@ class PythonVersionTest extends AbstractVersionTest {
                 "1.0.0, IS_LOWER_THAN, 1.0.1",
                 "1.11.0, IS_HIGHER_THAN, 1.2.0"
             })
-    void testCompareTo(final String versionA, final ComparisonExpectation expectation, final String versionB) {
+    void testCompareTo(String versionA, ComparisonExpectation expectation, String versionB) {
         expectation.evaluate(new PythonVersion(versionA), new PythonVersion(versionB));
     }
 
@@ -169,7 +169,7 @@ class PythonVersionTest extends AbstractVersionTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"", "abc", "1.2.3.a.b.c", "1.2-", ".1.2", "1..2"})
-        void shouldThrowOnInvalidVersion(final String invalidVersion) {
+        void shouldThrowOnInvalidVersion(String invalidVersion) {
             assertThatThrownBy(() -> new PythonVersion(invalidVersion)).isInstanceOf(InvalidVersionException.class);
         }
     }
@@ -177,39 +177,45 @@ class PythonVersionTest extends AbstractVersionTest {
     @Nested
     class NormalizationTest {
 
-        @Test
-        void shouldStripLeadingV() {
-            final PythonVersion v1 = new PythonVersion("v1.0");
-            final PythonVersion v2 = new PythonVersion("1.0");
-            assertThat(v1).isEqualByComparingTo(v2);
-        }
-
-        @Test
-        void shouldNormalizeAlphaSpelling() {
-            final PythonVersion v1 = new PythonVersion("1.0alpha1");
-            final PythonVersion v2 = new PythonVersion("1.0a1");
-            assertThat(v1).isEqualByComparingTo(v2);
-        }
-
-        @Test
-        void shouldNormalizeBetaSpelling() {
-            final PythonVersion v1 = new PythonVersion("1.0beta1");
-            final PythonVersion v2 = new PythonVersion("1.0b1");
-            assertThat(v1).isEqualByComparingTo(v2);
-        }
-
-        @Test
-        void shouldNormalizeRcSpelling() {
-            final PythonVersion v1 = new PythonVersion("1.0c1");
-            final PythonVersion v2 = new PythonVersion("1.0rc1");
-            assertThat(v1).isEqualByComparingTo(v2);
-        }
-
-        @Test
-        void shouldNormalizePostSpelling() {
-            final PythonVersion v1 = new PythonVersion("1.0-1");
-            final PythonVersion v2 = new PythonVersion("1.0.post1");
-            assertThat(v1).isEqualByComparingTo(v2);
+        @ParameterizedTest
+        @ValueSource(
+                strings = {
+                    "1.0",
+                    "v1.0",
+                    "1!2.0",
+                    "0!1.0",
+                    "1.01.2",
+                    "1.0a1",
+                    "1.0alpha1",
+                    "1.0ALPHA.1",
+                    "1.0-a-1",
+                    "1.0a",
+                    "1.0b1",
+                    "1.0BETA3",
+                    "1.0_beta_2",
+                    "1.0c1",
+                    "1.0rc",
+                    "2.7.0rc0",
+                    "2.7.0-rc1",
+                    "1.0pre1",
+                    "1.0preview1",
+                    "1.0RC1",
+                    "1.0-1",
+                    "1.0.post5",
+                    "1.0.rev1",
+                    "1.0_r_2",
+                    "1.0dev",
+                    "1.0-dev.5",
+                    "1.0.dev7",
+                    "1.0+local",
+                    "1.0+Ubuntu-1_2.3",
+                    "1!1.2.3a4.post5.dev6+local"
+                })
+        void shouldNormalizeIdempotently(String versionStr) {
+            final PythonVersion version = new PythonVersion(versionStr);
+            assertThat(new PythonVersion(version.toString()))
+                    .hasToString(version.toString())
+                    .isEqualByComparingTo(version);
         }
     }
 
@@ -218,19 +224,41 @@ class PythonVersionTest extends AbstractVersionTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"1.0", "1.2.3", "1.2.3.4.5", "1.0.post1", "2.1"})
-        void shouldReturnTrueForFinalReleases(final String version) {
+        void shouldReturnTrueForFinalReleases(String version) {
             assertThat(new PythonVersion(version).isStable()).isTrue();
         }
 
         @ParameterizedTest
         @ValueSource(strings = {"1.0a1", "1.0b1", "1.0rc1", "1.0.dev1", "1.0+local", "1.0a1.dev1"})
-        void shouldReturnFalseForPreDevAndLocalReleases(final String version) {
+        void shouldReturnFalseForPreDevAndLocalReleases(String version) {
             assertThat(new PythonVersion(version).isStable()).isFalse();
         }
     }
 
-    @Test
-    void testToString() {
-        assertThat(new PythonVersion("1.2.3").toString()).isEqualTo("1.2.3");
+    @ParameterizedTest
+    @CsvSource(textBlock = """
+                    1.2.3, 1.2.3
+                    v1.0, 1.0
+                    1!2.0, 1!2.0
+                    0!1.0, 1.0
+                    1.01.2, 1.1.2
+                    2.7.0rc0, 2.7.0rc0
+                    2.7.0-rc1, 2.7.0rc1
+                    1.0RC1, 1.0rc1
+                    1.0c1, 1.0rc1
+                    1.0pre1, 1.0rc1
+                    1.0preview1, 1.0rc1
+                    1.0rc, 1.0rc0
+                    1.0-alpha.2, 1.0a2
+                    1.0BETA3, 1.0b3
+                    1.0-1, 1.0.post1
+                    1.0.rev1, 1.0.post1
+                    1.0dev, 1.0.dev0
+                    1.0-dev.5, 1.0.dev5
+                    1.0rc2.post3.dev4, 1.0rc2.post3.dev4
+                    1.0+Ubuntu-1_2.3, 1.0+ubuntu.1.2.3
+                    """)
+    void testToString(String versionStr, String expected) {
+        assertThat(new PythonVersion(versionStr)).hasToString(expected);
     }
 }
