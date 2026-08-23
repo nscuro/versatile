@@ -84,87 +84,37 @@ public final class VersUtils {
     }
 
     /**
-     * Convert a range type, ecosystem, and range events as used by OSV to a {@link Vers} range.
+     * Convert a range type, ecosystem, and range events as used by OSV to {@link Vers} ranges.
+     * <p>
+     * Events are evaluated per OSV's evaluation algorithm, which sorts them by version and
+     * treats {@code limit} events as a range-wide gate rather than an upper bound.
+     * The resulting ranges are ascending and disjoint, and have at most two constraints each.
+     * <p>
+     * An empty {@link List} is returned when the range affects no version at all.
+     * <p>
+     * The {@code last_known_affected_version_range} of {@code databaseSpecific} is not part of the
+     * OSV schema, but a convention of the GitHub advisory database. It is applied to the last range,
+     * and only when that range has no upper bound, so it can never widen the result.
+     * <p>
+     * When a version does not comply with the scheme inferred from {@code ecosystem},
+     * the whole range is converted again under the {@code generic} scheme rather than discarded.
+     * The returned ranges then all carry the {@code generic} scheme.
      *
      * @param type      The type of the range, must be either {@code ECOSYSTEM} or {@code SEMVER}
      * @param ecosystem The ecosystem of the affected package
      * @param events    The events in the range
-     * @return The resulting {@link Vers}
+     * @return The resulting {@link Vers} ranges, one per affected interval
      * @throws IllegalArgumentException When the provided range type is not support supported,
      *                                  or the provided {@code events} contains an invalid event
-     * @throws VersException            When the produced {@link Vers} is invalid
-     * @throws InvalidVersionException  When any version in the range is invalid according to the inferred scheme
+     * @throws InvalidVersionException  When any version in the range is invalid according to the {@code generic} scheme
+     * @see <a href="https://ossf.github.io/osv-schema/#evaluation">OSV evaluation algorithm</a>
      */
-    public static Vers versFromOsvRange(
+    public static List<Vers> versFromOsvRange(
             String type,
             String ecosystem,
             List<Map.Entry<String, String>> events,
             @Nullable Map<String, Object> databaseSpecific) {
-        if (!"ecosystem".equalsIgnoreCase(type) && !"semver".equalsIgnoreCase(type)) {
-            throw new IllegalArgumentException("Range type \"%s\" is not supported".formatted(type));
-        }
-
-        // The suffix is not part of the ecosystem name, and thus must not end up in the scheme.
-        final var scheme = schemeFromOsvEcosystem(ecosystem).orElseGet(() -> osvEcosystemNameOf(ecosystem));
-        final var versBuilder = Vers.builder(scheme);
-        int constraintCount = 0;
-
-        for (int i = 0; i < events.size(); i++) {
-            final Map.Entry<String, String> event = events.get(i);
-
-            final Comparator comparator =
-                    switch (event.getKey()) {
-                        case "introduced" -> Comparator.GREATER_THAN_OR_EQUAL;
-                        case "fixed", "limit" -> Comparator.LESS_THAN;
-                        case "last_affected" -> Comparator.LESS_THAN_OR_EQUAL;
-                        default ->
-                            throw new IllegalArgumentException(
-                                    "Invalid event \"%s\" at position %d".formatted(event.getKey(), i));
-                    };
-
-            if (comparator == Comparator.GREATER_THAN_OR_EQUAL && "0".equals(event.getValue())) {
-                // introduced=0 is OSV's special value for "before all versions",
-                // see https://ossf.github.io/osv-schema/#special-values
-                continue;
-            }
-
-            if ("deb".equals(scheme)
-                    && (comparator == Comparator.LESS_THAN || comparator == Comparator.LESS_THAN_OR_EQUAL)
-                    && Set.of("<end-of-life>", "<unfixed>").contains(event.getValue())) {
-                // Some ranges in the Debian ecosystem use these special values for their upper bound,
-                // to signal that all versions are affected. As they are not valid versions, we skip them.
-                //
-                // introduced=0, fixed=<unfixed> is equivalent to *.
-                continue;
-            }
-
-            versBuilder.withConstraint(comparator, event.getValue());
-            constraintCount++;
-        }
-
-        if (databaseSpecific != null
-                && databaseSpecific.get("last_known_affected_version_range")
-                        instanceof final String lastKnownAffectedRange) {
-            if (lastKnownAffectedRange.startsWith("<=")) {
-                versBuilder.withConstraint(
-                        Comparator.LESS_THAN_OR_EQUAL,
-                        lastKnownAffectedRange.replaceFirst("<=", "").trim());
-                constraintCount++;
-            } else if (lastKnownAffectedRange.startsWith("<")) {
-                versBuilder.withConstraint(
-                        Comparator.LESS_THAN,
-                        lastKnownAffectedRange.replaceFirst("<", "").trim());
-                constraintCount++;
-            }
-        }
-
-        if (constraintCount == 0) {
-            return Vers.builder(scheme)
-                    .withConstraint(Comparator.WILDCARD, null)
-                    .build();
-        }
-
-        return versBuilder.build();
+        return OsvRangeConverter.convert(type, ecosystem, events, databaseSpecific);
     }
 
     /**
@@ -291,7 +241,7 @@ public final class VersUtils {
         };
     }
 
-    private static String osvEcosystemNameOf(String ecosystem) {
+    static String osvEcosystemNameOf(String ecosystem) {
         final int suffixIndex = ecosystem.indexOf(':');
         return suffixIndex != -1 ? ecosystem.substring(0, suffixIndex) : ecosystem;
     }

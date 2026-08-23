@@ -23,8 +23,9 @@ import static io.github.nscuro.versatile.VersUtils.versFromGhsaRange;
 import static io.github.nscuro.versatile.VersUtils.versFromOsvRange;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
-import static org.junit.jupiter.params.ParameterizedTest.ARGUMENTS_WITH_NAMES_PLACEHOLDER;
+import static org.junit.jupiter.params.ParameterizedInvocationConstants.ARGUMENTS_WITH_NAMES_PLACEHOLDER;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -37,6 +38,7 @@ import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.github.jeremylong.openvulnerability.client.ghsa.GitHubSecurityAdvisoryClient;
 import io.github.jeremylong.openvulnerability.client.ghsa.SecurityAdvisory;
 import io.github.jeremylong.openvulnerability.client.ghsa.Vulnerabilities;
+import io.github.nscuro.versatile.version.KnownVersioningSchemes;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -47,6 +49,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -137,7 +140,7 @@ public class VersUtilsIT {
                 "RubyGems",
                 "Ubuntu"
             })
-    void testVersFromOsvRangeWithAllRanges(final String ecosystem) throws Exception {
+    void testVersFromOsvRangeWithAllRanges(String ecosystem) throws Exception {
         final Path tempFile = Files.createTempFile(null, null);
 
         final HttpRequest request = HttpRequest.newBuilder()
@@ -177,6 +180,15 @@ public class VersUtilsIT {
                         continue;
                     }
 
+                    // GitHub records last_known_affected_version_range here, not on the range.
+                    final Map<String, Object> databaseSpecific =
+                            objectMapper.convertValue(affected.get("database_specific"), new TypeReference<>() {});
+
+                    // An advisory in this ecosystem's archive can affect packages of other ecosystems.
+                    // Packages identified by purl alone may not declare one.
+                    final String affectedEcosystem =
+                            affected.path("package").path("ecosystem").asText(ecosystem);
+
                     for (final JsonNode range : ranges) {
                         if ("GIT".equals(range.get("type").asText())) {
                             continue;
@@ -191,15 +203,35 @@ public class VersUtilsIT {
 
                         final ObjectNode objectNode = objectMapper
                                 .createObjectNode()
-                                .put("name", affected.get("package").get("name").asText())
+                                .put("ecosystem", affectedEcosystem)
+                                .put(
+                                        "name",
+                                        affected.path("package").path("name").asText())
                                 .putPOJO("events", events);
 
                         try {
-                            final Vers vers = versFromOsvRange(range.get("type").asText(), ecosystem, events, null)
-                                    .simplify()
-                                    .validate();
+                            final List<Vers> versList =
+                                    versFromOsvRange(
+                                                    range.get("type").asText(),
+                                                    affectedEcosystem,
+                                                    events,
+                                                    databaseSpecific)
+                                            .stream()
+                                            .map(vers -> vers.simplify().validate())
+                                            .toList();
 
-                            resultsArrayNode.add(objectNode.put("vers", vers.toString()));
+                            resultsArrayNode.add(objectNode
+                                    .deepCopy()
+                                    .putPOJO(
+                                            "vers",
+                                            versList.stream()
+                                                    .map(Vers::toString)
+                                                    .toList()));
+
+                            final String violation = invariantViolation(versList);
+                            if (violation != null) {
+                                failuresArrayNode.add(objectNode.put("failureReason", violation));
+                            }
                         } catch (RuntimeException e) {
                             failuresArrayNode.add(objectNode.put("failureReason", e.getMessage()));
                         }
@@ -208,14 +240,60 @@ public class VersUtilsIT {
             }
         }
 
-        try (final var resultsFileOutputStream =
-                        Files.newOutputStream(Paths.get("target/results/osv-%s.json".formatted(ecosystem)));
-                final var failuresFileOutputStream =
-                        Files.newOutputStream(Paths.get("target/results/osv-%s-failures.json".formatted(ecosystem)))) {
-            objectMapper.writerWithDefaultPrettyPrinter().writeValue(resultsFileOutputStream, resultsArrayNode);
-            objectMapper.writerWithDefaultPrettyPrinter().writeValue(failuresFileOutputStream, failuresArrayNode);
-        }
+        writeResults(objectMapper, ecosystem, "", resultsArrayNode);
+        writeResults(objectMapper, ecosystem, "-failures", failuresArrayNode);
 
         assertThat(failuresArrayNode).isEmpty();
+    }
+
+    private static String invariantViolation(List<Vers> versList) {
+        for (Vers vers : versList) {
+            if (vers.constraints().size() > 2) {
+                return "Range %s has more than two constraints".formatted(vers);
+            }
+
+            try {
+                String reparsed = Vers.parseLenient(vers.toString()).toString();
+
+                // Composer normalization is not idempotent, e.g. `2020-09-14` normalizes to `2020.09.14`,
+                // and `2020.09.14` to `2020.09.14.0`. We intentionally don't "fix" this because Composer
+                // itself doesn't either.
+                if (!KnownVersioningSchemes.SCHEME_COMPOSER.equals(vers.scheme())
+                        && !reparsed.equals(vers.toString())) {
+                    return "Range %s renders as %s after a parse round-trip".formatted(vers, reparsed);
+                }
+            } catch (RuntimeException e) {
+                return "Range %s cannot be parsed back: %s".formatted(vers, e.getMessage());
+            }
+        }
+
+        for (int i = 0; i + 1 < versList.size(); i++) {
+            Vers current = versList.get(i);
+            Vers next = versList.get(i + 1);
+
+            Constraint upperBound = current.constraints().getLast();
+            Constraint lowerBound = next.constraints().getFirst();
+            if (upperBound.version() == null || lowerBound.version() == null) {
+                continue;
+            }
+
+            int comparison = upperBound.version().compareTo(lowerBound.version());
+            boolean touching = comparison == 0
+                    && upperBound.comparator() == Comparator.LESS_THAN_OR_EQUAL
+                    && lowerBound.comparator() == Comparator.GREATER_THAN_OR_EQUAL;
+            if (comparison > 0 || touching) {
+                return "Ranges %s and %s are not ascending and disjoint".formatted(current, next);
+            }
+        }
+
+        return null;
+    }
+
+    private static void writeResults(ObjectMapper objectMapper, String ecosystem, String suffix, ArrayNode results)
+            throws Exception {
+        try (final var outputStream =
+                Files.newOutputStream(Paths.get("target/results/osv-%s%s.json".formatted(ecosystem, suffix)))) {
+            objectMapper.writerWithDefaultPrettyPrinter().writeValue(outputStream, results);
+        }
     }
 }
