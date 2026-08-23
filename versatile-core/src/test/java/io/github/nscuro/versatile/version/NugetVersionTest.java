@@ -169,4 +169,27 @@ class NugetVersionTest {
     void testCompareTo(String versionA, ComparisonExpectation expectation, String versionB) {
         expectation.evaluate(new NugetVersion(versionA), new NugetVersion(versionB));
     }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "1",
+                "1.0",
+                "1.0.0",
+                "1.0.0.0",
+                "1.0.0.5",
+                "v1.2.3",
+                "01.02.03",
+                "1.0.0-Alpha.1",
+                "1.0.0-alpha+Build.1",
+                "1.0.0+meta",
+                "1.0.0-rc.1+meta",
+                "1.2.3.4-BETA"
+            })
+    void shouldNormalizeIdempotently(String versionStr) {
+        final var version = new NugetVersion(versionStr);
+        assertThat(new NugetVersion(version.toString()))
+                .hasToString(version.toString())
+                .isEqualByComparingTo(version);
+    }
 }

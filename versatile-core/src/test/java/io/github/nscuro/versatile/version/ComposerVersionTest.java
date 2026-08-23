@@ -223,4 +223,26 @@ class ComposerVersionTest {
     void testCompareTo(String versionA, ComparisonExpectation expectation, String versionB) {
         expectation.evaluate(new ComposerVersion(versionA), new ComposerVersion(versionB));
     }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "1.0", "v1.2.3", "1.0.0.0", "1.0+meta", "1.0.0-beta2", "1.0.0-RC1", "1.0.0-alpha.1",
+                "v2.0.0-BETA.3", "1.0-p1", "1.0.0-patch1", "dev-master", "master", "1.0.x-dev", "1.x-dev"
+            })
+    void shouldNormalizeIdempotently(String versionStr) {
+        final var version = new ComposerVersion(versionStr);
+        assertThat(new ComposerVersion(version.toString()))
+                .hasToString(version.toString())
+                .isEqualByComparingTo(version);
+    }
+
+    @Test
+    void shouldNotNormalizeDateVersionsIdempotently() {
+        final var version = new ComposerVersion("2010-01-02");
+        assertThat(version).hasToString("2010.01.02");
+        assertThat(new ComposerVersion(version.toString()))
+                .hasToString("2010.01.02.0")
+                .isEqualByComparingTo(version);
+    }
 }
