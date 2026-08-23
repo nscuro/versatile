@@ -50,7 +50,23 @@ public class PythonVersion extends Version {
         public enum Type {
             ALPHA,
             BETA,
-            RC
+            RC;
+
+            static Type of(String spelling) {
+                return switch (spelling.toLowerCase(Locale.ROOT)) {
+                    case "a", "alpha" -> ALPHA;
+                    case "b", "beta" -> BETA;
+                    default -> RC;
+                };
+            }
+
+            String normalized() {
+                return switch (this) {
+                    case ALPHA -> "a";
+                    case BETA -> "b";
+                    case RC -> "rc";
+                };
+            }
         }
     }
 
@@ -65,19 +81,7 @@ public class PythonVersion extends Version {
             (?<dev>[-_.]?dev[-_.]?(?<devNum>[0-9]+)?)?\
             (?:\\+(?<local>[a-zA-Z0-9]+(?:[-_.][a-zA-Z0-9]+)*))?\
             $""", Pattern.CASE_INSENSITIVE);
-    private static final Pattern NORM_PATTERN_LEADING_V = Pattern.compile("^[vV]");
-    private static final Pattern NORM_PATTERN_EPOCH = Pattern.compile("^([0-9]+)!");
-    private static final Pattern NORM_PATTERN_ALPHA = Pattern.compile("[-_.]?(alpha)");
-    private static final Pattern NORM_PATTERN_BETA = Pattern.compile("[-_.]?(beta)");
-    private static final Pattern NORM_PATTERN_RC = Pattern.compile("[-_.]?(c|pre|preview)");
-    private static final Pattern NORM_PATTERN_PRE_NUM = Pattern.compile("(a|b|rc)[-_.]?([0-9]+)");
-    private static final Pattern NORM_PATTERN_PRE_IMPLICIT_NUM = Pattern.compile("(a|b|rc)(?![0-9])");
-    private static final Pattern NORM_PATTERN_POST = Pattern.compile("[-_.]?(post|rev|r)[-_.]?([0-9]+)");
-    private static final Pattern NORM_PATTERN_POST_IMPLICIT = Pattern.compile("-([0-9]+)(?!.*post)");
-    private static final Pattern NORM_PATTERN_DEV = Pattern.compile("[-_.]?dev[-_.]?([0-9]+)");
-    private static final Pattern NORM_PATTERN_DEV_IMPLICIT_NUM = Pattern.compile("[-_.]?dev(?![0-9])");
-    private static final Pattern NORM_PATTERN_LOCAL_SEP = Pattern.compile("\\+([a-zA-Z0-9]+)[-_.]");
-    private static final Pattern LOCAL_SEGMENT_SEPARATOR_PATTERN = Pattern.compile("\\.");
+    private static final Pattern SEGMENT_SEPARATOR_PATTERN = Pattern.compile("\\.");
     private static final Pattern LOCAL_NORMALIZE_PATTERN = Pattern.compile("[-_]");
 
     private final int epoch;
@@ -87,20 +91,16 @@ public class PythonVersion extends Version {
     private final @Nullable Integer devRelease;
     private final @Nullable String local;
 
-    PythonVersion(final String versionStr) {
-        super(SCHEME_PYPI, normalize(versionStr));
+    PythonVersion(String versionStr) {
+        this(requireMatch(versionStr));
+    }
 
-        final Matcher matcher = VERSION_PATTERN.matcher(versionStr.strip());
-        if (!matcher.matches()) {
-            throw new InvalidVersionException(versionStr, """
-                    Provided version "%s" does not match PEP 440 format: \
-                    [N!]N(.N)*[{a|b|rc}N][.postN][.devN][+local]\
-                    """.formatted(versionStr));
-        }
+    private PythonVersion(Matcher matcher) {
+        super(SCHEME_PYPI, normalize(matcher));
 
         this.epoch = parseEpoch(matcher.group("epoch"));
         this.release = parseRelease(matcher.group("release"));
-        this.preRelease = parsePreRelease(matcher.group("pre"), matcher.group("preType"), matcher.group("preNum"));
+        this.preRelease = parsePreRelease(matcher.group("preType"), matcher.group("preNum"));
         this.postRelease =
                 parsePostRelease(matcher.group("post"), matcher.group("postNum1"), matcher.group("postNum2"));
         this.devRelease = parseDevRelease(matcher.group("dev"), matcher.group("devNum"));
@@ -185,61 +185,56 @@ public class PythonVersion extends Version {
         return local;
     }
 
-    private static String normalize(final String versionStr) {
-        // Normalize the version according to PEP 440:
-        // https://peps.python.org/pep-0440/#normalization
-
-        // https://peps.python.org/pep-0440/#leading-and-trailing-whitespace
-        String normalized = versionStr.strip();
-
-        // Avoid the heavy regex machinery when the version is simple, e.g. `666` or `6.6.6`.
-        if (isSimpleNumericVersion(normalized)) {
-            return normalized;
+    private static Matcher requireMatch(String versionStr) {
+        final Matcher matcher = VERSION_PATTERN.matcher(versionStr.strip());
+        if (!matcher.matches()) {
+            throw new InvalidVersionException(versionStr, """
+                    Provided version "%s" does not match PEP 440 format: \
+                    [N!]N(.N)*[{a|b|rc}N][.postN][.devN][+local]\
+                    """.formatted(versionStr));
         }
 
-        // https://peps.python.org/pep-0440/#preceding-v-character
-        normalized = NORM_PATTERN_LEADING_V.matcher(normalized).replaceFirst("");
-
-        // https://peps.python.org/pep-0440/#integer-normalization
-        normalized = NORM_PATTERN_EPOCH.matcher(normalized).replaceAll("$1!");
-
-        // https://peps.python.org/pep-0440/#pre-release-separators
-        // https://peps.python.org/pep-0440/#pre-release-spelling
-        normalized = NORM_PATTERN_ALPHA.matcher(normalized).replaceAll("a");
-        normalized = NORM_PATTERN_BETA.matcher(normalized).replaceAll("b");
-        normalized = NORM_PATTERN_RC.matcher(normalized).replaceAll("rc");
-        normalized = NORM_PATTERN_PRE_NUM.matcher(normalized).replaceAll("$1$2");
-        normalized = NORM_PATTERN_PRE_IMPLICIT_NUM.matcher(normalized).replaceAll("$10");
-
-        // https://peps.python.org/pep-0440/#post-release-separators
-        // https://peps.python.org/pep-0440/#post-release-spelling
-        normalized = NORM_PATTERN_POST.matcher(normalized).replaceAll(".post$2");
-        normalized = NORM_PATTERN_POST_IMPLICIT.matcher(normalized).replaceAll(".post$1");
-
-        // https://peps.python.org/pep-0440/#development-release-separators
-        normalized = NORM_PATTERN_DEV.matcher(normalized).replaceAll(".dev$1");
-        normalized = NORM_PATTERN_DEV_IMPLICIT_NUM.matcher(normalized).replaceAll(".dev0");
-
-        // https://peps.python.org/pep-0440/#local-version-segments
-        normalized = NORM_PATTERN_LOCAL_SEP.matcher(normalized).replaceAll("+$1.");
-
-        // https://peps.python.org/pep-0440/#case-sensitivity
-        return normalized.toLowerCase(Locale.ROOT);
+        return matcher;
     }
 
-    private static boolean isSimpleNumericVersion(String version) {
-        if (version.isEmpty()) {
-            return false;
+    private static String normalize(Matcher matcher) {
+        final var normalized = new StringBuilder();
+
+        final int epoch = parseEpoch(matcher.group("epoch"));
+        if (epoch != 0) {
+            normalized.append(epoch).append('!');
         }
 
-        for (int i = 0; i < version.length(); i++) {
-            final char c = version.charAt(i);
-            if ((c < '0' || c > '9') && c != '.') {
-                return false;
+        final List<Integer> release = parseRelease(matcher.group("release"));
+        for (int i = 0; i < release.size(); i++) {
+            if (i > 0) {
+                normalized.append('.');
             }
+            normalized.append(release.get(i));
         }
 
-        return true;
+        final PreRelease preRelease = parsePreRelease(matcher.group("preType"), matcher.group("preNum"));
+        if (preRelease != null) {
+            normalized.append(preRelease.type().normalized()).append(preRelease.number());
+        }
+
+        final Integer postRelease =
+                parsePostRelease(matcher.group("post"), matcher.group("postNum1"), matcher.group("postNum2"));
+        if (postRelease != null) {
+            normalized.append(".post").append(postRelease);
+        }
+
+        final Integer devRelease = parseDevRelease(matcher.group("dev"), matcher.group("devNum"));
+        if (devRelease != null) {
+            normalized.append(".dev").append(devRelease);
+        }
+
+        final String local = parseLocal(matcher.group("local"));
+        if (local != null) {
+            normalized.append('+').append(local);
+        }
+
+        return normalized.toString();
     }
 
     private static int parseEpoch(@Nullable String epochStr) {
@@ -250,12 +245,8 @@ public class PythonVersion extends Version {
         return Integer.parseInt(epochStr);
     }
 
-    private List<Integer> parseRelease(@Nullable String releaseStr) {
-        if (releaseStr == null || releaseStr.isBlank()) {
-            throw new InvalidVersionException(this.versionStr, "Release segment is required");
-        }
-
-        final String[] parts = releaseStr.split("\\.");
+    private static List<Integer> parseRelease(String releaseStr) {
+        final String[] parts = SEGMENT_SEPARATOR_PATTERN.split(releaseStr);
         final var release = new ArrayList<Integer>(parts.length);
 
         for (final String part : parts) {
@@ -265,21 +256,12 @@ public class PythonVersion extends Version {
         return release;
     }
 
-    private @Nullable PreRelease parsePreRelease(
-            @Nullable String preStr, @Nullable String preType, @Nullable String preNum) {
-        if (preStr == null || preType == null) {
+    private static @Nullable PreRelease parsePreRelease(@Nullable String preType, @Nullable String preNum) {
+        if (preType == null) {
             return null;
         }
 
-        final PreRelease.Type type =
-                switch (preType.toLowerCase(Locale.ROOT)) {
-                    case "a", "alpha" -> PreRelease.Type.ALPHA;
-                    case "b", "beta" -> PreRelease.Type.BETA;
-                    case "c", "rc", "pre", "preview" -> PreRelease.Type.RC;
-                    default ->
-                        throw new InvalidVersionException(this.versionStr, "Unknown pre-release type: " + preType);
-                };
-
+        final PreRelease.Type type = PreRelease.Type.of(preType);
         final int num = (preNum == null || preNum.isBlank()) ? 0 : Integer.parseInt(preNum);
         return new PreRelease(type, num);
     }
@@ -319,7 +301,7 @@ public class PythonVersion extends Version {
                 .replaceAll(".");
     }
 
-    private static int compareRelease(final List<Integer> release1, final List<Integer> release2) {
+    private static int compareRelease(List<Integer> release1, List<Integer> release2) {
         final int maxLen = Math.max(release1.size(), release2.size());
 
         for (int i = 0; i < maxLen; i++) {
@@ -418,8 +400,8 @@ public class PythonVersion extends Version {
             return 1;
         }
 
-        final String[] parts1 = LOCAL_SEGMENT_SEPARATOR_PATTERN.split(local1);
-        final String[] parts2 = LOCAL_SEGMENT_SEPARATOR_PATTERN.split(local2);
+        final String[] parts1 = SEGMENT_SEPARATOR_PATTERN.split(local1);
+        final String[] parts2 = SEGMENT_SEPARATOR_PATTERN.split(local2);
         final int maxLen = Math.max(parts1.length, parts2.length);
 
         for (int i = 0; i < maxLen; i++) {
