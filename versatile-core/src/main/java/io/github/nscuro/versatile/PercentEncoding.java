@@ -73,6 +73,11 @@ final class PercentEncoding {
             }
 
             final int decoded = hi << 4 | lo;
+            if (strict && decoded != ' ' && Character.isWhitespace(decoded)) {
+                throw new VersException("""
+                        Value "%s" contains percent-encoded whitespace at index %d, \
+                        but only SPACE (%%20) is permitted""".formatted(value, i));
+            }
             if (strict && !mustEncode(decoded)) {
                 throw new VersException("""
                         Percent-encoded triplet at index %d of value "%s" is non-canonical, \

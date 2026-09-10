@@ -198,9 +198,9 @@ class VersConformanceTest {
         assertThat(expectedOutput).isNotNull();
 
         final var vers = Vers.parse(input);
-        assertThat(vers.scheme()).as(versTest.getDescription()).isEqualTo(expectedOutput.get("scheme"));
+        assertThat(vers.scheme()).as(versTest.getDescription()).isEqualTo(expectedOutput.get("type"));
 
-        final var expectedConstraints = (List<List<String>>) expectedOutput.get("version_constraints");
+        final var expectedConstraints = (List<List<String>>) expectedOutput.get("constraints");
         final List<List<String>> actualConstraints = vers.constraints().stream()
                 .map(constraint -> List.of(
                         constraint.comparator().operator(), constraint.version().toString()))
