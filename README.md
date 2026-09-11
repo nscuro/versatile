@@ -208,7 +208,7 @@ for versioning scheme support.
 
 To add support for a new scheme, let's say `alpine`, the following steps may be performed:
 
-1. Add either `versatile-core`, or `versatile-spi` as dependency to your project
+1. Add either `versatile-core` as dependency to your project
 2. Create a class `AlpineVersion` that extends `io.github.nscuro.versatile.spi.Version`
 3. Implement the version parsing logic as desired
     * Be sure to overwrite `compareTo`, `equals`, `hashCode`, and `toString`
