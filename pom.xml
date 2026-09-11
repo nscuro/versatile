@@ -20,7 +20,6 @@
     </developers>
 
     <modules>
-        <module>versatile-spi</module>
         <module>versatile-core</module>
         <module>versatile-conformance</module>
         <module>versatile-benchmark</module>

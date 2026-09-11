@@ -16,12 +16,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.github.nscuro</groupId>
-            <artifactId>versatile-spi</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.jspecify</groupId>
             <artifactId>jspecify</artifactId>
         </dependency>

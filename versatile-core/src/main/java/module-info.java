@@ -31,10 +31,10 @@ import org.jspecify.annotations.NullMarked;
 
 @NullMarked
 module io.github.nscuro.versatile.core {
+    exports io.github.nscuro.versatile.spi;
     exports io.github.nscuro.versatile.version;
     exports io.github.nscuro.versatile;
 
-    requires io.github.nscuro.versatile.spi;
     requires maven.artifact;
     requires semver4j;
     requires transitive org.jspecify;
@@ -50,6 +50,4 @@ module io.github.nscuro.versatile.core {
             NpmVersion.Provider,
             PythonVersion.Provider,
             RpmVersion.Provider;
-
-    uses io.github.nscuro.versatile.spi.VersionProvider;
 }
