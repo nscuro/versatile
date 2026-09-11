@@ -64,7 +64,7 @@
         <lib.open-vulnerability-clients.version>9.0.6</lib.open-vulnerability-clients.version>
         <lib.palantir-java-format.version>2.93.0</lib.palantir-java-format.version>
         <lib.semver4j.version>3.1.0</lib.semver4j.version>
-        <lib.slf4j.version>2.0.18</lib.slf4j.version>
+        <lib.slf4j.version>2.0.19</lib.slf4j.version>
 
         <!-- Default SCM Properties -->
         <scm.connection>scm:git:ssh://git@github.com/nscuro/versatile.git</scm.connection>
