@@ -46,6 +46,11 @@ public class Constraint implements Comparable<Constraint> {
     }
 
     static Constraint parse(String scheme, String constraintStr, boolean strict) {
+        if (strict && constraintStr.startsWith("=")) {
+            throw new VersException("equality comparator is implicit and must not be stated explicitly in \"%s\""
+                    .formatted(constraintStr));
+        }
+
         final Comparator comparator;
         if (constraintStr.startsWith("<=")) {
             comparator = Comparator.LESS_THAN_OR_EQUAL;
