@@ -60,7 +60,7 @@
         <lib.junit-jupiter.version>6.1.3</lib.junit-jupiter.version>
         <lib.maven-artifact.version>3.9.16</lib.maven-artifact.version>
         <lib.nullaway.version>0.14.1</lib.nullaway.version>
-        <lib.open-vulnerability-clients.version>9.0.6</lib.open-vulnerability-clients.version>
+        <lib.open-vulnerability-clients.version>9.0.7</lib.open-vulnerability-clients.version>
         <lib.palantir-java-format.version>2.93.0</lib.palantir-java-format.version>
         <lib.semver4j.version>3.1.0</lib.semver4j.version>
         <lib.slf4j.version>2.0.19</lib.slf4j.version>
