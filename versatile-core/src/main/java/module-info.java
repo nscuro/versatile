@@ -36,7 +36,6 @@ module io.github.nscuro.versatile.core {
     exports io.github.nscuro.versatile;
 
     requires maven.artifact;
-    requires semver4j;
     requires transitive org.jspecify;
 
     provides io.github.nscuro.versatile.spi.VersionProvider with
