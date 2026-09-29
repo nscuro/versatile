@@ -181,7 +181,7 @@ public final class VersUtils {
 
     public static Optional<String> schemeFromGhsaEcosystem(String ecosystem) {
         // Can be one of: actions, composer, erlang, go, maven, npm, nuget, other, pip, pub, rubygems, rust.
-        return switch (ecosystem.toLowerCase()) {
+        return switch (ecosystem.toLowerCase(Locale.ROOT)) {
             case "go" -> Optional.of(KnownVersioningSchemes.SCHEME_GOLANG);
             case "maven" -> Optional.of(KnownVersioningSchemes.SCHEME_MAVEN);
             case "npm" -> Optional.of(KnownVersioningSchemes.SCHEME_NPM);
@@ -199,7 +199,7 @@ public final class VersUtils {
         // For nesting ecosystems the second segment names the re-packaged ecosystem,
         // e.g. "TuxCare:Ubuntu:16.04". For all others it is a release, repository URL,
         // or CPE, which must not be interpreted as an ecosystem.
-        if (segments.length > 1 && NESTING_OSV_ECOSYSTEMS.contains(segments[0].toLowerCase())) {
+        if (segments.length > 1 && NESTING_OSV_ECOSYSTEMS.contains(segments[0].toLowerCase(Locale.ROOT))) {
             return schemeFromOsvEcosystemName(segments[1]).or(() -> schemeFromOsvEcosystemName(segments[0]));
         }
 

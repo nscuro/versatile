@@ -25,6 +25,7 @@ import io.github.nscuro.versatile.spi.Version;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -234,6 +235,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
         return new Builder(versioningScheme);
     }
 
+    @Override
     public String scheme() {
         return scheme;
     }
@@ -673,7 +675,7 @@ public record Vers(String scheme, List<Constraint> constraints) {
 
     @Override
     public String toString() {
-        final String schemeStr = scheme().toLowerCase();
+        final String schemeStr = scheme().toLowerCase(Locale.ROOT);
         final String constraintsStr =
                 constraints.stream().map(Constraint::toString).collect(Collectors.joining("|"));
         return "vers:%s/%s".formatted(schemeStr, constraintsStr);

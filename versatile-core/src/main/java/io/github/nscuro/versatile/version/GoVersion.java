@@ -49,7 +49,6 @@ public class GoVersion extends Version {
     private final String major;
     private final String minor;
     private final String patch;
-    private final @Nullable String shortV;
     private final @Nullable String prerelease;
     private final @Nullable String build;
 
@@ -75,7 +74,6 @@ public class GoVersion extends Version {
         if (partAndRest.getValue().isEmpty()) {
             this.minor = "0";
             this.patch = "0";
-            this.shortV = ".0.0";
             this.prerelease = null;
             this.build = null;
             return;
@@ -93,7 +91,6 @@ public class GoVersion extends Version {
         this.minor = partAndRest.getKey();
         if (partAndRest.getValue().isEmpty()) {
             this.patch = "0";
-            this.shortV = ".0";
             this.prerelease = null;
             this.build = null;
             return;
@@ -131,8 +128,6 @@ public class GoVersion extends Version {
             throw new InvalidVersionException(
                     versionStr, "Unexpected remainder after parsing: \"%s\"".formatted(partAndRest.getValue()));
         }
-
-        this.shortV = null;
     }
 
     /**
@@ -339,18 +334,18 @@ public class GoVersion extends Version {
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L300-L306
     private static boolean isBadNum(String version) {
         int i = 0;
-        for (
-        /* i */ ; i < version.length() && isAsciiDigit(version.charAt(i)); i++)
-            ;
+        while (i < version.length() && isAsciiDigit(version.charAt(i))) {
+            i++;
+        }
         return i == version.length() && i > 1 && version.startsWith("0");
     }
 
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L395-L401
     private static Map.Entry<String, String> nextIdent(final String x) {
         int i = 0;
-        for (
-        /* i */ ; i < x.length() && x.charAt(i) != '.'; i++)
-            ;
+        while (i < x.length() && x.charAt(i) != '.') {
+            i++;
+        }
         return Map.entry(x.substring(0, i), x.substring(i));
     }
 }

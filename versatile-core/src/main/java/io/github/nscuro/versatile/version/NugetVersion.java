@@ -134,7 +134,7 @@ public class NugetVersion extends Version {
         try {
             return Integer.parseInt(part);
         } catch (final NumberFormatException e) {
-            throw new InvalidVersionException(versionStr, "Invalid " + name + " version component: " + part);
+            throw new InvalidVersionException(versionStr, "Invalid " + name + " version component: " + part, e);
         }
     }
 
