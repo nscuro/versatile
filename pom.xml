@@ -146,8 +146,25 @@
                         <arg>--should-stop=ifError=FLOW</arg>
                         <arg>
                             -Xplugin:ErrorProne
-                            -XepDisableAllChecks
+                            -XepDisableAllWarnings
+                            -XepExcludedPaths:.*/target/generated-(test-)?sources/.*
+                            -Xep:BadInstanceof:ERROR
+                            -Xep:CatchAndPrintStackTrace:ERROR
+                            -Xep:DefaultCharset:ERROR
+                            -Xep:DuplicateBranches:ERROR
+                            -Xep:EmptyCatch:ERROR
+                            -Xep:MissingBraces:ERROR
+                            -Xep:MissingCasesInEnumSwitch:ERROR
+                            -Xep:MissingOverride:ERROR
                             -Xep:NullAway:ERROR
+                            -Xep:ObjectEqualsForPrimitives:ERROR
+                            -Xep:OperatorPrecedence:ERROR
+                            -Xep:ReferenceEquality:ERROR
+                            -Xep:StringCaseLocaleUsage:ERROR
+                            -Xep:UnnecessaryParentheses:ERROR
+                            -Xep:UnusedException:ERROR
+                            -Xep:UnusedMethod:ERROR
+                            -Xep:UnusedVariable:ERROR
                             -XepOpt:NullAway:OnlyNullMarked=true
                             -XepOpt:NullAway:TreatGeneratedAsUnannotated=true
                         </arg>

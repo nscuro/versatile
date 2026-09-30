@@ -23,6 +23,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -85,7 +86,7 @@ public class ComponentVersion implements Iterable<String>, Comparable<ComponentV
         if (version != null) {
             // https://github.com/DependencyTrack/dependency-track/issues/1374
             // handle deb versions
-            String lcVersion = version.toLowerCase();
+            String lcVersion = version.toLowerCase(Locale.ROOT);
             final Matcher debmatcher = DEBIAN_VERSION_PATTERN.matcher(lcVersion);
             if (debmatcher.matches()) {
                 lcVersion = debmatcher.group(2);
