@@ -35,7 +35,7 @@ module io.github.nscuro.versatile.core {
     exports io.github.nscuro.versatile.version;
     exports io.github.nscuro.versatile;
 
-    requires maven.artifact;
+    requires org.apache.maven.v3.artifact;
     requires transitive org.jspecify;
 
     provides io.github.nscuro.versatile.spi.VersionProvider with
