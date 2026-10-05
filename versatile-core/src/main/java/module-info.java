@@ -19,12 +19,14 @@
 
 import io.github.nscuro.versatile.version.ApkVersion;
 import io.github.nscuro.versatile.version.CargoVersion;
+import io.github.nscuro.versatile.version.ComposerVersion;
 import io.github.nscuro.versatile.version.DebianVersion;
 import io.github.nscuro.versatile.version.GemVersion;
 import io.github.nscuro.versatile.version.GenericVersion;
 import io.github.nscuro.versatile.version.GoVersion;
 import io.github.nscuro.versatile.version.MavenVersion;
 import io.github.nscuro.versatile.version.NpmVersion;
+import io.github.nscuro.versatile.version.NugetVersion;
 import io.github.nscuro.versatile.version.PythonVersion;
 import io.github.nscuro.versatile.version.RpmVersion;
 import org.jspecify.annotations.NullMarked;
@@ -38,15 +40,19 @@ module io.github.nscuro.versatile.core {
     requires org.apache.maven.v3.artifact;
     requires transitive org.jspecify;
 
+    uses io.github.nscuro.versatile.spi.VersionProvider;
+
     provides io.github.nscuro.versatile.spi.VersionProvider with
             ApkVersion.Provider,
             CargoVersion.Provider,
+            ComposerVersion.Provider,
             DebianVersion.Provider,
             GemVersion.Provider,
             GenericVersion.Provider,
             GoVersion.Provider,
             MavenVersion.Provider,
             NpmVersion.Provider,
+            NugetVersion.Provider,
             PythonVersion.Provider,
             RpmVersion.Provider;
 }

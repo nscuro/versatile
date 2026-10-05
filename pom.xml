@@ -166,6 +166,7 @@
                             -Xep:UnusedMethod:ERROR
                             -Xep:UnusedVariable:ERROR
                             -XepOpt:NullAway:OnlyNullMarked=true
+                            -XepOpt:NullAway:HandleTestAssertionLibraries=true
                             -XepOpt:NullAway:TreatGeneratedAsUnannotated=true
                         </arg>
                         <!-- Required for building with JDK 21. Remove when discontinuing Java 21 support. -->
@@ -188,7 +189,12 @@
                     <execution>
                         <id>default-testCompile</id>
                         <configuration>
-                            <useModulePath>false</useModulePath>
+                            <compilerArgs combine.children="append">
+                                <arg>--add-modules</arg>
+                                <arg>java.net.http</arg>
+                                <arg>--add-reads</arg>
+                                <arg>io.github.nscuro.versatile.core=java.net.http</arg>
+                            </compilerArgs>
                         </configuration>
                     </execution>
                 </executions>
@@ -223,16 +229,13 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.6.0</version>
-                <configuration>
-                    <useModulePath>false</useModulePath>
-                </configuration>
             </plugin>
 
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>3.6.0</version>
                 <configuration>
-                    <useModulePath>false</useModulePath>
+                    <argLine>--add-reads io.github.nscuro.versatile.core=java.net.http</argLine>
                 </configuration>
             </plugin>
 

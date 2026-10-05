@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -246,7 +247,7 @@ public class VersUtilsIT {
         assertThat(failuresArrayNode).isEmpty();
     }
 
-    private static String invariantViolation(List<Vers> versList) {
+    private static @Nullable String invariantViolation(List<Vers> versList) {
         for (Vers vers : versList) {
             if (vers.constraints().size() > 2) {
                 return "Range %s has more than two constraints".formatted(vers);
