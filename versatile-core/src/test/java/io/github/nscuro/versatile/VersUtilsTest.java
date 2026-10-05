@@ -413,6 +413,7 @@ class VersUtilsTest {
         }
 
         @Test
+        @SuppressWarnings("NullAway")
         void versFromOsvRangeShouldThrowForInvalidRangeType() {
             final List<Map.Entry<String, String>> events = List.of(Map.entry("introduced", "0"));
             assertThatExceptionOfType(IllegalArgumentException.class)
