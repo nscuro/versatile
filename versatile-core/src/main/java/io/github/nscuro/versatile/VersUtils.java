@@ -29,7 +29,7 @@ import org.jspecify.annotations.Nullable;
 
 public final class VersUtils {
 
-    private static final Set<String> NESTING_OSV_ECOSYSTEMS = Set.of("echo", "root", "tuxcare");
+    private static final Set<String> NESTING_OSV_ECOSYSTEMS = Set.of("echo", "red hat lightwell", "root", "tuxcare");
 
     private VersUtils() {}
 
@@ -180,14 +180,17 @@ public final class VersUtils {
     }
 
     public static Optional<String> schemeFromGhsaEcosystem(String ecosystem) {
-        // Can be one of: actions, composer, erlang, go, maven, npm, nuget, other, pip, pub, rubygems, rust.
+        // https://github.com/github/advisory-database#supported-ecosystems
+        // Can be one of: actions, composer, erlang, go, maven, npm, nuget, other, pip, pub, rubygems, rust, swift.
         return switch (ecosystem.toLowerCase(Locale.ROOT)) {
+            case "composer" -> Optional.of(KnownVersioningSchemes.SCHEME_COMPOSER);
             case "go" -> Optional.of(KnownVersioningSchemes.SCHEME_GOLANG);
             case "maven" -> Optional.of(KnownVersioningSchemes.SCHEME_MAVEN);
             case "npm" -> Optional.of(KnownVersioningSchemes.SCHEME_NPM);
             case "nuget" -> Optional.of(KnownVersioningSchemes.SCHEME_NUGET);
             case "pip" -> Optional.of(KnownVersioningSchemes.SCHEME_PYPI);
             case "rubygems" -> Optional.of(KnownVersioningSchemes.SCHEME_GEM);
+            case "rust" -> Optional.of(KnownVersioningSchemes.SCHEME_CARGO);
             default -> Optional.empty();
         };
     }
@@ -230,7 +233,7 @@ public final class VersUtils {
                     "wolfi" -> Optional.of(KnownVersioningSchemes.SCHEME_APK);
             case "composer", "packagist" -> Optional.of(KnownVersioningSchemes.SCHEME_COMPOSER);
             case "crates.io" -> Optional.of(KnownVersioningSchemes.SCHEME_CARGO);
-            case "debian", "echo", "ubuntu" -> Optional.of(KnownVersioningSchemes.SCHEME_DEBIAN);
+            case "debian", "echo", "raspberry pi os", "ubuntu" -> Optional.of(KnownVersioningSchemes.SCHEME_DEBIAN);
             case "go" -> Optional.of(KnownVersioningSchemes.SCHEME_GOLANG);
             case "maven" -> Optional.of(KnownVersioningSchemes.SCHEME_MAVEN);
             case "npm" -> Optional.of(KnownVersioningSchemes.SCHEME_NPM);

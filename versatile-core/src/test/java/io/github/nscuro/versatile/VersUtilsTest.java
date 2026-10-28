@@ -66,7 +66,7 @@ class VersUtilsTest {
     @CsvSource(
             value = {
                 "actions, ",
-                "composer, ",
+                "composer, composer",
                 "erlang, ",
                 "go, golang",
                 "maven, maven",
@@ -76,7 +76,8 @@ class VersUtilsTest {
                 "pip, pypi",
                 "pub, ",
                 "rubygems, gem",
-                "rust, ",
+                "rust, cargo",
+                "swift, ",
                 "foo, ",
             })
     void testSchemeFromGhsaEcosystem(final String ecosystem, final String expectedScheme) {
@@ -128,6 +129,8 @@ class VersUtilsTest {
                 "Photon OS, rpm",
                 "Pub, ",
                 "PyPI, pypi",
+                "Raspberry Pi OS:13, deb",
+                "Red Hat Lightwell:Maven, maven",
                 "Red Hat:enterprise_linux:7::server, rpm",
                 "Rocky Linux, rpm",
                 "Root:Alpine:3.18, apk",
