@@ -233,7 +233,7 @@
 
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>3.6.1</version>
                 <configuration>
                     <argLine>--add-reads io.github.nscuro.versatile.core=java.net.http</argLine>
                 </configuration>
