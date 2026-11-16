@@ -29,7 +29,12 @@ class DebianVersionTest extends AbstractVersionTest {
                 "0, IS_LOWER_THAN, 1",
                 "1, IS_EQUAL_TO, 1",
                 "114.0.5735.106-1~deb11u1, IS_LOWER_THAN, 114.0.5735.133-1~deb12u1",
-                "114.0.5735.133-1, IS_HIGHER_THAN, 114.0.5735.133-1~deb12u1"
+                "114.0.5735.133-1, IS_HIGHER_THAN, 114.0.5735.133-1~deb12u1",
+                "6.2.0-3+deb12u4A~5.2.0.202611021823, IS_EQUAL_TO, 6.2.0-3+deb12u4A~5.2.0.202611021823",
+                "6.2.0-3+deb12u4A~5.2.0.202611021823, IS_LOWER_THAN, 6.2.0-3+deb12u4A~5.2.0.202611021824",
+                "6.2.0-3+deb12u4A~5.2.0.202611021823, IS_HIGHER_THAN, 6.2.0-3+deb12u4",
+                "1.9999999999, IS_LOWER_THAN, 1.10000000000",
+                "1.0000000000010, IS_EQUAL_TO, 1.10"
             })
     void testCompareTo(final String versionA, final ComparisonExpectation expectation, final String versionB) {
         expectation.evaluate(new DebianVersion(versionA), new DebianVersion(versionB));
