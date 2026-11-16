@@ -149,7 +149,7 @@ public class DebianVersion extends Version {
 
             final int comparisonResult;
             if (isAsciiNumeric(a) && isAsciiNumeric(b)) {
-                comparisonResult = Integer.compare(Integer.parseInt(a), Integer.parseInt(b));
+                comparisonResult = compareNumeric(a, b);
             } else {
                 comparisonResult = compareString(a, b);
             }
@@ -160,6 +160,28 @@ public class DebianVersion extends Version {
         }
 
         return 0;
+    }
+
+    // Compares digit strings without parsing them, because Debian sets no upper bound on their length.
+    private static int compareNumeric(final String a, final String b) {
+        final String strippedA = stripLeadingZeros(a);
+        final String strippedB = stripLeadingZeros(b);
+
+        final int comparisonResult = Integer.compare(strippedA.length(), strippedB.length());
+        if (comparisonResult != 0) {
+            return comparisonResult;
+        }
+
+        return Integer.signum(strippedA.compareTo(strippedB));
+    }
+
+    private static String stripLeadingZeros(final String digits) {
+        int start = 0;
+        while (start < digits.length() && digits.charAt(start) == '0') {
+            start++;
+        }
+
+        return digits.substring(start);
     }
 
     private static int compareString(final String versionPartA, final String versionPartB) {
