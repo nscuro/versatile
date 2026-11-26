@@ -22,6 +22,7 @@ import static io.github.nscuro.versatile.version.KnownVersioningSchemes.SCHEME_A
 
 import io.github.nscuro.versatile.spi.InvalidVersionException;
 import io.github.nscuro.versatile.spi.Version;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -43,20 +44,22 @@ public class ApkVersion extends Version {
 
     private record Token(Type type, String value) {
 
+        // Declaration order is the precedence when token types differ (apk-tools enum PARTS, reversed).
         private enum Type {
-            COMMIT_HASH,
-            DIGIT,
-            LETTER,
             REVISION,
+            COMMIT_HASH,
+            SUFFIX_NO,
             SUFFIX_ALPHA,
             SUFFIX_BETA,
+            SUFFIX_PRE,
+            SUFFIX_RC,
             SUFFIX_CVS,
+            SUFFIX_SVN,
             SUFFIX_GIT,
             SUFFIX_HG,
             SUFFIX_P,
-            SUFFIX_PRE,
-            SUFFIX_RC,
-            SUFFIX_SVN;
+            LETTER,
+            DIGIT;
 
             static Type ofSuffix(final String suffix) {
                 return switch (suffix) {
@@ -86,7 +89,7 @@ public class ApkVersion extends Version {
     private static final Pattern TOKEN_PATTERN = Pattern.compile("""
             (?<digit>\\d+)|\
             (?<letter>[a-z])|\
-            (?<suffix>_(?:alpha|beta|pre|rc|cvs|svn|git|hg|p))|\
+            (?<suffix>_(?:alpha|beta|pre|rc|cvs|svn|git|hg|p))(?<suffixno>\\d*)|\
             (?<commit>~[0-9a-f]+)|\
             (?<revision>-r\\d+)|\
             (?<dot>\\.)|\
@@ -136,6 +139,9 @@ public class ApkVersion extends Version {
             } else if (matcher.group("suffix") != null) {
                 final String suffix = matcher.group("suffix").substring(1); // Remove leading underscore.
                 tokens.add(new Token(Token.Type.ofSuffix(suffix), suffix));
+                if (!matcher.group("suffixno").isEmpty()) {
+                    tokens.add(new Token(Token.Type.SUFFIX_NO, matcher.group("suffixno")));
+                }
             } else if (matcher.group("commit") != null) {
                 tokens.add(new Token(
                         Token.Type.COMMIT_HASH, matcher.group("commit").substring(1)));
@@ -185,15 +191,6 @@ public class ApkVersion extends Version {
                     return 1;
                 }
 
-                if (tokenA.type() == Token.Type.REVISION
-                        && (tokenB.type() == Token.Type.DIGIT || tokenB.type() == Token.Type.LETTER)) {
-                    return -1;
-                }
-                if (tokenB.type() == Token.Type.REVISION
-                        && (tokenA.type() == Token.Type.DIGIT || tokenA.type() == Token.Type.LETTER)) {
-                    return 1;
-                }
-
                 return Integer.compare(tokenA.type().ordinal(), tokenB.type().ordinal());
             }
 
@@ -231,6 +228,7 @@ public class ApkVersion extends Version {
             }
             case LETTER ->
                 Character.compare(tokenA.value().charAt(0), tokenB.value().charAt(0));
+            case SUFFIX_NO -> new BigInteger(tokenA.value()).compareTo(new BigInteger(tokenB.value()));
             case REVISION -> Integer.compare(Integer.parseInt(tokenA.value()), Integer.parseInt(tokenB.value()));
             case SUFFIX_ALPHA,
                     SUFFIX_BETA,

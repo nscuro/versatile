@@ -65,6 +65,21 @@ class ApkVersionTest extends AbstractVersionTest {
                 "1.0_svn, IS_HIGHER_THAN, 1.0",
                 "1.0_git, IS_HIGHER_THAN, 1.0",
                 "1.0_hg, IS_HIGHER_THAN, 1.0",
+                // Post-release suffixes (cvs < svn < git < hg < p)
+                "1.0_cvs, IS_LOWER_THAN, 1.0_svn",
+                "1.0_svn, IS_LOWER_THAN, 1.0_git",
+                "1.0_git, IS_LOWER_THAN, 1.0_hg",
+                "1.0_hg, IS_LOWER_THAN, 1.0_p",
+                "1.0_svn1, IS_LOWER_THAN, 1.0_p1",
+                // Suffix numbers
+                "1.0_p1, IS_LOWER_THAN, 1.0_p_git",
+                "1.0_git20240101123456, IS_LOWER_THAN, 1.0_git20240101123457",
+                // Token type precedence (revision < commit hash < suffix < letter < digit)
+                "1.0-r1, IS_LOWER_THAN, 1.0~abc",
+                "1.0~abc, IS_LOWER_THAN, 1.0_p",
+                "1.0_p1, IS_LOWER_THAN, 1.0a",
+                "1.0a, IS_LOWER_THAN, 1.0.1",
+                "1.0_p1, IS_LOWER_THAN, 1.0.1",
                 // Letters in versions
                 "1.0a, IS_LOWER_THAN, 1.0b",
                 "1.0b, IS_LOWER_THAN, 1.0c",
