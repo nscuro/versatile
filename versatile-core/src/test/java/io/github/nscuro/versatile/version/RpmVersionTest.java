@@ -147,7 +147,11 @@ class RpmVersionTest extends AbstractVersionTest {
                 "1.1.ββ, IS_EQUAL_TO, 1.1.αα",
                 // Custom test cases
                 "1.0-1, IS_HIGHER_THAN, 1.0",
-                "1.0, IS_LOWER_THAN, 1.0-1"
+                "1.0, IS_LOWER_THAN, 1.0-1",
+                "1.0-0, IS_HIGHER_THAN, 1.0",
+                "1.0, IS_LOWER_THAN, 1.0-0",
+                "1.0-alpha, IS_HIGHER_THAN, 1.0",
+                "1.0, IS_LOWER_THAN, 1.0-alpha"
             })
     void testCompareTo(final String versionA, final ComparisonExpectation expectation, final String versionB) {
         expectation.evaluate(new RpmVersion(versionA), new RpmVersion(versionB));
