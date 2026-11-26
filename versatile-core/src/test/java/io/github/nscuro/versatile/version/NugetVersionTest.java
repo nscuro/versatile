@@ -165,6 +165,11 @@ class NugetVersionTest {
                 "1.0.0-5, IS_LOWER_THAN, 1.0.0-alpha",
                 "1.0.0-beta.5.77.0, IS_LOWER_THAN, 1.0.0-beta.5.79.0",
                 "1.0.0-beta.5.79.0, IS_LOWER_THAN, 1.0.0-beta.5.790.0",
+
+                // Numeric labels beyond Int32.MaxValue compare as alphanumeric, like NuGet's int.TryParse
+                "1.0.0-20240101120000, IS_LOWER_THAN, 1.0.0-20240101120001",
+                "1.0.0-beta.2147483647, IS_LOWER_THAN, 1.0.0-beta.2147483648",
+                "1.0.0-beta.10000000000, IS_LOWER_THAN, 1.0.0-beta.9999999999",
             })
     void testCompareTo(String versionA, ComparisonExpectation expectation, String versionB) {
         expectation.evaluate(new NugetVersion(versionA), new NugetVersion(versionB));
