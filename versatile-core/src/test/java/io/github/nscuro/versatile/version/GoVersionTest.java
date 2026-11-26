@@ -112,6 +112,13 @@ class GoVersionTest {
                 "v1.2.3, IS_EQUAL_TO, v1.2.3+meta",
                 "v1.2.3+meta, IS_EQUAL_TO, v1.2.3+meta-pre",
                 "v1.2.3+meta-pre, IS_EQUAL_TO, v1.2.3+meta-pre.sha.256a",
+
+                // Numeric segments beyond Integer.MAX_VALUE compare like Go's compareInt
+                "v1.0.0, IS_LOWER_THAN, v1.0.20250331001",
+                "v1.0.2147483647, IS_LOWER_THAN, v1.0.2147483648",
+                "v1.9999999999.0, IS_LOWER_THAN, v1.10000000000.0",
+                "v2.0.0, IS_LOWER_THAN, v20240101120000.0.0",
+                "v20240101120000.0.0, IS_EQUAL_TO, v20240101120000.0.0",
             })
     void testCompareTo(final String versionA, final ComparisonExpectation expectation, final String versionB) {
         expectation.evaluate(new GoVersion(versionA), new GoVersion(versionB));

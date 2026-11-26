@@ -145,17 +145,17 @@ public class GoVersion extends Version {
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L116-L138
     public int compareTo(final Version other) {
         if (other instanceof final GoVersion otherVersion) {
-            int comparisonResult = Integer.compare(Integer.parseInt(this.major), Integer.parseInt(otherVersion.major));
+            int comparisonResult = compareInt(this.major, otherVersion.major);
             if (comparisonResult != 0) {
                 return comparisonResult;
             }
 
-            comparisonResult = Integer.compare(Integer.parseInt(this.minor), Integer.parseInt(otherVersion.minor));
+            comparisonResult = compareInt(this.minor, otherVersion.minor);
             if (comparisonResult != 0) {
                 return comparisonResult;
             }
 
-            comparisonResult = Integer.compare(Integer.parseInt(this.patch), Integer.parseInt(otherVersion.patch));
+            comparisonResult = compareInt(this.patch, otherVersion.patch);
             if (comparisonResult != 0) {
                 return comparisonResult;
             }
@@ -263,6 +263,16 @@ public class GoVersion extends Version {
         }
 
         return Map.entry(version.substring(0, i), version.substring(i));
+    }
+
+    // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L316-L331
+    private static int compareInt(final String x, final String y) {
+        final int comparisonResult = Integer.compare(x.length(), y.length());
+        if (comparisonResult != 0) {
+            return comparisonResult;
+        }
+
+        return Integer.signum(x.compareTo(y));
     }
 
     // https://github.com/golang/mod/blob/baa5c2d058db25484c20d76985ba394e73176132/semver/semver.go#L333-L393
