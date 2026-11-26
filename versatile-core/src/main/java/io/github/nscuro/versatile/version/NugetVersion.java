@@ -206,21 +206,33 @@ public class NugetVersion extends Version {
     }
 
     private static int compareRelease(String a, String b) {
-        final boolean aIsNum = isAsciiNumeric(a);
-        final boolean bIsNum = isAsciiNumeric(b);
+        final Integer aNum = tryParseInt(a);
+        final Integer bNum = tryParseInt(b);
 
-        if (aIsNum && bIsNum) {
-            return Integer.compare(Integer.parseInt(a), Integer.parseInt(b));
+        if (aNum != null && bNum != null) {
+            return Integer.compare(aNum, bNum);
         }
 
-        if (aIsNum) {
+        if (aNum != null) {
             return -1;
         }
-        if (bIsNum) {
+        if (bNum != null) {
             return 1;
         }
 
         return a.compareToIgnoreCase(b);
+    }
+
+    private static @Nullable Integer tryParseInt(String label) {
+        if (!isAsciiNumeric(label)) {
+            return null;
+        }
+
+        try {
+            return Integer.parseInt(label);
+        } catch (final NumberFormatException e) {
+            return null;
+        }
     }
 
     @Override
