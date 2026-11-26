@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.nscuro.versatile.spi.InvalidVersionException;
+import java.math.BigInteger;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -77,10 +78,21 @@ class PythonVersionTest extends AbstractVersionTest {
                 "1.0, IS_LOWER_THAN, 1.0.post456.dev34",
                 "1.0.post456.dev34, IS_LOWER_THAN, 1.0.post456",
                 "1.0.post456, IS_LOWER_THAN, 1.1.dev1",
+                // Numbers beyond int range
+                "99999999999!1.0, IS_HIGHER_THAN, 1!1.0",
+                "1.2147483648, IS_HIGHER_THAN, 1.2147483647",
+                "1.0a99999999999, IS_HIGHER_THAN, 1.0a1",
+                "1.0.post99999999999, IS_HIGHER_THAN, 1.0.post1",
+                "1.0.dev99999999999, IS_HIGHER_THAN, 1.0.dev1",
                 // Local version comparisons
                 "1.0, IS_LOWER_THAN, 1.0+local",
                 "1.0+abc, IS_LOWER_THAN, 1.0+def",
                 "1.0+local1, IS_LOWER_THAN, 1.0+local2",
+                "1.0+2a, IS_LOWER_THAN, 1.0+10",
+                "1.0+abc.7, IS_LOWER_THAN, 1.0+5",
+                "1.0+cu130, IS_LOWER_THAN, 1.0+6509443",
+                "1.0+abc, IS_LOWER_THAN, 1.0+abc.1",
+                "1.0+99999999999, IS_LOWER_THAN, 1.0+100000000000",
                 // Normalization equivalence
                 "v1.0, IS_EQUAL_TO, 1.0",
                 "1.0alpha1, IS_EQUAL_TO, 1.0a1",
@@ -107,15 +119,15 @@ class PythonVersionTest extends AbstractVersionTest {
         @Test
         void shouldParseEpoch() {
             final PythonVersion version = new PythonVersion("2!1.0");
-            assertThat(version.epoch()).isEqualTo(2);
-            assertThat(version.release()).containsExactly(1, 0);
+            assertThat(version.epoch()).isEqualTo(BigInteger.valueOf(2));
+            assertThat(version.release()).containsExactly(BigInteger.ONE, BigInteger.ZERO);
         }
 
         @Test
         void shouldParseRelease() {
             final PythonVersion version = new PythonVersion("1.2.3");
             assertThat(version.epoch()).isZero();
-            assertThat(version.release()).containsExactly(1, 2, 3);
+            assertThat(version.release()).containsExactly(BigInteger.ONE, BigInteger.TWO, BigInteger.valueOf(3));
         }
 
         @Test
@@ -123,29 +135,29 @@ class PythonVersionTest extends AbstractVersionTest {
             final PythonVersion alpha = new PythonVersion("1.0a1");
             assertThat(alpha.preRelease()).isNotNull();
             assertThat(alpha.preRelease().type()).isEqualTo(PythonVersion.PreRelease.Type.ALPHA);
-            assertThat(alpha.preRelease().number()).isEqualTo(1);
+            assertThat(alpha.preRelease().number()).isEqualTo(BigInteger.valueOf(1));
 
             final PythonVersion beta = new PythonVersion("1.0b2");
             assertThat(beta.preRelease()).isNotNull();
             assertThat(beta.preRelease().type()).isEqualTo(PythonVersion.PreRelease.Type.BETA);
-            assertThat(beta.preRelease().number()).isEqualTo(2);
+            assertThat(beta.preRelease().number()).isEqualTo(BigInteger.valueOf(2));
 
             final PythonVersion rc = new PythonVersion("1.0rc3");
             assertThat(rc.preRelease()).isNotNull();
             assertThat(rc.preRelease().type()).isEqualTo(PythonVersion.PreRelease.Type.RC);
-            assertThat(rc.preRelease().number()).isEqualTo(3);
+            assertThat(rc.preRelease().number()).isEqualTo(BigInteger.valueOf(3));
         }
 
         @Test
         void shouldParsePostRelease() {
             final PythonVersion version = new PythonVersion("1.0.post5");
-            assertThat(version.postRelease()).isEqualTo(5);
+            assertThat(version.postRelease()).isEqualTo(BigInteger.valueOf(5));
         }
 
         @Test
         void shouldParseDevRelease() {
             final PythonVersion version = new PythonVersion("1.0.dev7");
-            assertThat(version.devRelease()).isEqualTo(7);
+            assertThat(version.devRelease()).isEqualTo(BigInteger.valueOf(7));
         }
 
         @Test
@@ -157,13 +169,13 @@ class PythonVersionTest extends AbstractVersionTest {
         @Test
         void shouldParseComplexVersion() {
             final PythonVersion version = new PythonVersion("1!1.2.3a4.post5.dev6+local");
-            assertThat(version.epoch()).isEqualTo(1);
-            assertThat(version.release()).containsExactly(1, 2, 3);
+            assertThat(version.epoch()).isEqualTo(BigInteger.valueOf(1));
+            assertThat(version.release()).containsExactly(BigInteger.ONE, BigInteger.TWO, BigInteger.valueOf(3));
             assertThat(version.preRelease()).isNotNull();
             assertThat(version.preRelease().type()).isEqualTo(PythonVersion.PreRelease.Type.ALPHA);
-            assertThat(version.preRelease().number()).isEqualTo(4);
-            assertThat(version.postRelease()).isEqualTo(5);
-            assertThat(version.devRelease()).isEqualTo(6);
+            assertThat(version.preRelease().number()).isEqualTo(BigInteger.valueOf(4));
+            assertThat(version.postRelease()).isEqualTo(BigInteger.valueOf(5));
+            assertThat(version.devRelease()).isEqualTo(BigInteger.valueOf(6));
             assertThat(version.local()).isEqualTo("local");
         }
 
@@ -171,6 +183,13 @@ class PythonVersionTest extends AbstractVersionTest {
         @ValueSource(strings = {"", "abc", "1.2.3.a.b.c", "1.2-", ".1.2", "1..2"})
         void shouldThrowOnInvalidVersion(String invalidVersion) {
             assertThatThrownBy(() -> new PythonVersion(invalidVersion)).isInstanceOf(InvalidVersionException.class);
+        }
+
+        @Test
+        void shouldRejectNumbersExceedingPythonDigitLimit() {
+            assertThat(new PythonVersion("1." + "9".repeat(4300)).release()).hasSize(2);
+            assertThatThrownBy(() -> new PythonVersion("1." + "9".repeat(4301)))
+                    .isInstanceOf(InvalidVersionException.class);
         }
     }
 
