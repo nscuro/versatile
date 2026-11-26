@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A {@link Version} implementation for the {@code rpm} versioning scheme.
@@ -55,7 +56,7 @@ public class RpmVersion extends Version {
 
     private final int epoch;
     private final String version;
-    private final String release;
+    private final @Nullable String release;
     private final String[] versionSegments;
     private final String[] releaseSegments;
 
@@ -80,7 +81,7 @@ public class RpmVersion extends Version {
                 .map(Integer::parseInt)
                 .orElse(0);
         this.version = versionMatcher.group("version");
-        this.release = Optional.ofNullable(versionMatcher.group("release")).orElse("0");
+        this.release = versionMatcher.group("release");
 
         if (this.version == null) {
             throw new InvalidVersionException(versionStr, """
@@ -90,7 +91,7 @@ public class RpmVersion extends Version {
         }
 
         this.versionSegments = splitSegments(this.version);
-        this.releaseSegments = splitSegments(this.release);
+        this.releaseSegments = this.release != null ? splitSegments(this.release) : new String[0];
     }
 
     /**
@@ -125,6 +126,10 @@ public class RpmVersion extends Version {
                 return comparisonResult;
             }
 
+            if (this.release == null || otherVersion.release == null) {
+                return Boolean.compare(this.release != null, otherVersion.release != null);
+            }
+
             return !this.release.equals(otherVersion.release)
                     ? rpmVerCmp(this.releaseSegments, otherVersion.releaseSegments)
                     : 0;
@@ -142,7 +147,7 @@ public class RpmVersion extends Version {
         return version;
     }
 
-    public String release() {
+    public @Nullable String release() {
         return release;
     }
 
