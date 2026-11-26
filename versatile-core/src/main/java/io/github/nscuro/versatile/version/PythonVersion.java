@@ -23,6 +23,7 @@ import static io.github.nscuro.versatile.version.VersionUtils.isAsciiNumeric;
 
 import io.github.nscuro.versatile.spi.InvalidVersionException;
 import io.github.nscuro.versatile.spi.Version;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -45,7 +46,7 @@ public class PythonVersion extends Version {
         }
     }
 
-    public record PreRelease(Type type, int number) {
+    public record PreRelease(Type type, BigInteger number) {
 
         public enum Type {
             ALPHA,
@@ -84,11 +85,15 @@ public class PythonVersion extends Version {
     private static final Pattern SEGMENT_SEPARATOR_PATTERN = Pattern.compile("\\.");
     private static final Pattern LOCAL_NORMALIZE_PATTERN = Pattern.compile("[-_]");
 
-    private final int epoch;
-    private final List<Integer> release;
+    // CPython's default int_max_str_digits. Also caps the superlinear cost of parsing BigInteger.
+    private static final int MAX_NUMBER_DIGITS = 4300;
+    private static final Pattern OVERSIZED_NUMBER_PATTERN = Pattern.compile("[0-9]{" + (MAX_NUMBER_DIGITS + 1) + "}");
+
+    private final BigInteger epoch;
+    private final List<BigInteger> release;
     private final @Nullable PreRelease preRelease;
-    private final @Nullable Integer postRelease;
-    private final @Nullable Integer devRelease;
+    private final @Nullable BigInteger postRelease;
+    private final @Nullable BigInteger devRelease;
     private final @Nullable String local;
 
     PythonVersion(String versionStr) {
@@ -125,7 +130,7 @@ public class PythonVersion extends Version {
                     .formatted(this.getClass().getName(), other.getClass().getName()));
         }
 
-        int result = Integer.compare(this.epoch, otherVersion.epoch);
+        int result = this.epoch.compareTo(otherVersion.epoch);
         if (result != 0) {
             return result;
         }
@@ -161,11 +166,11 @@ public class PythonVersion extends Version {
         return compareLocal(this.local, otherVersion.local);
     }
 
-    public int epoch() {
+    public BigInteger epoch() {
         return epoch;
     }
 
-    public List<Integer> release() {
+    public List<BigInteger> release() {
         return List.copyOf(release);
     }
 
@@ -173,11 +178,11 @@ public class PythonVersion extends Version {
         return preRelease;
     }
 
-    public @Nullable Integer postRelease() {
+    public @Nullable BigInteger postRelease() {
         return postRelease;
     }
 
-    public @Nullable Integer devRelease() {
+    public @Nullable BigInteger devRelease() {
         return devRelease;
     }
 
@@ -193,6 +198,10 @@ public class PythonVersion extends Version {
                     [N!]N(.N)*[{a|b|rc}N][.postN][.devN][+local]\
                     """.formatted(versionStr));
         }
+        if (OVERSIZED_NUMBER_PATTERN.matcher(versionStr).find()) {
+            throw new InvalidVersionException(
+                    versionStr, "Numbers must not exceed %d digits".formatted(MAX_NUMBER_DIGITS));
+        }
 
         return matcher;
     }
@@ -200,12 +209,12 @@ public class PythonVersion extends Version {
     private static String normalize(Matcher matcher) {
         final var normalized = new StringBuilder();
 
-        final int epoch = parseEpoch(matcher.group("epoch"));
-        if (epoch != 0) {
+        final BigInteger epoch = parseEpoch(matcher.group("epoch"));
+        if (epoch.signum() != 0) {
             normalized.append(epoch).append('!');
         }
 
-        final List<Integer> release = parseRelease(matcher.group("release"));
+        final List<BigInteger> release = parseRelease(matcher.group("release"));
         for (int i = 0; i < release.size(); i++) {
             if (i > 0) {
                 normalized.append('.');
@@ -218,13 +227,13 @@ public class PythonVersion extends Version {
             normalized.append(preRelease.type().normalized()).append(preRelease.number());
         }
 
-        final Integer postRelease =
+        final BigInteger postRelease =
                 parsePostRelease(matcher.group("post"), matcher.group("postNum1"), matcher.group("postNum2"));
         if (postRelease != null) {
             normalized.append(".post").append(postRelease);
         }
 
-        final Integer devRelease = parseDevRelease(matcher.group("dev"), matcher.group("devNum"));
+        final BigInteger devRelease = parseDevRelease(matcher.group("dev"), matcher.group("devNum"));
         if (devRelease != null) {
             normalized.append(".dev").append(devRelease);
         }
@@ -237,20 +246,20 @@ public class PythonVersion extends Version {
         return normalized.toString();
     }
 
-    private static int parseEpoch(@Nullable String epochStr) {
+    private static BigInteger parseEpoch(@Nullable String epochStr) {
         if (epochStr == null || epochStr.isBlank()) {
-            return 0;
+            return BigInteger.ZERO;
         }
 
-        return Integer.parseInt(epochStr);
+        return new BigInteger(epochStr);
     }
 
-    private static List<Integer> parseRelease(String releaseStr) {
+    private static List<BigInteger> parseRelease(String releaseStr) {
         final String[] parts = SEGMENT_SEPARATOR_PATTERN.split(releaseStr);
-        final var release = new ArrayList<Integer>(parts.length);
+        final var release = new ArrayList<BigInteger>(parts.length);
 
         for (final String part : parts) {
-            release.add(Integer.parseInt(part));
+            release.add(new BigInteger(part));
         }
 
         return release;
@@ -262,33 +271,33 @@ public class PythonVersion extends Version {
         }
 
         final PreRelease.Type type = PreRelease.Type.of(preType);
-        final int num = (preNum == null || preNum.isBlank()) ? 0 : Integer.parseInt(preNum);
+        final BigInteger num = (preNum == null || preNum.isBlank()) ? BigInteger.ZERO : new BigInteger(preNum);
         return new PreRelease(type, num);
     }
 
-    private static @Nullable Integer parsePostRelease(
+    private static @Nullable BigInteger parsePostRelease(
             @Nullable String postStr, @Nullable String postNum1, @Nullable String postNum2) {
         if (postStr == null) {
             return null;
         }
 
         if (postNum1 != null && !postNum1.isBlank()) {
-            return Integer.parseInt(postNum1);
+            return new BigInteger(postNum1);
         }
 
         if (postNum2 != null && !postNum2.isBlank()) {
-            return Integer.parseInt(postNum2);
+            return new BigInteger(postNum2);
         }
 
-        return 0;
+        return BigInteger.ZERO;
     }
 
-    private static @Nullable Integer parseDevRelease(@Nullable String devStr, @Nullable String devNum) {
+    private static @Nullable BigInteger parseDevRelease(@Nullable String devStr, @Nullable String devNum) {
         if (devStr == null) {
             return null;
         }
 
-        return (devNum == null || devNum.isBlank()) ? 0 : Integer.parseInt(devNum);
+        return (devNum == null || devNum.isBlank()) ? BigInteger.ZERO : new BigInteger(devNum);
     }
 
     private static @Nullable String parseLocal(@Nullable String localStr) {
@@ -301,14 +310,14 @@ public class PythonVersion extends Version {
                 .replaceAll(".");
     }
 
-    private static int compareRelease(List<Integer> release1, List<Integer> release2) {
+    private static int compareRelease(List<BigInteger> release1, List<BigInteger> release2) {
         final int maxLen = Math.max(release1.size(), release2.size());
 
         for (int i = 0; i < maxLen; i++) {
-            final int v1 = i < release1.size() ? release1.get(i) : 0;
-            final int v2 = i < release2.size() ? release2.get(i) : 0;
+            final BigInteger v1 = i < release1.size() ? release1.get(i) : BigInteger.ZERO;
+            final BigInteger v2 = i < release2.size() ? release2.get(i) : BigInteger.ZERO;
 
-            final int result = Integer.compare(v1, v2);
+            final int result = v1.compareTo(v2);
             if (result != 0) {
                 return result;
             }
@@ -319,11 +328,11 @@ public class PythonVersion extends Version {
 
     private static int comparePreReleaseWithDev(
             @Nullable PreRelease pre1,
-            @Nullable Integer dev1,
+            @Nullable BigInteger dev1,
             @Nullable PreRelease pre2,
-            @Nullable Integer dev2,
-            @Nullable Integer post1,
-            @Nullable Integer post2) {
+            @Nullable BigInteger dev2,
+            @Nullable BigInteger post1,
+            @Nullable BigInteger post2) {
         final boolean isDev1OfFinal = pre1 == null && post1 == null && dev1 != null;
         final boolean isDev2OfFinal = pre2 == null && post2 == null && dev2 != null;
 
@@ -356,10 +365,10 @@ public class PythonVersion extends Version {
             return result;
         }
 
-        return Integer.compare(pre1.number, pre2.number);
+        return pre1.number.compareTo(pre2.number);
     }
 
-    private static int compareOptionalInt(@Nullable Integer int1, @Nullable Integer int2) {
+    private static int compareOptionalInt(@Nullable BigInteger int1, @Nullable BigInteger int2) {
         // null is treated as less than any value (for post-releases).
         if (int1 == null && int2 == null) {
             return 0;
@@ -372,10 +381,10 @@ public class PythonVersion extends Version {
             return 1;
         }
 
-        return Integer.compare(int1, int2);
+        return int1.compareTo(int2);
     }
 
-    private static int compareDevRelease(@Nullable Integer dev1, @Nullable Integer dev2) {
+    private static int compareDevRelease(@Nullable BigInteger dev1, @Nullable BigInteger dev2) {
         if (dev1 == null && dev2 == null) {
             return 0;
         }
@@ -386,7 +395,7 @@ public class PythonVersion extends Version {
             return -1;
         }
 
-        return Integer.compare(dev1, dev2);
+        return dev1.compareTo(dev2);
     }
 
     private static int compareLocal(@Nullable String local1, @Nullable String local2) {
@@ -402,24 +411,32 @@ public class PythonVersion extends Version {
 
         final String[] parts1 = SEGMENT_SEPARATOR_PATTERN.split(local1);
         final String[] parts2 = SEGMENT_SEPARATOR_PATTERN.split(local2);
-        final int maxLen = Math.max(parts1.length, parts2.length);
+        final int minLen = Math.min(parts1.length, parts2.length);
 
-        for (int i = 0; i < maxLen; i++) {
-            final String p1 = i < parts1.length ? parts1[i] : "";
-            final String p2 = i < parts2.length ? parts2[i] : "";
-
-            final int result;
-            if (isAsciiNumeric(p1) && isAsciiNumeric(p2)) {
-                result = Integer.compare(Integer.parseInt(p1), Integer.parseInt(p2));
-            } else {
-                result = p1.compareTo(p2);
-            }
-
+        for (int i = 0; i < minLen; i++) {
+            final int result = compareLocalSegment(parts1[i], parts2[i]);
             if (result != 0) {
                 return result;
             }
         }
 
-        return 0;
+        return Integer.compare(parts1.length, parts2.length);
+    }
+
+    private static int compareLocalSegment(String segment1, String segment2) {
+        final boolean numeric1 = isAsciiNumeric(segment1);
+        final boolean numeric2 = isAsciiNumeric(segment2);
+
+        if (numeric1 && numeric2) {
+            return new BigInteger(segment1).compareTo(new BigInteger(segment2));
+        }
+        if (numeric1) {
+            return 1;
+        }
+        if (numeric2) {
+            return -1;
+        }
+
+        return segment1.compareTo(segment2);
     }
 }
